@@ -1,16 +1,17 @@
-#map {
+#mapContainer {
   position: relative;
-  
+
   #controls {
     background: rgba(230,230,230,0.6);
     position: absolute;
     right: 0px;
     top: 0px;
-    bottom: 0px;
-    min-width: 200px;
-    width: 20%;
+    bottom: 16px;
+    min-width: 300px;
+    width: 25%;
     z-index: 1000;
-    
+    overflow-y: scroll;
+
     section {
       > h1, > h2 {
         margin: 0px;
@@ -29,7 +30,7 @@
       }
     }
   }
-  
+
   button, .button {
     white-space: nowrap;
     cursor: pointer;
@@ -39,76 +40,76 @@
     padding: 5px 10px;
     display: inline-block;
     margin: 2px;
-    
+
     background: rgba(255,255,255,0.4);
-    
+
     &:hover {
       background: rgba(255,255,255,0.6);
     }
-    
+
     &.selected {
       background: rgba(255,255,255,0.8);
-      
+
       &:hover {
         background: rgba(255,255,255,1);
       }
     }
-    
+
     > div {
-      padding: 2px 5px;  
+      padding: 2px 5px;
       display: inline-block;
       margin: -3px 1px;
       background: rgba(255,255,255,0.2);
-      
+
       &:hover {
         background: rgba(255,255,255,1);
       }
     }
   }
-  
+
   .time button {
     border-color: hsla(214, 10%, 56%, 0.40);
-    
+
     &:hover {
       border-color: hsla(214, 15%, 56%, 0.77);
     }
-    
+
     &.selected {
       border-color: hsla(214, 35%, 56%, 0.77);
-    
+
       &:hover {
         border-color: hsla(214, 61%, 56%, 0.77);
       }
     }
   }
-  
+
   #surveys button {
     border-color: hsla(135, 10%, 56%, 0.40);
-    
+
     &:hover {
       border-color: hsla(135, 15%, 50%, 0.77);
     }
-    
+
     &.selected {
       border-color: hsla(135, 35%, 46%, 0.77);
-    
+
     &:hover {
       border-color: hsla(135, 61%, 46%, 0.77);
     }
     }
   }
-  
+
   #timeSlider {
     margin: 10px;
   }
-  
+
   .key {
     font-size: 0.8em;
   }
-  
+
   .range {
     clear: both;
-    
+
     .min {
       float: left;
     }
@@ -116,7 +117,7 @@
       float: right;
     }
   }
-  
+
   #overall  {
     .selected {
       &#excellent {
