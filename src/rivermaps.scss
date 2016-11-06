@@ -1,0 +1,159 @@
+// out: ../rivermaps.css
+
+#mapContainer {
+  position: relative;
+
+  #controls {
+    background: rgba(230,230,230,0.6);
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 16px;
+    min-width: 350px;
+    width: 25%;
+    z-index: 1000;
+    overflow-y: scroll;
+
+    section {
+      h1, h2 {
+        margin: 0px;
+        padding: 2px 8px;
+      }
+      h1{
+        background: rgba(255,255,255,0.9);
+        font-size: 1.2em;
+      }
+      h2 {
+        background: rgba(255,255,255,0.5);
+        font-size: 1.1em;
+      }
+      div {
+        padding: 5px 10px;
+      }
+
+      > div {
+        padding: 0px;
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 1s;
+      }
+
+      &.collapsed > div {
+        max-height: 0px;
+      }
+    }
+  }
+
+  button, .button {
+    white-space: nowrap;
+    cursor: pointer;
+    border-radius: 5px;
+    border: solid 3px #ffffff;
+    box-shadow: none;
+    padding: 5px 10px;
+    display: inline-block;
+    margin: 2px;
+
+    background: rgba(255,255,255,0.4);
+
+    &:hover {
+      background: rgba(255,255,255,0.6);
+    }
+
+    &.selected {
+      background: rgba(255,255,255,0.8);
+
+      &:hover {
+        background: rgba(255,255,255,1);
+      }
+    }
+
+    > div {
+      padding: 2px 5px;
+      display: inline-block;
+      margin: -3px 1px;
+      background: rgba(255,255,255,0.2);
+
+      &:hover {
+        background: rgba(255,255,255,1);
+      }
+    }
+  }
+
+  .time button {
+    border-color: hsla(214, 10%, 56%, 0.40);
+
+    &:hover {
+      border-color: hsla(214, 15%, 56%, 0.77);
+    }
+
+    &.selected {
+      border-color: hsla(214, 35%, 56%, 0.77);
+
+      &:hover {
+        border-color: hsla(214, 61%, 56%, 0.77);
+      }
+    }
+  }
+
+  .surveys button {
+    border-color: hsla(135, 10%, 56%, 0.40);
+
+    &:hover {
+      border-color: hsla(135, 15%, 50%, 0.77);
+    }
+
+    &.selected {
+      border-color: hsla(135, 35%, 46%, 0.77);
+
+    &:hover {
+      border-color: hsla(135, 61%, 46%, 0.77);
+    }
+    }
+  }
+
+  .noUi-target {
+    padding: 0 !important;
+    margin: 10px;
+  }
+
+  .key {
+    font-size: 0.8em;
+  }
+
+  .range {
+    clear: both;
+
+    .min,
+    .max {
+      display: inline-block;
+    }
+
+    /*.min {
+      float: left;
+    }*/
+    .max {
+      float: right;
+    }
+  }
+
+  #overall  {
+    .selected {
+      &#excellent {
+        border-color: hsl(114, 63%, 54%);
+      }
+      &#good {
+        border-color: hsl(74, 51%, 54%);
+      }
+      &#moderate {
+        border-color: hsl(52, 94%, 50%);
+      }
+      &#poor {
+        border-color: hsl(14, 88%, 55%);
+      }
+      &#bad {
+        border-color: hsl(358, 80%, 51%);
+      }
+    }
+  }
+}
