@@ -10,6 +10,7 @@
     top: 0px;
     bottom: 16px;
     min-width: 350px;
+    max-width: 500px;
     width: 25%;
     z-index: 1000;
     overflow-y: scroll;
@@ -27,19 +28,18 @@
         background: rgba(255,255,255,0.5);
         font-size: 1.1em;
       }
-      div {
+      > div {
         padding: 5px 10px;
       }
 
-      > div {
-        padding: 0px;
-        max-height: 1000px;
-        overflow: hidden;
-        transition: max-height 1s;
-      }
+      &.collapsed {
+        > * {
+          display: none;
+        }
 
-      &.collapsed > div {
-        max-height: 0px;
+        h1 {
+          display: block;
+        }
       }
     }
   }
@@ -137,21 +137,21 @@
     }
   }
 
-  #overall  {
+  .ratings  {
     .selected {
-      &#excellent {
+      &.excellent {
         border-color: hsl(114, 63%, 54%);
       }
-      &#good {
+      &.good {
         border-color: hsl(74, 51%, 54%);
       }
-      &#moderate {
+      &.moderate {
         border-color: hsl(52, 94%, 50%);
       }
-      &#poor {
-        border-color: hsl(14, 88%, 55%);
+      &.poor {
+        border-color: hsl(33, 88%, 55%);
       }
-      &#bad {
+      &.bad {
         border-color: hsl(358, 80%, 51%);
       }
     }

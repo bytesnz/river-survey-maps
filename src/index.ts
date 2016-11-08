@@ -18,8 +18,6 @@ let disableBubbling = (event: Event) => {
   controlsLayer.addEventListener(event, disableBubbling);
 });
 
-console.log('elements are', mapElement, controlsLayer);
-
 // Create map
 Map(mapElement);
 

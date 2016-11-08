@@ -43,8 +43,6 @@ export function getDecayAmount(amount: number | Date, date?: Date) {
     let halflife = config.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].time;
     //var halflife = halflifeLengths[4][1];
 
-    console.log('getDecayAmount', halflife);
-
     // Calculate how many "decayed" the survey is
     if (amount instanceof Date) {
       if (date instanceof Date) {

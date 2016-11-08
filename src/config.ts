@@ -19,7 +19,10 @@ const config = {
   decayOpacity: true,
   startSurveysEnabled: false,
   defaultTime: "decaying",
-  mapMoveTimeout: 1000
+  mapMoveTimeout: 1000,
+  defautSurveys: {
+    quality: ['ph']
+  }
 }
 
 export default config;

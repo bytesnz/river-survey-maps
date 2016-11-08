@@ -58,7 +58,6 @@
 	['click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'scroll'].forEach(function (event) {
 	    controlsLayer.addEventListener(event, disableBubbling);
 	});
-	console.log('elements are', mapElement, controlsLayer);
 	map_1.default(mapElement);
 	var timeSection = Controls.addControlSection('Time', controlsLayer);
 	time_1.default(timeSection);
@@ -152,15 +151,13 @@
 	function addControlSection(title, parentSection) {
 	    var header = document.createElement('h1');
 	    var section = document.createElement('section');
-	    var main = document.createElement('div');
 	    parentSection.appendChild(section);
 	    section.appendChild(header);
-	    section.appendChild(main);
 	    header.innerHTML = title;
 	    header.addEventListener('click', function (event) {
 	        section.classList.toggle('collapsed');
 	    });
-	    return main;
+	    return section;
 	}
 	exports.addControlSection = addControlSection;
 	;
@@ -229,12 +226,14 @@
 	}, {
 	    label: 'Poor',
 	    id: 'poor',
-	    color: [14, 88, 55]
+	    color: [33, 88, 55]
 	}, {
 	    label: 'Bad',
 	    id: 'bad',
 	    color: [358, 80, 51]
 	}];
+	var buttons = {};
+	var ratingListeners = [];
 	exports.scores = {};
 	exports.ratings.forEach(function (rating, i) {
 	    exports.scores[rating.id] = i;
@@ -267,25 +266,58 @@
 	    return exports.selectedRatings;
 	}
 	exports.selected = selected;
-	function selectRatings(rating, method) {
+	function selectRatings(rating, method, event) {
+	    console.log('selectRatings called', arguments);
+	    if (event) {
+	        if (event.defaultPrevented) {
+	            return;
+	        }
+	        event.preventDefault();
+	    }
 	    if (typeof rating === 'string') {
 	        if (typeof exports.scores[rating] !== 'undefined') {
 	            switch (method) {
 	                case exports.EXCLUSIVE:
 	                    exports.selectedRatings = [rating];
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (ratingData.id === rating) {
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
 	                    break;
 	                case exports.LESS_THAN:
 	                    exports.selectedRatings = [];
-	                    for (var i = exports.scores[rating]; i >= 0; i--) {
-	                        exports.selectedRatings.push(exports.ratings[i].id);
-	                    }
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (score >= exports.scores[rating]) {
+	                            exports.selectedRatings.push(ratingData.id);
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
 	                    break;
 	                case exports.GREATER_THAN:
 	                    exports.selectedRatings = [];
-	                    for (var _i = exports.scores[rating]; _i < exports.ratings.length; _i++) {
-	                        exports.selectedRatings.push(exports.ratings[_i].id);
-	                    }
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (score <= exports.scores[rating]) {
+	                            exports.selectedRatings.push(ratingData.id);
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
 	                    break;
+	                default:
+	                    var i = void 0;
+	                    if ((i = exports.selectedRatings.indexOf(rating)) !== -1) {
+	                        exports.selectedRatings.splice(i, 1);
+	                        buttons[rating].classList.remove('selected');
+	                    } else {
+	                        exports.selectedRatings.push(rating);
+	                        buttons[rating].classList.add('selected');
+	                    }
 	            }
 	        }
 	    } else {
@@ -297,23 +329,49 @@
 	            });
 	        }
 	    }
+	    ratingListeners.forEach(function (callback) {
+	        callback();
+	    });
 	}
 	exports.selectRatings = selectRatings;
 	;
-	function createRatings(element) {
+	function addListener(func) {
+	    var id = void 0;
+	    if ((id = ratingListeners.indexOf(func)) !== -1) {
+	        return id;
+	    }
+	    return ratingListeners.push(func) - 1;
+	}
+	exports.addListener = addListener;
+	;
+	function removeListener(item) {
+	    var id = void 0;
+	    if (typeof item === 'number' && typeof ratingListeners[item] !== 'undefined') {
+	        delete ratingListeners[item];
+	    } else if (typeof item === 'function' && (id = ratingListeners.indexOf(item)) !== -1) {
+	        delete ratingListeners[id];
+	    }
+	}
+	exports.removeListener = removeListener;
+	;
+	function createRatings(parentElement) {
+	    var element = void 0;
+	    parentElement.appendChild(element = document.createElement('div'));
+	    parentElement.classList.add('ratings');
 	    exports.ratings.forEach(function (rating) {
 	        var button = document.createElement('div');
 	        var div = void 0;
 	        element.appendChild(button);
-	        button.classList.add('button');
+	        button.classList.add('button', rating.id);
 	        button.innerHTML = rating.label;
+	        buttons[rating.id] = button;
 	        button.appendChild(div = document.createElement('div'));
 	        div.innerHTML = '&oplus;';
 	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.EXCLUSIVE));
 	        button.appendChild(div = document.createElement('div'));
 	        div.innerHTML = '&lt;';
 	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.LESS_THAN));
-	        button.addEventListener('click', selectRatings.bind(null, rating.id));
+	        button.addEventListener('click', selectRatings.bind(null, rating.id, false));
 	        if (config_1.default.startRatingsEnabled) {
 	            button.classList.add('selected');
 	            exports.selectedRatings.push(rating.id);
@@ -347,7 +405,10 @@
 	    decayOpacity: true,
 	    startSurveysEnabled: false,
 	    defaultTime: "decaying",
-	    mapMoveTimeout: 1000
+	    mapMoveTimeout: 1000,
+	    defautSurveys: {
+	        quality: ['ph']
+	    }
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = config;
@@ -439,7 +500,6 @@
 	    }
 	    if (Time.selectedTimeType === 'decaying') {
 	        var decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
-	        console.log('decaying time', survey.timestamp._epoch, decay);
 	        if (config_1.default.decaySaturation) {
 	            s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
 	        }
@@ -462,6 +522,7 @@
 	        parts = void 0;
 	    Map.addListener(reloadData);
 	    Time.addListener(redrawAllActive);
+	    Ratings.addListener(redrawAllActive);
 	    parentElement.appendChild(buttons = document.createElement('div'));
 	    parentElement.appendChild(parts = document.createElement('div'));
 	    allSurveysButton = document.createElement('button');
@@ -476,8 +537,11 @@
 	        button.innerHTML = survey.label;
 	        button.addEventListener('click', toggleSurvey.bind(null, s));
 	        var pbuttons = Controls.addControlSection(survey.label, parentElement);
+	        pbuttons.style.display = 'none';
+	        var pdiv = void 0;
+	        pbuttons.appendChild(pdiv = document.createElement('div'));
 	        var pAllButton = document.createElement('button');
-	        pbuttons.appendChild(pAllButton);
+	        pdiv.appendChild(pAllButton);
 	        pAllButton.innerHTML = 'All';
 	        pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
 	        surveyControls[s] = {
@@ -489,7 +553,7 @@
 	        Object.keys(survey.parts).forEach(function (p) {
 	            var pbutton = document.createElement('button');
 	            surveyControls[s].partButtons[p] = pbutton;
-	            pbuttons.appendChild(pbutton);
+	            pdiv.appendChild(pbutton);
 	            pbutton.innerHTML = survey.parts[p].label;
 	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 	        });
@@ -561,7 +625,6 @@
 	;
 	function toggleSurveyPart(survey, part) {
 	    var index = void 0;
-	    console.log('toggleSurveyPart called', arguments);
 	    if (typeof exports.surveys[survey] !== 'undefined') {
 	        var partKeys = Object.keys(exports.surveys[survey].parts);
 	        if (part) {
@@ -617,7 +680,6 @@
 	        ne: bounds.getNorth() + ',' + bounds.getEast(),
 	        sw: bounds.getSouth() + ',' + bounds.getWest()
 	    };
-	    console.log('checking data for', bounds, activeSurveys);
 	    var checkPreviousLoads = function checkPreviousLoads(survey) {
 	        if (typeof requestedAreas[survey] !== 'undefined') {
 	            if (typeof requestedAreas[survey].find(function (area) {
@@ -1054,7 +1116,6 @@
 	function getDecayAmount(amount, date) {
 	    if (exports.selectedTimeType === 'decaying') {
 	        var halflife = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].time;
-	        console.log('getDecayAmount', halflife);
 	        if (amount instanceof Date) {
 	            if (date instanceof Date) {} else if (typeof date === 'amount') {
 	                date = new Date(date);

@@ -103,7 +103,6 @@ let pointColor = (surveyType: string, survey: Survey): HSLColor | false => {
   if (Time.selectedTimeType === 'decaying') {
     // Get the halflife value
     let decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
-      console.log('decaying time', survey.timestamp._epoch, decay);
 
     // Adjust saturation and lightness based of the diff;
     if (config.decaySaturation) {
@@ -140,6 +139,9 @@ export function createSurveyButtons(parentElement: HTMLElement) {
   // Add listener to time
   Time.addListener(redrawAllActive);
 
+  // Add listener to ratings
+  Ratings.addListener(redrawAllActive);
+
   parentElement.appendChild((buttons = document.createElement('div')));
   parentElement.appendChild((parts = document.createElement('div')));
 
@@ -159,8 +161,11 @@ export function createSurveyButtons(parentElement: HTMLElement) {
     button.addEventListener('click', toggleSurvey.bind(null, s));
 
     let pbuttons = Controls.addControlSection(survey.label, parentElement);
+    pbuttons.style.display = 'none';
+    let pdiv;
+    pbuttons.appendChild((pdiv = document.createElement('div')));
     let pAllButton = document.createElement('button');
-    pbuttons.appendChild(pAllButton);
+    pdiv.appendChild(pAllButton);
     pAllButton.innerHTML = 'All';
     pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
 
@@ -174,10 +179,10 @@ export function createSurveyButtons(parentElement: HTMLElement) {
     Object.keys(survey.parts).forEach((p) => {
       let pbutton = document.createElement('button');
       surveyControls[s].partButtons[p] = pbutton;
-      pbuttons.appendChild(pbutton);
+      pdiv.appendChild(pbutton);
       pbutton.innerHTML = survey.parts[p].label;
       pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
-    })
+    });
   });
 };
 
@@ -241,7 +246,7 @@ export function toggleSurvey(survey?: string) {
             Map.map.addLayer(surveyLayers[survey]);
           }
         }
-        // Hide parts layer
+        // Show parts layer
         surveyControls[survey].partSection.style.display = '';
 
         reloadData(survey);
@@ -277,7 +282,6 @@ export function toggleSurvey(survey?: string) {
  */
 export function toggleSurveyPart(survey: string, part?: string) {
   let index;
-  console.log('toggleSurveyPart called', arguments);
 
   if (typeof surveys[survey] !== 'undefined') {
     let partKeys = Object.keys(surveys[survey].parts);
@@ -352,9 +356,6 @@ export function reloadData(survey?: string) {
     sw: bounds.getSouth() + ',' + bounds.getWest()
   };
 
-  console.log('checking data for', bounds, activeSurveys);
-
-
   var checkPreviousLoads = (survey: string) => {
     if (typeof requestedAreas[survey] !== 'undefined') {
       if (typeof (requestedAreas[survey].find((area: L.LatLngBounds) => {
@@ -405,7 +406,7 @@ export function reloadData(survey?: string) {
       if (code === 200) {
         try {
           data = JSON.parse(responseText);
-            console.log('get response for', surveys[survey].url, get, data);
+          console.log('get response for', surveys[survey].url, get, data);
         } catch (err) {
           console.error('Error parsing response', surveys[survey].url, get, responseText);
           return;
