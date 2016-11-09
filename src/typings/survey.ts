@@ -2,6 +2,7 @@ interface Survey {
   _id: {
     $oid: string
   },
+  attributes: any,
   location: {
     _wgs84: [number, number]
   },

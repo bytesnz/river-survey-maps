@@ -47,9 +47,9 @@
 	"use strict";
 
 	var map_1 = __webpack_require__(1);
-	var Controls = __webpack_require__(2);
-	var surveys_1 = __webpack_require__(3);
-	var time_1 = __webpack_require__(13);
+	var Controls = __webpack_require__(3);
+	var surveys_1 = __webpack_require__(4);
+	var time_1 = __webpack_require__(14);
 	var mapElement = document.getElementById('map');
 	var controlsLayer = document.getElementById('controls');
 	var disableBubbling = function disableBubbling(event) {
@@ -71,7 +71,7 @@
 
 	"use strict";
 
-	var L = __webpack_require__(16);
+	var L = __webpack_require__(2);
 	var mapElement = void 0;
 	var mapListeners = [];
 	function resizeMap(height) {
@@ -144,3278 +144,6 @@
 
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	function addControlSection(title, parentSection) {
-	    var header = document.createElement('h1');
-	    var section = document.createElement('section');
-	    parentSection.appendChild(section);
-	    section.appendChild(header);
-	    header.innerHTML = title;
-	    header.addEventListener('click', function (event) {
-	        section.classList.toggle('collapsed');
-	    });
-	    return section;
-	}
-	exports.addControlSection = addControlSection;
-	;
-	var mapListeners = [];
-	//# sourceMappingURL=controls.js.map
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var Ratings = __webpack_require__(4);
-	var Surveys = __webpack_require__(6);
-	var Controls = __webpack_require__(2);
-	var config_1 = __webpack_require__(5);
-	var timeTypes = {
-	    none: {
-	        label: 'No limit'
-	    },
-	    decaying: {
-	        label: 'Decaying',
-	        description: 'The older the survey, the more opaque it is'
-	    },
-	    ranged: {
-	        label: 'Ranged'
-	    }
-	};
-	function create(element) {
-	    var surveySection = Controls.addControlSection('Thames21 Surveys', element);
-	    var surveyButtonsSection = Controls.addControlSection('Surveys', surveySection);
-	    var ratingsSection = Controls.addControlSection('Overall Rating', surveySection);
-	    Surveys.createSurveyButtons(surveyButtonsSection);
-	    Ratings.createRatings(ratingsSection);
-	    if (config_1.default.startSurveysEnabled) {
-	        Surveys.toggleSurvey();
-	        Surveys.reloadData();
-	    }
-	}
-	exports.create = create;
-	;
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = create;
-	//# sourceMappingURL=index.js.map
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var config_1 = __webpack_require__(5);
-	;
-	exports.ratings = [{
-	    label: 'Excellent',
-	    id: 'excellent',
-	    color: [114, 63, 54]
-	}, {
-	    label: 'Good',
-	    id: 'good',
-	    color: [74, 51, 54]
-	}, {
-	    label: 'Moderate',
-	    id: 'moderate',
-	    color: [52, 94, 50]
-	}, {
-	    label: 'Poor',
-	    id: 'poor',
-	    color: [33, 88, 55]
-	}, {
-	    label: 'Bad',
-	    id: 'bad',
-	    color: [358, 80, 51]
-	}];
-	var buttons = {};
-	var ratingListeners = [];
-	exports.scores = {};
-	exports.ratings.forEach(function (rating, i) {
-	    exports.scores[rating.id] = i;
-	});
-	exports.colors = {};
-	exports.ratings.forEach(function (rating, i) {
-	    exports.colors[rating.id] = rating.color;
-	});
-	function getColor(rating) {
-	    if (typeof rating === 'number') {
-	        rating = Math.min(Math.max(0, rating), exports.ratings.length);
-	        return exports.ratings[rating].color;
-	    } else {
-	        if (typeof exports.scores[rating] !== 'undefined') {
-	            return exports.ratings[exports.scores[rating]].color;
-	        }
-	    }
-	}
-	exports.getColor = getColor;
-	exports.selectedRatings = [];
-	exports.EXCLUSIVE = 1;
-	exports.LESS_THAN = 2;
-	exports.GREATER_THAN = 3;
-	function selected(rating) {
-	    if (typeof rating === 'number') {
-	        return exports.selectedRatings.indexOf(exports.ratings[rating].id) !== -1;
-	    } else if (typeof rating === 'string' && typeof exports.scores[rating] !== 'undefined') {
-	        return exports.selectedRatings.indexOf(rating) !== -1;
-	    }
-	    return exports.selectedRatings;
-	}
-	exports.selected = selected;
-	function selectRatings(rating, method, event) {
-	    console.log('selectRatings called', arguments);
-	    if (event) {
-	        if (event.defaultPrevented) {
-	            return;
-	        }
-	        event.preventDefault();
-	    }
-	    if (typeof rating === 'string') {
-	        if (typeof exports.scores[rating] !== 'undefined') {
-	            switch (method) {
-	                case exports.EXCLUSIVE:
-	                    exports.selectedRatings = [rating];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (ratingData.id === rating) {
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                case exports.LESS_THAN:
-	                    exports.selectedRatings = [];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (score >= exports.scores[rating]) {
-	                            exports.selectedRatings.push(ratingData.id);
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                case exports.GREATER_THAN:
-	                    exports.selectedRatings = [];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (score <= exports.scores[rating]) {
-	                            exports.selectedRatings.push(ratingData.id);
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                default:
-	                    var i = void 0;
-	                    if ((i = exports.selectedRatings.indexOf(rating)) !== -1) {
-	                        exports.selectedRatings.splice(i, 1);
-	                        buttons[rating].classList.remove('selected');
-	                    } else {
-	                        exports.selectedRatings.push(rating);
-	                        buttons[rating].classList.add('selected');
-	                    }
-	            }
-	        }
-	    } else {
-	        if (typeof rating === 'boolean' && rating === false || exports.selectedRatings.length === exports.ratings.length) {
-	            exports.selectedRatings = [];
-	        } else {
-	            exports.selectedRatings = exports.ratings.map(function (rating) {
-	                return rating.id;
-	            });
-	        }
-	    }
-	    ratingListeners.forEach(function (callback) {
-	        callback();
-	    });
-	}
-	exports.selectRatings = selectRatings;
-	;
-	function addListener(func) {
-	    var id = void 0;
-	    if ((id = ratingListeners.indexOf(func)) !== -1) {
-	        return id;
-	    }
-	    return ratingListeners.push(func) - 1;
-	}
-	exports.addListener = addListener;
-	;
-	function removeListener(item) {
-	    var id = void 0;
-	    if (typeof item === 'number' && typeof ratingListeners[item] !== 'undefined') {
-	        delete ratingListeners[item];
-	    } else if (typeof item === 'function' && (id = ratingListeners.indexOf(item)) !== -1) {
-	        delete ratingListeners[id];
-	    }
-	}
-	exports.removeListener = removeListener;
-	;
-	function createRatings(parentElement) {
-	    var element = void 0;
-	    parentElement.appendChild(element = document.createElement('div'));
-	    parentElement.classList.add('ratings');
-	    exports.ratings.forEach(function (rating) {
-	        var button = document.createElement('div');
-	        var div = void 0;
-	        element.appendChild(button);
-	        button.classList.add('button', rating.id);
-	        button.innerHTML = rating.label;
-	        buttons[rating.id] = button;
-	        button.appendChild(div = document.createElement('div'));
-	        div.innerHTML = '&oplus;';
-	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.EXCLUSIVE));
-	        button.appendChild(div = document.createElement('div'));
-	        div.innerHTML = '&lt;';
-	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.LESS_THAN));
-	        button.addEventListener('click', selectRatings.bind(null, rating.id, false));
-	        if (config_1.default.startRatingsEnabled) {
-	            button.classList.add('selected');
-	            exports.selectedRatings.push(rating.id);
-	        }
-	    });
-	}
-	exports.createRatings = createRatings;
-	;
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = createRatings;
-	//# sourceMappingURL=ratings.js.map
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	var config = {
-	    halflifeLengths: [{ label: "1 hour", time: 3600000 }, { label: "1 day", time: 86400000 }, { label: "1 week", time: 604800000 }, { label: "1 month", time: 2592000000 }, { label: "1 year", time: 31536000000 }],
-	    defaultMarkerOptions: {
-	        color: "#ffffff",
-	        interactive: true,
-	        weight: 2
-	    },
-	    startRatingsEnabled: true,
-	    expiredSaturation: 0,
-	    decaySaturation: false,
-	    expiredLightness: 60,
-	    decayLightness: false,
-	    decayOpacity: true,
-	    startSurveysEnabled: false,
-	    defaultTime: "decaying",
-	    mapMoveTimeout: 1000,
-	    defautSurveys: {
-	        quality: ['ph']
-	    }
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = config;
-	//# sourceMappingURL=config.js.map
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	var Map = __webpack_require__(1);
-	var Quality = __webpack_require__(7);
-	var Time = __webpack_require__(13);
-	var Ratings = __webpack_require__(4);
-	var Controls = __webpack_require__(2);
-	var config_1 = __webpack_require__(5);
-	var nanoajax = __webpack_require__(15);
-	;
-	exports.surveyData = {};
-	exports.surveys = {
-	    quality: Quality
-	};
-	var activeSurveys = [];
-	var surveyParts = {};
-	var surveyLayers = {};
-	var surveyControls = {};
-	var requestedAreas = {};
-	var allSurveysButton = void 0;
-	var pointLatlng = function pointLatlng(survey) {
-	    return L.latLng([survey.location._wgs84[1], survey.location._wgs84[0]]);
-	};
-	var surveyScore = function surveyScore(surveyType, survey) {
-	    var total = 0;
-	    var items = void 0;
-	    var score = void 0;
-	    if (surveyParts[surveyType] instanceof Array && (items = surveyParts[surveyType].length) !== 0) {
-	        surveyParts[surveyType].forEach(function (part) {
-	            if (typeof (score = exports.surveys[surveyType].parts[part].score(survey)) === 'number') {
-	                total += score;
-	            } else {
-	                items--;
-	            }
-	        });
-	        if (items) {
-	            return Math.round(total / items);
-	        }
-	    }
-	};
-	var pointColor = function pointColor(surveyType, survey) {
-	    var score = 0;
-	    var items = 0;
-	    var currentTime = new Date().getTime();
-	    var h,
-	        s,
-	        l,
-	        o = 1;
-	    var value;
-	    var color = void 0;
-	    switch (surveyParts[surveyType].length) {
-	        case 0:
-	            return;
-	        case 1:
-	            if (color = exports.surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey)) {
-	                var _color = color;
-
-	                var _color2 = _slicedToArray(_color, 3);
-
-	                h = _color2[0];
-	                s = _color2[1];
-	                l = _color2[2];
-	            }
-	            break;
-	        default:
-	            if (color = Ratings.getColor(surveyScore(surveyType, survey))) {
-	                var _color3 = color;
-
-	                var _color4 = _slicedToArray(_color3, 3);
-
-	                h = _color4[0];
-	                s = _color4[1];
-	                l = _color4[2];
-	            }
-	            break;
-	    }
-	    if (Time.selectedTimeType === 'decaying') {
-	        var decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
-	        if (config_1.default.decaySaturation) {
-	            s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
-	        }
-	        if (config_1.default.decayLightness) {
-	            l = Math.round(l - (l - config_1.default.expiredLightness) * decay);
-	        }
-	        if (config_1.default.decayOpacity) {
-	            o = 1 - decay;
-	        }
-	    }
-	    if (typeof h === 'undefined') {
-	        return false;
-	    } else {
-	        return [h, s, l, o];
-	    }
-	};
-	function createSurveyButtons(parentElement) {
-	    parentElement.classList.add('surveys');
-	    var buttons = void 0,
-	        parts = void 0;
-	    Map.addListener(reloadData);
-	    Time.addListener(redrawAllActive);
-	    Ratings.addListener(redrawAllActive);
-	    parentElement.appendChild(buttons = document.createElement('div'));
-	    parentElement.appendChild(parts = document.createElement('div'));
-	    allSurveysButton = document.createElement('button');
-	    buttons.appendChild(allSurveysButton);
-	    allSurveysButton.innerHTML = 'All';
-	    allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
-	    Object.keys(exports.surveys).forEach(function (s) {
-	        var survey = exports.surveys[s];
-	        surveyParts[s] = [];
-	        var button = document.createElement('button');
-	        buttons.appendChild(button);
-	        button.innerHTML = survey.label;
-	        button.addEventListener('click', toggleSurvey.bind(null, s));
-	        var pbuttons = Controls.addControlSection(survey.label, parentElement);
-	        pbuttons.style.display = 'none';
-	        var pdiv = void 0;
-	        pbuttons.appendChild(pdiv = document.createElement('div'));
-	        var pAllButton = document.createElement('button');
-	        pdiv.appendChild(pAllButton);
-	        pAllButton.innerHTML = 'All';
-	        pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
-	        surveyControls[s] = {
-	            button: button,
-	            allButton: pAllButton,
-	            partSection: pbuttons,
-	            partButtons: {}
-	        };
-	        Object.keys(survey.parts).forEach(function (p) {
-	            var pbutton = document.createElement('button');
-	            surveyControls[s].partButtons[p] = pbutton;
-	            pdiv.appendChild(pbutton);
-	            pbutton.innerHTML = survey.parts[p].label;
-	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
-	        });
-	    });
-	}
-	exports.createSurveyButtons = createSurveyButtons;
-	;
-	function addSurveyData(type, data) {
-	    if (_typeof(exports.surveyData[type]) !== 'object') {
-	        exports.surveyData[type] = {};
-	    }
-	    data.forEach(function (survey) {
-	        exports.surveyData[type][survey._id['$oid']] = survey;
-	    });
-	}
-	exports.addSurveyData = addSurveyData;
-	;
-	function toggleSurvey(survey) {
-	    var index = void 0;
-	    var surveyKeys = Object.keys(exports.surveys);
-	    if (survey) {
-	        if (typeof exports.surveys[survey] !== 'undefined') {
-	            if ((index = activeSurveys.indexOf(survey)) !== -1) {
-	                activeSurveys.splice(index, 1);
-	                allSurveysButton.classList.remove('selected');
-	                if (surveyControls[survey].button) {
-	                    surveyControls[survey].button.classList.remove('selected');
-	                }
-	                if (typeof surveyLayers[survey] !== 'undefined') {
-	                    if (Map.map.hasLayer(surveyLayers[survey])) {
-	                        Map.map.removeLayer(surveyLayers[survey]);
-	                    }
-	                }
-	                surveyControls[survey].partSection.style.display = 'none';
-	            } else {
-	                activeSurveys.push(survey);
-	                if (surveyKeys.length === activeSurveys.length) {
-	                    allSurveysButton.classList.add('selected');
-	                }
-	                if (surveyControls[survey].button) {
-	                    surveyControls[survey].button.classList.add('selected');
-	                }
-	                if (typeof surveyLayers[survey] !== 'undefined') {
-	                    if (!Map.map.hasLayer(surveyLayers[survey])) {
-	                        Map.map.addLayer(surveyLayers[survey]);
-	                    }
-	                }
-	                surveyControls[survey].partSection.style.display = '';
-	                reloadData(survey);
-	            }
-	        }
-	    } else {
-	        if (activeSurveys.length === 0 || surveyKeys.length !== activeSurveys.length) {
-	            surveyKeys.forEach(function (survey) {
-	                if (activeSurveys.indexOf(survey) === -1) {
-	                    toggleSurvey(survey);
-	                }
-	            });
-	            allSurveysButton.classList.add('selected');
-	        } else {
-	            surveyKeys.forEach(function (survey) {
-	                toggleSurvey(survey);
-	            });
-	            allSurveysButton.classList.remove('selected');
-	        }
-	    }
-	}
-	exports.toggleSurvey = toggleSurvey;
-	;
-	function toggleSurveyPart(survey, part) {
-	    var index = void 0;
-	    if (typeof exports.surveys[survey] !== 'undefined') {
-	        var partKeys = Object.keys(exports.surveys[survey].parts);
-	        if (part) {
-	            if (typeof exports.surveys[survey].parts[part] !== 'undefined') {
-	                if (typeof surveyParts[survey] === 'undefined') {
-	                    surveyParts[survey] = [];
-	                }
-	                if ((index = surveyParts[survey].indexOf(part)) !== -1) {
-	                    surveyParts[survey].splice(index, 1);
-	                    surveyControls[survey].allButton.classList.remove('selected');
-	                    if (surveyControls[survey].partButtons[part]) {
-	                        surveyControls[survey].partButtons[part].classList.remove('selected');
-	                    }
-	                } else {
-	                    surveyParts[survey].push(part);
-	                    if (partKeys.length === surveyParts[survey].length) {
-	                        surveyControls[survey].allButton.classList.add('selected');
-	                    }
-	                    if (surveyControls[survey].partButtons[part]) {
-	                        surveyControls[survey].partButtons[part].classList.add('selected');
-	                    }
-	                }
-	            }
-	        } else {
-	            if (surveyParts[survey].length === 0 || partKeys.length !== surveyParts[survey].length) {
-	                partKeys.forEach(function (p) {
-	                    surveyControls[survey].partButtons[p].classList.add('selected');
-	                });
-	                surveyParts[survey] = partKeys;
-	                surveyControls[survey].allButton.classList.add('selected');
-	            } else {
-	                partKeys.forEach(function (p) {
-	                    surveyControls[survey].partButtons[p].classList.remove('selected');
-	                });
-	                surveyParts[survey] = [];
-	                surveyControls[survey].allButton.classList.remove('selected');
-	            }
-	        }
-	        if (activeSurveys.indexOf(survey) !== -1) {
-	            redrawSurveyData(survey);
-	        }
-	    }
-	}
-	exports.toggleSurveyPart = toggleSurveyPart;
-	;
-	function reloadData(survey) {
-	    var toFetch = [];
-	    if (typeof survey === 'string' && typeof exports.surveys[survey] === 'undefined') {
-	        throw new Error("Unknown survey " + survey);
-	    }
-	    var bounds = Map.map.getBounds();
-	    var getParams = {
-	        ne: bounds.getNorth() + ',' + bounds.getEast(),
-	        sw: bounds.getSouth() + ',' + bounds.getWest()
-	    };
-	    var checkPreviousLoads = function checkPreviousLoads(survey) {
-	        if (typeof requestedAreas[survey] !== 'undefined') {
-	            if (typeof requestedAreas[survey].find(function (area) {
-	                if (area.contains(bounds)) {
-	                    return true;
-	                }
-	            }) === 'undefined') {
-	                toFetch.push(survey);
-	            }
-	        } else {
-	            toFetch.push(survey);
-	        }
-	    };
-	    if (typeof survey === 'string') {
-	        checkPreviousLoads(survey);
-	    } else {
-	        activeSurveys.forEach(checkPreviousLoads);
-	    }
-	    toFetch.forEach(function (survey) {
-	        var params = Object.assign({}, getParams, exports.surveys[survey].getParams);
-	        var get = [];
-	        Object.keys(params).forEach(function (param) {
-	            get.push(param + '=' + encodeURIComponent(params[param]));
-	        });
-	        if (get.length) {
-	            get = '?' + get.join('&');
-	        } else {
-	            get = '';
-	        }
-	        nanoajax.ajax({
-	            url: exports.surveys[survey].url + get,
-	            headers: {
-	                Accept: 'javascript/json'
-	            }
-	        }, function (code, responseText) {
-	            var data;
-	            if (code === 200) {
-	                try {
-	                    data = JSON.parse(responseText);
-	                    console.log('get response for', exports.surveys[survey].url, get, data);
-	                } catch (err) {
-	                    console.error('Error parsing response', exports.surveys[survey].url, get, responseText);
-	                    return;
-	                }
-	                if ((typeof data === "undefined" ? "undefined" : _typeof(data)) === 'object' && data.results && data.results instanceof Array) {
-	                    addSurveyData(survey, data.results);
-	                    if (typeof requestedAreas[survey] === 'undefined') {
-	                        requestedAreas[survey] = [];
-	                    }
-	                    requestedAreas[survey].push(bounds);
-	                    redrawSurveyData(survey);
-	                } else {
-	                    console.error('Unknown data received');
-	                }
-	            }
-	        });
-	    });
-	    if (typeof survey === 'string' && !toFetch.length) {
-	        redrawSurveyData(survey);
-	    }
-	}
-	exports.reloadData = reloadData;
-	function redrawSurveyData(survey) {
-	    if (typeof exports.surveyData[survey] !== 'undefined') {
-	        console.log('redrawing', survey);
-	        if (typeof surveyLayers[survey] === 'undefined') {
-	            surveyLayers[survey] = L.layerGroup([]);
-	        } else {
-	            surveyLayers[survey].clearLayers();
-	        }
-	        var markers = [];
-	        Object.keys(exports.surveyData[survey]).forEach(function (point) {
-	            var surveyPoint = exports.surveyData[survey][point];
-	            var score = surveyScore(survey, surveyPoint);
-	            if (!Ratings.selected(score)) {
-	                return;
-	            }
-	            var latlng = pointLatlng(surveyPoint);
-	            var color = pointColor(survey, surveyPoint);
-	            if (color) {
-	                var marker = L.circleMarker(latlng, Object.assign({}, config_1.default.defaultMarkerOptions, {
-	                    color: surveyPoint.status === 'approved' ? '#ffffff' : '#666666',
-	                    fillColor: 'hsl(' + color[0] + ', ' + color[1] + '%, ' + color[2] + '%)',
-	                    opacity: 1 - Math.pow(1 - color[3], 2),
-	                    fillOpacity: color[3]
-	                }));
-	                markers.push({
-	                    marker: marker,
-	                    time: surveyPoint.timestamp._epoch
-	                });
-	            }
-	        });
-	        markers.forEach(function (marker) {
-	            surveyLayers[survey].addLayer(marker.marker);
-	        });
-	        if (!Map.map.hasLayer(surveyLayers[survey])) {
-	            Map.map.addLayer(surveyLayers[survey]);
-	        }
-	    }
-	}
-	exports.redrawSurveyData = redrawSurveyData;
-	;
-	function redrawAllActive() {
-	    activeSurveys.forEach(redrawSurveyData);
-	}
-	exports.redrawAllActive = redrawAllActive;
-	;
-	//# sourceMappingURL=surveys.js.map
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var Coliforms = __webpack_require__(8);
-	var O2 = __webpack_require__(9);
-	var Ph = __webpack_require__(10);
-	var Temperature = __webpack_require__(11);
-	var Turbidity = __webpack_require__(12);
-	exports.label = 'Water Quality';
-	exports.layerId = 'thames21ThamesWaterQuality';
-	exports.url = 'https://widget.cartographer.io/api/v1/map';
-	exports.getParams = {
-	    subdomain: 'thames21',
-	    layer: 'thames21ThamesWaterQuality'
-	};
-	exports.parts = {
-	    coliforms: Coliforms,
-	    o2: O2,
-	    ph: Ph,
-	    temperature: Temperature,
-	    turbidity: Turbidity
-	};
-	//# sourceMappingURL=index.js.map
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var ratings_1 = __webpack_require__(4);
-	exports.label = 'Coliforms';
-	exports.description = "Volunteers carry out one-off tests to indicate the\npresence of coliform bacteria which are found in the intestinal tract of\nanimals and humans. Although harmless themselves, they can indicate presence\nof pathogens and viruses. These enter the water when there is sewage or\nanimal waste discharged into the Thames.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Coliforms;
-	    if (value === true) {
-	        return ratings_1.colors['good'];
-	    } else if (value === false) {
-	        return ratings_1.colors['bad'];
-	    }
-	}
-	exports.color = color;
-	function score(survey) {
-	    var value = survey.attributes.thames21Coliforms;
-	    if (value === true) {
-	        return ratings_1.scores['good'];
-	    } else if (value === false) {
-	        return ratings_1.scores['bad'];
-	    }
-	}
-	exports.score = score;
-	//# sourceMappingURL=coliforms.js.map
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var ratings_1 = __webpack_require__(4);
-	exports.label = 'Dissolved Oxygen';
-	exports.description = "Volunteers measure the amount of dissolved oxygen\n(DO) in the water which tells us how much oxygen there is available for river\nlife to use (e.g. fish and insects). Dissolved oxygen is measured in \u2018parts\nper million\u2019 (ppm); high levels (above 10ppm) indicate a healthy river. When\nuntreated sewage is discharged into the Thames, microorganisms use the\ndissolved oxygen to break down the sewage meaning that oxygen is no longer\navailable for other forms of life. This can lead to large scale fish kills\nsuch as those in 2004 and 2011, when thousands of fish died after sewage\nentered the river.";
-	function color(survey) {
-	    var value = survey.attributes.thames21DissolvedOxygen;
-	    if (typeof value === 'number') {
-	        if (value >= 10) {
-	            return [152, 91, 21];
-	        } else if (value >= 8) {
-	            return [128, 52, 47];
-	        } else if (value >= 6) {
-	            return [63, 75, 50];
-	        } else if (value >= 4) {
-	            return [36, 97, 62];
-	        } else if (value >= 2) {
-	            return [14, 88, 55];
-	        } else if (value >= 1) {
-	            return [3, 85, 57];
-	        } else if (value >= 0) {
-	            return [354, 73, 43];
-	        }
-	    }
-	}
-	exports.color = color;
-	function score(survey) {
-	    var value = survey.attributes.thames21DissolvedOxygen;
-	    if (typeof value === 'number') {
-	        if (value >= 8) {
-	            return ratings_1.scores['excellent'];
-	        } else if (value >= 6) {
-	            return ratings_1.scores['good'];
-	        } else if (value >= 4) {
-	            return ratings_1.scores['moderate'];
-	        } else if (value >= 2) {
-	            return ratings_1.scores['poor'];
-	        } else if (value >= 0) {
-	            return ratings_1.scores['bad'];
-	        }
-	    }
-	}
-	exports.score = score;
-	//# sourceMappingURL=dissolved.js.map
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var ratings_1 = __webpack_require__(4);
-	exports.label = 'pH';
-	exports.description = "For the Thames to support a variety of wildlife, the\nwater mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would\nhave been affected by pollution from industry, killing all wildlife. These\ndays, we would expect the water to be neutral (neither acid nor alkali) which\nis better for wildlife. Volunteers measure the pH of the water to find\nthis out.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Ph;
-	    if (typeof value === 'number') {
-	        switch (Math.round(value)) {
-	            case 1:
-	                return [358, 80, 51];
-	            case 2:
-	                return [26, 85, 53];
-	            case 3:
-	                return [35, 90, 54];
-	            case 4:
-	                return [45, 91, 52];
-	            case 5:
-	                return [52, 94, 50];
-	            case 6:
-	                return [58, 90, 51];
-	            case 7:
-	                return [65, 68, 51];
-	            case 8:
-	                return [74, 51, 54];
-	            case 9:
-	                return [170, 22, 57];
-	            case 10:
-	                return [202, 54, 50];
-	            case 11:
-	                return [211, 52, 51];
-	            case 12:
-	                return [217, 48, 48];
-	            case 13:
-	                return [251, 34, 47];
-	            case 14:
-	                return [264, 40, 43];
-	        }
-	    }
-	}
-	exports.color = color;
-	function score(survey) {
-	    var value = survey.attributes.thames21Ph;
-	    if (typeof value === 'number') {
-	        switch (Math.round(value)) {
-	            case 1:
-	            case 2:
-	            case 3:
-	            case 4:
-	            case 5:
-	            case 10:
-	            case 11:
-	            case 12:
-	            case 13:
-	            case 14:
-	                return ratings_1.scores['bad'];
-	            case 6:
-	            case 9:
-	                return ratings_1.scores['good'];
-	            case 7:
-	            case 8:
-	                return ratings_1.scores['excellent'];
-	        }
-	    }
-	}
-	exports.score = score;
-	//# sourceMappingURL=ph.js.map
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var ratings_1 = __webpack_require__(4);
-	exports.label = 'Temperature';
-	exports.description = "High water temperatures can have a negative impact\non river life \u2013 both directly and by reducing the amount of dissolved oxygen\nthat the water can hold. Unnatural warming of the water is called 'thermal\npollution'. In the past, this would have been discharged directly from an\nindustrial source (such as power stations like Battersea).  These days, a\npossible source is rainwater run-off, which is heated up as it moves across\nthe warmer roads and ends up in the river.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Temperature;
-	    if (typeof value === 'number') {
-	        if (value < 3) {
-	            return [238, 52, 38];
-	        } else if (value < 6) {
-	            return [214, 86, 34];
-	        } else if (value < 9) {
-	            return [206, 100, 35];
-	        } else if (value < 12) {
-	            return [202, 100, 39];
-	        } else if (value < 15) {
-	            return [199, 100, 43];
-	        } else if (value < 18) {
-	            return [196, 100, 47];
-	        } else if (value < 21) {
-	            return [188, 95, 39];
-	        } else if (value < 24) {
-	            return [173, 24, 54];
-	        } else if (value < 29) {
-	            return [27, 83, 53];
-	        } else {
-	            return [354, 73, 43];
-	        }
-	    }
-	}
-	exports.color = color;
-	function score(survey) {
-	    var value = survey.attributes.thames21Temperature;
-	    if (typeof value === 'number') {
-	        if (value < 21) {
-	            return ratings_1.scores['excellent'];
-	        } else if (value < 24) {
-	            return ratings_1.scores['good'];
-	        } else if (value < 29) {
-	            return ratings_1.scores['moderate'];
-	        } else {
-	            return ratings_1.scores['bad'];
-	        }
-	    }
-	}
-	exports.score = score;
-	//# sourceMappingURL=temperature.js.map
-
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var ratings_1 = __webpack_require__(4);
-	exports.label = 'Turbidity';
-	exports.description = "Volunteers record how much algae, soil particles\nand other tiny substances are carried in the water. This is called turbidity\nand it is a measure of how far light can travel through the water. Turbidity\nreduces the light available to plants for photosynthesis and can increase\nwater temperature (as particles absorb more heat). The particles can also\naffect fish directly by clogging their gills. On the tidal Thames we would\nexpect it to be muddy and turbid but it is important to measure because of\nits possible impacts when conditions are particularly poor.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Turbidity;
-	    if (typeof value === 'number') {
-	        if (value < 12) {
-	            return [196, 100, 47];
-	        } else if (value < 13) {
-	            return [191, 100, 41];
-	        } else if (value < 14) {
-	            return [187, 75, 42];
-	        } else if (value < 15) {
-	            return [177, 27, 52];
-	        } else if (value < 17) {
-	            return [125, 13, 59];
-	        } else if (value < 19) {
-	            return [51, 23, 56];
-	        } else if (value < 21) {
-	            return [38, 48, 57];
-	        } else if (value < 25) {
-	            return [34, 71, 56];
-	        } else if (value < 30) {
-	            return [33, 93, 54];
-	        } else if (value < 40) {
-	            return [32, 78, 51];
-	        } else if (value < 50) {
-	            return [31, 68, 48];
-	        } else if (value < 75) {
-	            return [30, 65, 45];
-	        } else if (value < 100) {
-	            return [30, 61, 43];
-	        } else if (value < 150) {
-	            return [29, 57, 40];
-	        } else if (value < 200) {
-	            return [29, 55, 36];
-	        } else if (value < 240) {
-	            return [28, 51, 34];
-	        } else {
-	            return [28, 49, 31];
-	        }
-	    }
-	}
-	exports.color = color;
-	function score(survey) {
-	    var value = survey.attributes.thames21Turbidity;
-	    if (typeof value === 'number') {
-	        if (value < 20) {
-	            return ratings_1.scores['excellent'];
-	        } else if (value < 75) {
-	            return ratings_1.scores['good'];
-	        } else {
-	            return ratings_1.scores['moderate'];
-	        }
-	    }
-	}
-	exports.score = score;
-	//# sourceMappingURL=turbidity.js.map
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var config_1 = __webpack_require__(5);
-	var noUiSlider = __webpack_require__(14);
-	var timeSlider = void 0;
-	var rangeDiv = void 0;
-	var timeListeners = [];
-	var lowerValue = void 0;
-	var upperValue = void 0;
-	var minLimit = void 0;
-	var maxLimit = void 0;
-	var limitSeparator = void 0;
-	var rangeTitle = void 0;
-	exports.timeTypes = {
-	    none: {
-	        label: 'No limit'
-	    },
-	    decaying: {
-	        label: 'Decaying',
-	        description: 'The older the survey, the more opaque it is'
-	    },
-	    ranged: {
-	        label: 'Ranged'
-	    }
-	};
-	function getDecayAmount(amount, date) {
-	    if (exports.selectedTimeType === 'decaying') {
-	        var halflife = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].time;
-	        if (amount instanceof Date) {
-	            if (date instanceof Date) {} else if (typeof date === 'amount') {
-	                date = new Date(date);
-	            } else {
-	                date = new Date();
-	            }
-	            amount = date.getTime() - amount.getTime();
-	        }
-	        amount = amount / halflife;
-	        amount = 1 - Math.pow(0.5, amount);
-	        return amount;
-	    }
-	}
-	exports.getDecayAmount = getDecayAmount;
-	;
-	var callListeners = function callListeners() {
-	    timeListeners.forEach(function (callback) {
-	        callback();
-	    });
-	};
-	function addListener(callback) {
-	    timeListeners.push(callback);
-	}
-	exports.addListener = addListener;
-	;
-	function selectTimeType(type) {
-	    if (typeof exports.timeTypes[type] !== 'undefined') {
-	        Object.keys(exports.timeTypes).forEach(function (time) {
-	            var timeType = exports.timeTypes[time];
-	            if (time === type) {
-	                timeType.button.classList.add('selected');
-	            } else {
-	                timeType.button.classList.remove('selected');
-	            }
-	        });
-	        if (exports.selectedTimeType !== type) {
-	            exports.selectedTimeType = type;
-	            switch (type) {
-	                case 'decaying':
-	                    rangeDiv.style.display = '';
-	                    timeSlider.noUiSlider.updateOptions({
-	                        range: {
-	                            min: 0,
-	                            max: config_1.default.halflifeLengths.length - 1
-	                        }
-	                    });
-	                    timeSlider.noUiSlider.set([3]);
-	                    rangeTitle.innerHTML = 'Survey Halflife:';
-	                    minLimit.innerHTML = config_1.default.halflifeLengths[0].label;
-	                    maxLimit.innerHTML = config_1.default.halflifeLengths[config_1.default.halflifeLengths.length - 1].label;
-	                    break;
-	                case 'none':
-	                    rangeDiv.style.display = 'none';
-	                    break;
-	            }
-	            callListeners();
-	        } else {
-	            exports.selectedTimeType = type;
-	        }
-	    }
-	}
-	exports.selectTimeType = selectTimeType;
-	;
-	function createTimeSection(parentElement) {
-	    var element = void 0,
-	        div = void 0;
-	    parentElement.classList.add('time');
-	    parentElement.appendChild(element = document.createElement('div'));
-	    Object.keys(exports.timeTypes).forEach(function (time) {
-	        var button = document.createElement('button');
-	        var timeType = exports.timeTypes[time];
-	        timeType.button = button;
-	        element.appendChild(button);
-	        button.innerHTML = timeType.label;
-	        if (timeType.description) {
-	            button.title = timeType.description;
-	        }
-	        if (timeType.id === exports.selectedTimeType) {
-	            button.classList.add('selected');
-	        }
-	        button.addEventListener('click', selectTimeType.bind(null, time));
-	    });
-	    parentElement.appendChild(rangeDiv = document.createElement('div'));
-	    rangeDiv.appendChild(rangeTitle = document.createElement('div'));
-	    rangeTitle.innerHTML = 'Range:';
-	    rangeDiv.appendChild(div = document.createElement('div'));
-	    div.classList.add('range', 'key');
-	    div.appendChild(minLimit = document.createElement('div'));
-	    minLimit.classList.add('min');
-	    div.appendChild(maxLimit = document.createElement('div'));
-	    maxLimit.classList.add('max');
-	    rangeDiv.appendChild(timeSlider = document.createElement('div'));
-	    rangeDiv.appendChild(div = document.createElement('div'));
-	    div.classList.add('separatedRange');
-	    div.appendChild(lowerValue = document.createElement('div'));
-	    lowerValue.classList.add('min');
-	    div.appendChild(limitSeparator = document.createElement('div'));
-	    limitSeparator.classList.add('separator');
-	    div.appendChild(upperValue = document.createElement('div'));
-	    upperValue.classList.add('max');
-	    noUiSlider.create(timeSlider, {
-	        start: [0],
-	        step: 1,
-	        range: {
-	            min: 0,
-	            max: config_1.default.halflifeLengths.length - 1
-	        }
-	    });
-	    var sliderUpdate = function sliderUpdate() {
-	        switch (exports.selectedTimeType) {
-	            case 'decaying':
-	                lowerValue.innerText = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].label;
-	                break;
-	        }
-	    };
-	    timeSlider.noUiSlider.on('update', sliderUpdate);
-	    timeSlider.noUiSlider.on('change', callListeners);
-	    selectTimeType(config_1.default.defaultTime);
-	}
-	exports.createTimeSection = createTimeSection;
-	;
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = createTimeSection;
-	//# sourceMappingURL=time.js.map
-
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! nouislider - 9.0.0 - 2016-09-29 21:44:02 */
-
-	(function (factory) {
-
-	    if ( true ) {
-
-	        // AMD. Register as an anonymous module.
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-	    } else if ( typeof exports === 'object' ) {
-
-	        // Node/CommonJS
-	        module.exports = factory();
-
-	    } else {
-
-	        // Browser globals
-	        window.noUiSlider = factory();
-	    }
-
-	}(function( ){
-
-		'use strict';
-
-
-		// Creates a node, adds it to target, returns the new node.
-		function addNodeTo ( target, className ) {
-			var div = document.createElement('div');
-			addClass(div, className);
-			target.appendChild(div);
-			return div;
-		}
-
-		// Removes duplicates from an array.
-		function unique ( array ) {
-			return array.filter(function(a){
-				return !this[a] ? this[a] = true : false;
-			}, {});
-		}
-
-		// Round a value to the closest 'to'.
-		function closest ( value, to ) {
-			return Math.round(value / to) * to;
-		}
-
-		// Current position of an element relative to the document.
-		function offset ( elem, orientation ) {
-
-		var rect = elem.getBoundingClientRect(),
-			doc = elem.ownerDocument,
-			docElem = doc.documentElement,
-			pageOffset = getPageOffset();
-
-			// getBoundingClientRect contains left scroll in Chrome on Android.
-			// I haven't found a feature detection that proves this. Worst case
-			// scenario on mis-match: the 'tap' feature on horizontal sliders breaks.
-			if ( /webkit.*Chrome.*Mobile/i.test(navigator.userAgent) ) {
-				pageOffset.x = 0;
-			}
-
-			return orientation ? (rect.top + pageOffset.y - docElem.clientTop) : (rect.left + pageOffset.x - docElem.clientLeft);
-		}
-
-		// Checks whether a value is numerical.
-		function isNumeric ( a ) {
-			return typeof a === 'number' && !isNaN( a ) && isFinite( a );
-		}
-
-		// Sets a class and removes it after [duration] ms.
-		function addClassFor ( element, className, duration ) {
-			if (duration > 0) {
-			addClass(element, className);
-				setTimeout(function(){
-					removeClass(element, className);
-				}, duration);
-			}
-		}
-
-		// Limits a value to 0 - 100
-		function limit ( a ) {
-			return Math.max(Math.min(a, 100), 0);
-		}
-
-		// Wraps a variable as an array, if it isn't one yet.
-		// Note that an input array is returned by reference!
-		function asArray ( a ) {
-			return Array.isArray(a) ? a : [a];
-		}
-
-		// Counts decimals
-		function countDecimals ( numStr ) {
-			numStr = String(numStr);
-			var pieces = numStr.split(".");
-			return pieces.length > 1 ? pieces[1].length : 0;
-		}
-
-		// http://youmightnotneedjquery.com/#add_class
-		function addClass ( el, className ) {
-			if ( el.classList ) {
-				el.classList.add(className);
-			} else {
-				el.className += ' ' + className;
-			}
-		}
-
-		// http://youmightnotneedjquery.com/#remove_class
-		function removeClass ( el, className ) {
-			if ( el.classList ) {
-				el.classList.remove(className);
-			} else {
-				el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-			}
-		}
-
-		// https://plainjs.com/javascript/attributes/adding-removing-and-testing-for-classes-9/
-		function hasClass ( el, className ) {
-			return el.classList ? el.classList.contains(className) : new RegExp('\\b' + className + '\\b').test(el.className);
-		}
-
-		// https://developer.mozilla.org/en-US/docs/Web/API/Window/scrollY#Notes
-		function getPageOffset ( ) {
-
-			var supportPageOffset = window.pageXOffset !== undefined,
-				isCSS1Compat = ((document.compatMode || "") === "CSS1Compat"),
-				x = supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft,
-				y = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop;
-
-			return {
-				x: x,
-				y: y
-			};
-		}
-
-		// we provide a function to compute constants instead
-		// of accessing window.* as soon as the module needs it
-		// so that we do not compute anything if not needed
-		function getActions ( ) {
-
-			// Determine the events to bind. IE11 implements pointerEvents without
-			// a prefix, which breaks compatibility with the IE10 implementation.
-			return window.navigator.pointerEnabled ? {
-				start: 'pointerdown',
-				move: 'pointermove',
-				end: 'pointerup'
-			} : window.navigator.msPointerEnabled ? {
-				start: 'MSPointerDown',
-				move: 'MSPointerMove',
-				end: 'MSPointerUp'
-			} : {
-				start: 'mousedown touchstart',
-				move: 'mousemove touchmove',
-				end: 'mouseup touchend'
-			};
-		}
-
-
-	// Value calculation
-
-		// Determine the size of a sub-range in relation to a full range.
-		function subRangeRatio ( pa, pb ) {
-			return (100 / (pb - pa));
-		}
-
-		// (percentage) How many percent is this value of this range?
-		function fromPercentage ( range, value ) {
-			return (value * 100) / ( range[1] - range[0] );
-		}
-
-		// (percentage) Where is this value on this range?
-		function toPercentage ( range, value ) {
-			return fromPercentage( range, range[0] < 0 ?
-				value + Math.abs(range[0]) :
-					value - range[0] );
-		}
-
-		// (value) How much is this percentage on this range?
-		function isPercentage ( range, value ) {
-			return ((value * ( range[1] - range[0] )) / 100) + range[0];
-		}
-
-
-	// Range conversion
-
-		function getJ ( value, arr ) {
-
-			var j = 1;
-
-			while ( value >= arr[j] ){
-				j += 1;
-			}
-
-			return j;
-		}
-
-		// (percentage) Input a value, find where, on a scale of 0-100, it applies.
-		function toStepping ( xVal, xPct, value ) {
-
-			if ( value >= xVal.slice(-1)[0] ){
-				return 100;
-			}
-
-			var j = getJ( value, xVal ), va, vb, pa, pb;
-
-			va = xVal[j-1];
-			vb = xVal[j];
-			pa = xPct[j-1];
-			pb = xPct[j];
-
-			return pa + (toPercentage([va, vb], value) / subRangeRatio (pa, pb));
-		}
-
-		// (value) Input a percentage, find where it is on the specified range.
-		function fromStepping ( xVal, xPct, value ) {
-
-			// There is no range group that fits 100
-			if ( value >= 100 ){
-				return xVal.slice(-1)[0];
-			}
-
-			var j = getJ( value, xPct ), va, vb, pa, pb;
-
-			va = xVal[j-1];
-			vb = xVal[j];
-			pa = xPct[j-1];
-			pb = xPct[j];
-
-			return isPercentage([va, vb], (value - pa) * subRangeRatio (pa, pb));
-		}
-
-		// (percentage) Get the step that applies at a certain value.
-		function getStep ( xPct, xSteps, snap, value ) {
-
-			if ( value === 100 ) {
-				return value;
-			}
-
-			var j = getJ( value, xPct ), a, b;
-
-			// If 'snap' is set, steps are used as fixed points on the slider.
-			if ( snap ) {
-
-				a = xPct[j-1];
-				b = xPct[j];
-
-				// Find the closest position, a or b.
-				if ((value - a) > ((b-a)/2)){
-					return b;
-				}
-
-				return a;
-			}
-
-			if ( !xSteps[j-1] ){
-				return value;
-			}
-
-			return xPct[j-1] + closest(
-				value - xPct[j-1],
-				xSteps[j-1]
-			);
-		}
-
-
-	// Entry parsing
-
-		function handleEntryPoint ( index, value, that ) {
-
-			var percentage;
-
-			// Wrap numerical input in an array.
-			if ( typeof value === "number" ) {
-				value = [value];
-			}
-
-			// Reject any invalid input, by testing whether value is an array.
-			if ( Object.prototype.toString.call( value ) !== '[object Array]' ){
-				throw new Error("noUiSlider: 'range' contains invalid value.");
-			}
-
-			// Covert min/max syntax to 0 and 100.
-			if ( index === 'min' ) {
-				percentage = 0;
-			} else if ( index === 'max' ) {
-				percentage = 100;
-			} else {
-				percentage = parseFloat( index );
-			}
-
-			// Check for correct input.
-			if ( !isNumeric( percentage ) || !isNumeric( value[0] ) ) {
-				throw new Error("noUiSlider: 'range' value isn't numeric.");
-			}
-
-			// Store values.
-			that.xPct.push( percentage );
-			that.xVal.push( value[0] );
-
-			// NaN will evaluate to false too, but to keep
-			// logging clear, set step explicitly. Make sure
-			// not to override the 'step' setting with false.
-			if ( !percentage ) {
-				if ( !isNaN( value[1] ) ) {
-					that.xSteps[0] = value[1];
-				}
-			} else {
-				that.xSteps.push( isNaN(value[1]) ? false : value[1] );
-			}
-
-			that.xHighestCompleteStep.push(0);
-		}
-
-		function handleStepPoint ( i, n, that ) {
-
-			// Ignore 'false' stepping.
-			if ( !n ) {
-				return true;
-			}
-
-			// Factor to range ratio
-			that.xSteps[i] = fromPercentage([
-				 that.xVal[i]
-				,that.xVal[i+1]
-			], n) / subRangeRatio (
-				that.xPct[i],
-				that.xPct[i+1] );
-
-			var totalSteps = (that.xVal[i+1] - that.xVal[i]) / that.xNumSteps[i];
-			var highestStep = Math.ceil(Number(totalSteps.toFixed(3)) - 1);
-			var step = that.xVal[i] + (that.xNumSteps[i] * highestStep);
-
-			that.xHighestCompleteStep[i] = step;
-		}
-
-
-	// Interface
-
-		// The interface to Spectrum handles all direction-based
-		// conversions, so the above values are unaware.
-
-		function Spectrum ( entry, snap, direction, singleStep ) {
-
-			this.xPct = [];
-			this.xVal = [];
-			this.xSteps = [ singleStep || false ];
-			this.xNumSteps = [ false ];
-			this.xHighestCompleteStep = [];
-
-			this.snap = snap;
-			this.direction = direction;
-
-			var index, ordered = [ /* [0, 'min'], [1, '50%'], [2, 'max'] */ ];
-
-			// Map the object keys to an array.
-			for ( index in entry ) {
-				if ( entry.hasOwnProperty(index) ) {
-					ordered.push([entry[index], index]);
-				}
-			}
-
-			// Sort all entries by value (numeric sort).
-			if ( ordered.length && typeof ordered[0][0] === "object" ) {
-				ordered.sort(function(a, b) { return a[0][0] - b[0][0]; });
-			} else {
-				ordered.sort(function(a, b) { return a[0] - b[0]; });
-			}
-
-
-			// Convert all entries to subranges.
-			for ( index = 0; index < ordered.length; index++ ) {
-				handleEntryPoint(ordered[index][1], ordered[index][0], this);
-			}
-
-			// Store the actual step values.
-			// xSteps is sorted in the same order as xPct and xVal.
-			this.xNumSteps = this.xSteps.slice(0);
-
-			// Convert all numeric steps to the percentage of the subrange they represent.
-			for ( index = 0; index < this.xNumSteps.length; index++ ) {
-				handleStepPoint(index, this.xNumSteps[index], this);
-			}
-		}
-
-		Spectrum.prototype.getMargin = function ( value ) {
-
-			var step = this.xNumSteps[0];
-
-			if ( step && (value % step) ) {
-				throw new Error("noUiSlider: 'limit' and 'margin' must be divisible by step.");
-			}
-
-			return this.xPct.length === 2 ? fromPercentage(this.xVal, value) : false;
-		};
-
-		Spectrum.prototype.toStepping = function ( value ) {
-
-			value = toStepping( this.xVal, this.xPct, value );
-
-			return value;
-		};
-
-		Spectrum.prototype.fromStepping = function ( value ) {
-
-			return fromStepping( this.xVal, this.xPct, value );
-		};
-
-		Spectrum.prototype.getStep = function ( value ) {
-
-			value = getStep(this.xPct, this.xSteps, this.snap, value );
-
-			return value;
-		};
-
-		Spectrum.prototype.getNearbySteps = function ( value ) {
-
-			var j = getJ(value, this.xPct);
-
-			return {
-				stepBefore: { startValue: this.xVal[j-2], step: this.xNumSteps[j-2], highestStep: this.xHighestCompleteStep[j-2] },
-				thisStep: { startValue: this.xVal[j-1], step: this.xNumSteps[j-1], highestStep: this.xHighestCompleteStep[j-1] },
-				stepAfter: { startValue: this.xVal[j-0], step: this.xNumSteps[j-0], highestStep: this.xHighestCompleteStep[j-0] }
-			};
-		};
-
-		Spectrum.prototype.countStepDecimals = function () {
-			var stepDecimals = this.xNumSteps.map(countDecimals);
-			return Math.max.apply(null, stepDecimals);
-	 	};
-
-		// Outside testing
-		Spectrum.prototype.convert = function ( value ) {
-			return this.getStep(this.toStepping(value));
-		};
-
-	/*	Every input option is tested and parsed. This'll prevent
-		endless validation in internal methods. These tests are
-		structured with an item for every option available. An
-		option can be marked as required by setting the 'r' flag.
-		The testing function is provided with three arguments:
-			- The provided value for the option;
-			- A reference to the options object;
-			- The name for the option;
-
-		The testing function returns false when an error is detected,
-		or true when everything is OK. It can also modify the option
-		object, to make sure all values can be correctly looped elsewhere. */
-
-		var defaultFormatter = { 'to': function( value ){
-			return value !== undefined && value.toFixed(2);
-		}, 'from': Number };
-
-		function testStep ( parsed, entry ) {
-
-			if ( !isNumeric( entry ) ) {
-				throw new Error("noUiSlider: 'step' is not numeric.");
-			}
-
-			// The step option can still be used to set stepping
-			// for linear sliders. Overwritten if set in 'range'.
-			parsed.singleStep = entry;
-		}
-
-		function testRange ( parsed, entry ) {
-
-			// Filter incorrect input.
-			if ( typeof entry !== 'object' || Array.isArray(entry) ) {
-				throw new Error("noUiSlider: 'range' is not an object.");
-			}
-
-			// Catch missing start or end.
-			if ( entry.min === undefined || entry.max === undefined ) {
-				throw new Error("noUiSlider: Missing 'min' or 'max' in 'range'.");
-			}
-
-			// Catch equal start or end.
-			if ( entry.min === entry.max ) {
-				throw new Error("noUiSlider: 'range' 'min' and 'max' cannot be equal.");
-			}
-
-			parsed.spectrum = new Spectrum(entry, parsed.snap, parsed.dir, parsed.singleStep);
-		}
-
-		function testStart ( parsed, entry ) {
-
-			entry = asArray(entry);
-
-			// Validate input. Values aren't tested, as the public .val method
-			// will always provide a valid location.
-			if ( !Array.isArray( entry ) || !entry.length ) {
-				throw new Error("noUiSlider: 'start' option is incorrect.");
-			}
-
-			// Store the number of handles.
-			parsed.handles = entry.length;
-
-			// When the slider is initialized, the .val method will
-			// be called with the start options.
-			parsed.start = entry;
-		}
-
-		function testSnap ( parsed, entry ) {
-
-			// Enforce 100% stepping within subranges.
-			parsed.snap = entry;
-
-			if ( typeof entry !== 'boolean' ){
-				throw new Error("noUiSlider: 'snap' option must be a boolean.");
-			}
-		}
-
-		function testAnimate ( parsed, entry ) {
-
-			// Enforce 100% stepping within subranges.
-			parsed.animate = entry;
-
-			if ( typeof entry !== 'boolean' ){
-				throw new Error("noUiSlider: 'animate' option must be a boolean.");
-			}
-		}
-
-		function testAnimationDuration ( parsed, entry ) {
-
-			parsed.animationDuration = entry;
-
-			if ( typeof entry !== 'number' ){
-				throw new Error("noUiSlider: 'animationDuration' option must be a number.");
-			}
-		}
-
-		function testConnect ( parsed, entry ) {
-
-			var connect = [false];
-			var i;
-
-			if ( entry === true || entry === false ) {
-
-				for ( i = 1; i < parsed.handles; i++ ) {
-					connect.push(entry);
-				}
-
-				connect.push(false);
-			}
-
-			else if ( !Array.isArray( entry ) || !entry.length || entry.length !== parsed.handles + 1 ) {
-				throw new Error("noUiSlider: 'connect' option doesn't match handle count.");
-			}
-
-			else {
-				connect = entry;
-			}
-
-			parsed.connect = connect;
-		}
-
-		function testOrientation ( parsed, entry ) {
-
-			// Set orientation to an a numerical value for easy
-			// array selection.
-			switch ( entry ){
-			  case 'horizontal':
-				parsed.ort = 0;
-				break;
-			  case 'vertical':
-				parsed.ort = 1;
-				break;
-			  default:
-				throw new Error("noUiSlider: 'orientation' option is invalid.");
-			}
-		}
-
-		function testMargin ( parsed, entry ) {
-
-			if ( !isNumeric(entry) ){
-				throw new Error("noUiSlider: 'margin' option must be numeric.");
-			}
-
-			// Issue #582
-			if ( entry === 0 ) {
-				return;
-			}
-
-			parsed.margin = parsed.spectrum.getMargin(entry);
-
-			if ( !parsed.margin ) {
-				throw new Error("noUiSlider: 'margin' option is only supported on linear sliders.");
-			}
-		}
-
-		function testLimit ( parsed, entry ) {
-
-			if ( !isNumeric(entry) ){
-				throw new Error("noUiSlider: 'limit' option must be numeric.");
-			}
-
-			parsed.limit = parsed.spectrum.getMargin(entry);
-
-			if ( !parsed.limit || parsed.handles < 2 ) {
-				throw new Error("noUiSlider: 'limit' option is only supported on linear sliders with 2 or more handles.");
-			}
-		}
-
-		function testDirection ( parsed, entry ) {
-
-			// Set direction as a numerical value for easy parsing.
-			// Invert connection for RTL sliders, so that the proper
-			// handles get the connect/background classes.
-			switch ( entry ) {
-			  case 'ltr':
-				parsed.dir = 0;
-				break;
-			  case 'rtl':
-				parsed.dir = 1;
-				break;
-			  default:
-				throw new Error("noUiSlider: 'direction' option was not recognized.");
-			}
-		}
-
-		function testBehaviour ( parsed, entry ) {
-
-			// Make sure the input is a string.
-			if ( typeof entry !== 'string' ) {
-				throw new Error("noUiSlider: 'behaviour' must be a string containing options.");
-			}
-
-			// Check if the string contains any keywords.
-			// None are required.
-			var tap = entry.indexOf('tap') >= 0;
-			var drag = entry.indexOf('drag') >= 0;
-			var fixed = entry.indexOf('fixed') >= 0;
-			var snap = entry.indexOf('snap') >= 0;
-			var hover = entry.indexOf('hover') >= 0;
-
-			if ( fixed ) {
-
-				if ( parsed.handles !== 2 ) {
-					throw new Error("noUiSlider: 'fixed' behaviour must be used with 2 handles");
-				}
-
-				// Use margin to enforce fixed state
-				testMargin(parsed, parsed.start[1] - parsed.start[0]);
-			}
-
-			parsed.events = {
-				tap: tap || snap,
-				drag: drag,
-				fixed: fixed,
-				snap: snap,
-				hover: hover
-			};
-		}
-
-		function testTooltips ( parsed, entry ) {
-
-			if ( entry === false ) {
-				return;
-			}
-
-			else if ( entry === true ) {
-
-				parsed.tooltips = [];
-
-				for ( var i = 0; i < parsed.handles; i++ ) {
-					parsed.tooltips.push(true);
-				}
-			}
-
-			else {
-
-				parsed.tooltips = asArray(entry);
-
-				if ( parsed.tooltips.length !== parsed.handles ) {
-					throw new Error("noUiSlider: must pass a formatter for all handles.");
-				}
-
-				parsed.tooltips.forEach(function(formatter){
-					if ( typeof formatter !== 'boolean' && (typeof formatter !== 'object' || typeof formatter.to !== 'function') ) {
-						throw new Error("noUiSlider: 'tooltips' must be passed a formatter or 'false'.");
-					}
-				});
-			}
-		}
-
-		function testFormat ( parsed, entry ) {
-
-			parsed.format = entry;
-
-			// Any object with a to and from method is supported.
-			if ( typeof entry.to === 'function' && typeof entry.from === 'function' ) {
-				return true;
-			}
-
-			throw new Error("noUiSlider: 'format' requires 'to' and 'from' methods.");
-		}
-
-		function testCssPrefix ( parsed, entry ) {
-
-			if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
-				throw new Error("noUiSlider: 'cssPrefix' must be a string or `false`.");
-			}
-
-			parsed.cssPrefix = entry;
-		}
-
-		function testCssClasses ( parsed, entry ) {
-
-			if ( entry !== undefined && typeof entry !== 'object' ) {
-				throw new Error("noUiSlider: 'cssClasses' must be an object.");
-			}
-
-			if ( typeof parsed.cssPrefix === 'string' ) {
-				parsed.cssClasses = {};
-
-				for ( var key in entry ) {
-					if ( !entry.hasOwnProperty(key) ) { continue; }
-
-					parsed.cssClasses[key] = parsed.cssPrefix + entry[key];
-				}
-			} else {
-				parsed.cssClasses = entry;
-			}
-		}
-
-		function testUseRaf ( parsed, entry ) {
-			if ( entry === true || entry === false ) {
-				parsed.useRequestAnimationFrame = entry;
-			} else {
-				throw new Error("noUiSlider: 'useRequestAnimationFrame' option should be true (default) or false.");
-			}
-		}
-
-		// Test all developer settings and parse to assumption-safe values.
-		function testOptions ( options ) {
-
-			// To prove a fix for #537, freeze options here.
-			// If the object is modified, an error will be thrown.
-			// Object.freeze(options);
-
-			var parsed = {
-				margin: 0,
-				limit: 0,
-				animate: true,
-				animationDuration: 300,
-				format: defaultFormatter
-			}, tests;
-
-			// Tests are executed in the order they are presented here.
-			tests = {
-				'step': { r: false, t: testStep },
-				'start': { r: true, t: testStart },
-				'connect': { r: true, t: testConnect },
-				'direction': { r: true, t: testDirection },
-				'snap': { r: false, t: testSnap },
-				'animate': { r: false, t: testAnimate },
-				'animationDuration': { r: false, t: testAnimationDuration },
-				'range': { r: true, t: testRange },
-				'orientation': { r: false, t: testOrientation },
-				'margin': { r: false, t: testMargin },
-				'limit': { r: false, t: testLimit },
-				'behaviour': { r: true, t: testBehaviour },
-				'format': { r: false, t: testFormat },
-				'tooltips': { r: false, t: testTooltips },
-				'cssPrefix': { r: false, t: testCssPrefix },
-				'cssClasses': { r: false, t: testCssClasses },
-				'useRequestAnimationFrame': { r: false, t: testUseRaf }
-			};
-
-			var defaults = {
-				'connect': false,
-				'direction': 'ltr',
-				'behaviour': 'tap',
-				'orientation': 'horizontal',
-				'cssPrefix' : 'noUi-',
-				'cssClasses': {
-					target: 'target',
-					base: 'base',
-					origin: 'origin',
-					handle: 'handle',
-					horizontal: 'horizontal',
-					vertical: 'vertical',
-					background: 'background',
-					connect: 'connect',
-					ltr: 'ltr',
-					rtl: 'rtl',
-					draggable: 'draggable',
-					drag: 'state-drag',
-					tap: 'state-tap',
-					active: 'active',
-					tooltip: 'tooltip',
-					pips: 'pips',
-					pipsHorizontal: 'pips-horizontal',
-					pipsVertical: 'pips-vertical',
-					marker: 'marker',
-					markerHorizontal: 'marker-horizontal',
-					markerVertical: 'marker-vertical',
-					markerNormal: 'marker-normal',
-					markerLarge: 'marker-large',
-					markerSub: 'marker-sub',
-					value: 'value',
-					valueHorizontal: 'value-horizontal',
-					valueVertical: 'value-vertical',
-					valueNormal: 'value-normal',
-					valueLarge: 'value-large',
-					valueSub: 'value-sub'
-				},
-				'useRequestAnimationFrame': true
-			};
-
-			// Run all options through a testing mechanism to ensure correct
-			// input. It should be noted that options might get modified to
-			// be handled properly. E.g. wrapping integers in arrays.
-			Object.keys(tests).forEach(function( name ){
-
-				// If the option isn't set, but it is required, throw an error.
-				if ( options[name] === undefined && defaults[name] === undefined ) {
-
-					if ( tests[name].r ) {
-						throw new Error("noUiSlider: '" + name + "' is required.");
-					}
-
-					return true;
-				}
-
-				tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
-			});
-
-			// Forward pips options
-			parsed.pips = options.pips;
-
-			var styles = [['left', 'top'], ['right', 'bottom']];
-
-			// Pre-define the styles.
-			parsed.style = styles[parsed.dir][parsed.ort];
-			parsed.styleOposite = styles[parsed.dir?0:1][parsed.ort];
-
-			return parsed;
-		}
-
-
-	function closure ( target, options, originalOptions ){
-
-		var actions = getActions( );
-
-		// All variables local to 'closure' are prefixed with 'scope_'
-		var scope_Target = target;
-		var scope_Locations = [];
-		var scope_Base;
-		var scope_Handles;
-		var scope_HandleNumbers = [];
-		var scope_Connects;
-		var scope_Spectrum = options.spectrum;
-		var scope_Values = [];
-		var scope_Events = {};
-		var scope_Self;
-
-
-		// Append a origin to the base
-		function addOrigin ( base, handleNumber ) {
-			var origin = addNodeTo(base, options.cssClasses.origin);
-			var handle = addNodeTo(origin, options.cssClasses.handle);
-			handle.setAttribute('data-handle', handleNumber);
-			return origin;
-		}
-
-		// Insert nodes for connect elements
-		function addConnect ( base, add ) {
-
-			if ( !add ) {
-				return false;
-			}
-
-			return addNodeTo(base, options.cssClasses.connect);
-		}
-
-		// Add handles to the slider base.
-		function addElements ( connectOptions, base ) {
-
-			scope_Handles = [];
-			scope_Connects = [];
-
-			scope_Connects.push(addConnect(base, connectOptions[0]));
-
-			// [::::O====O====O====]
-			// connectOptions = [0, 1, 1, 1]
-
-			for ( var i = 0; i < options.handles; i++ ) {
-				// Keep a list of all added handles.
-				scope_Handles.push(addOrigin(base, i));
-				scope_HandleNumbers[i] = i;
-				scope_Connects.push(addConnect(base, connectOptions[i + 1]));
-			}
-		}
-
-		// Initialize a single slider.
-		function addSlider ( target ) {
-
-			// Apply classes and data to the target.
-			addClass(target, options.cssClasses.target);
-
-			if ( options.dir === 0 ) {
-				addClass(target, options.cssClasses.ltr);
-			} else {
-				addClass(target, options.cssClasses.rtl);
-			}
-
-			if ( options.ort === 0 ) {
-				addClass(target, options.cssClasses.horizontal);
-			} else {
-				addClass(target, options.cssClasses.vertical);
-			}
-
-			scope_Base = addNodeTo(target, options.cssClasses.base);
-		}
-
-
-		function addTooltip ( handle, handleNumber ) {
-
-			if ( !options.tooltips[handleNumber] ) {
-				return false;
-			}
-
-			return addNodeTo(handle.firstChild, options.cssClasses.tooltip);
-		}
-
-		// The tooltips option is a shorthand for using the 'update' event.
-		function tooltips ( ) {
-
-			// Tooltips are added with options.tooltips in original order.
-			var tips = scope_Handles.map(addTooltip);
-
-			bindEvent('update', function(values, handleNumber, unencoded) {
-
-				if ( !tips[handleNumber] ) {
-					return;
-				}
-
-				var formattedValue = values[handleNumber];
-
-				if ( options.tooltips[handleNumber] !== true ) {
-					formattedValue = options.tooltips[handleNumber].to(unencoded[handleNumber]);
-				}
-
-				tips[handleNumber].innerHTML = formattedValue;
-			});
-		}
-
-
-		function getGroup ( mode, values, stepped ) {
-
-			// Use the range.
-			if ( mode === 'range' || mode === 'steps' ) {
-				return scope_Spectrum.xVal;
-			}
-
-			if ( mode === 'count' ) {
-
-				// Divide 0 - 100 in 'count' parts.
-				var spread = ( 100 / (values-1) ), v, i = 0;
-				values = [];
-
-				// List these parts and have them handled as 'positions'.
-				while ((v=i++*spread) <= 100 ) {
-					values.push(v);
-				}
-
-				mode = 'positions';
-			}
-
-			if ( mode === 'positions' ) {
-
-				// Map all percentages to on-range values.
-				return values.map(function( value ){
-					return scope_Spectrum.fromStepping( stepped ? scope_Spectrum.getStep( value ) : value );
-				});
-			}
-
-			if ( mode === 'values' ) {
-
-				// If the value must be stepped, it needs to be converted to a percentage first.
-				if ( stepped ) {
-
-					return values.map(function( value ){
-
-						// Convert to percentage, apply step, return to value.
-						return scope_Spectrum.fromStepping( scope_Spectrum.getStep( scope_Spectrum.toStepping( value ) ) );
-					});
-
-				}
-
-				// Otherwise, we can simply use the values.
-				return values;
-			}
-		}
-
-		function generateSpread ( density, mode, group ) {
-
-			function safeIncrement(value, increment) {
-				// Avoid floating point variance by dropping the smallest decimal places.
-				return (value + increment).toFixed(7) / 1;
-			}
-
-			var indexes = {},
-				firstInRange = scope_Spectrum.xVal[0],
-				lastInRange = scope_Spectrum.xVal[scope_Spectrum.xVal.length-1],
-				ignoreFirst = false,
-				ignoreLast = false,
-				prevPct = 0;
-
-			// Create a copy of the group, sort it and filter away all duplicates.
-			group = unique(group.slice().sort(function(a, b){ return a - b; }));
-
-			// Make sure the range starts with the first element.
-			if ( group[0] !== firstInRange ) {
-				group.unshift(firstInRange);
-				ignoreFirst = true;
-			}
-
-			// Likewise for the last one.
-			if ( group[group.length - 1] !== lastInRange ) {
-				group.push(lastInRange);
-				ignoreLast = true;
-			}
-
-			group.forEach(function ( current, index ) {
-
-				// Get the current step and the lower + upper positions.
-				var step, i, q,
-					low = current,
-					high = group[index+1],
-					newPct, pctDifference, pctPos, type,
-					steps, realSteps, stepsize;
-
-				// When using 'steps' mode, use the provided steps.
-				// Otherwise, we'll step on to the next subrange.
-				if ( mode === 'steps' ) {
-					step = scope_Spectrum.xNumSteps[ index ];
-				}
-
-				// Default to a 'full' step.
-				if ( !step ) {
-					step = high-low;
-				}
-
-				// Low can be 0, so test for false. If high is undefined,
-				// we are at the last subrange. Index 0 is already handled.
-				if ( low === false || high === undefined ) {
-					return;
-				}
-
-				// Make sure step isn't 0, which would cause an infinite loop (#654)
-				step = Math.max(step, 0.0000001);
-
-				// Find all steps in the subrange.
-				for ( i = low; i <= high; i = safeIncrement(i, step) ) {
-
-					// Get the percentage value for the current step,
-					// calculate the size for the subrange.
-					newPct = scope_Spectrum.toStepping( i );
-					pctDifference = newPct - prevPct;
-
-					steps = pctDifference / density;
-					realSteps = Math.round(steps);
-
-					// This ratio represents the ammount of percentage-space a point indicates.
-					// For a density 1 the points/percentage = 1. For density 2, that percentage needs to be re-devided.
-					// Round the percentage offset to an even number, then divide by two
-					// to spread the offset on both sides of the range.
-					stepsize = pctDifference/realSteps;
-
-					// Divide all points evenly, adding the correct number to this subrange.
-					// Run up to <= so that 100% gets a point, event if ignoreLast is set.
-					for ( q = 1; q <= realSteps; q += 1 ) {
-
-						// The ratio between the rounded value and the actual size might be ~1% off.
-						// Correct the percentage offset by the number of points
-						// per subrange. density = 1 will result in 100 points on the
-						// full range, 2 for 50, 4 for 25, etc.
-						pctPos = prevPct + ( q * stepsize );
-						indexes[pctPos.toFixed(5)] = ['x', 0];
-					}
-
-					// Determine the point type.
-					type = (group.indexOf(i) > -1) ? 1 : ( mode === 'steps' ? 2 : 0 );
-
-					// Enforce the 'ignoreFirst' option by overwriting the type for 0.
-					if ( !index && ignoreFirst ) {
-						type = 0;
-					}
-
-					if ( !(i === high && ignoreLast)) {
-						// Mark the 'type' of this point. 0 = plain, 1 = real value, 2 = step value.
-						indexes[newPct.toFixed(5)] = [i, type];
-					}
-
-					// Update the percentage count.
-					prevPct = newPct;
-				}
-			});
-
-			return indexes;
-		}
-
-		function addMarking ( spread, filterFunc, formatter ) {
-
-			var element = document.createElement('div'),
-				out = '',
-				valueSizeClasses = [
-					options.cssClasses.valueNormal,
-					options.cssClasses.valueLarge,
-					options.cssClasses.valueSub
-				],
-				markerSizeClasses = [
-					options.cssClasses.markerNormal,
-					options.cssClasses.markerLarge,
-					options.cssClasses.markerSub
-				],
-				valueOrientationClasses = [
-					options.cssClasses.valueHorizontal,
-					options.cssClasses.valueVertical
-				],
-				markerOrientationClasses = [
-					options.cssClasses.markerHorizontal,
-					options.cssClasses.markerVertical
-				];
-
-			addClass(element, options.cssClasses.pips);
-			addClass(element, options.ort === 0 ? options.cssClasses.pipsHorizontal : options.cssClasses.pipsVertical);
-
-			function getClasses( type, source ){
-				var a = source === options.cssClasses.value,
-					orientationClasses = a ? valueOrientationClasses : markerOrientationClasses,
-					sizeClasses = a ? valueSizeClasses : markerSizeClasses;
-
-				return source + ' ' + orientationClasses[options.ort] + ' ' + sizeClasses[type];
-			}
-
-			function getTags( offset, source, values ) {
-				return 'class="' + getClasses(values[1], source) + '" style="' + options.style + ': ' + offset + '%"';
-			}
-
-			function addSpread ( offset, values ){
-
-				// Apply the filter function, if it is set.
-				values[1] = (values[1] && filterFunc) ? filterFunc(values[0], values[1]) : values[1];
-
-				// Add a marker for every point
-				out += '<div ' + getTags(offset, options.cssClasses.marker, values) + '></div>';
-
-				// Values are only appended for points marked '1' or '2'.
-				if ( values[1] ) {
-					out += '<div ' + getTags(offset, options.cssClasses.value, values) + '>' + formatter.to(values[0]) + '</div>';
-				}
-			}
-
-			// Append all points.
-			Object.keys(spread).forEach(function(a){
-				addSpread(a, spread[a]);
-			});
-
-			element.innerHTML = out;
-
-			return element;
-		}
-
-		function pips ( grid ) {
-
-		var mode = grid.mode,
-			density = grid.density || 1,
-			filter = grid.filter || false,
-			values = grid.values || false,
-			stepped = grid.stepped || false,
-			group = getGroup( mode, values, stepped ),
-			spread = generateSpread( density, mode, group ),
-			format = grid.format || {
-				to: Math.round
-			};
-
-			return scope_Target.appendChild(addMarking(
-				spread,
-				filter,
-				format
-			));
-		}
-
-
-		// Shorthand for base dimensions.
-		function baseSize ( ) {
-			var rect = scope_Base.getBoundingClientRect(), alt = 'offset' + ['Width', 'Height'][options.ort];
-			return options.ort === 0 ? (rect.width||scope_Base[alt]) : (rect.height||scope_Base[alt]);
-		}
-
-		// Handler for attaching events trough a proxy.
-		function attachEvent ( events, element, callback, data ) {
-
-			// This function can be used to 'filter' events to the slider.
-			// element is a node, not a nodeList
-
-			var method = function ( e ){
-
-				if ( scope_Target.hasAttribute('disabled') ) {
-					return false;
-				}
-
-				// Stop if an active 'tap' transition is taking place.
-				if ( hasClass(scope_Target, options.cssClasses.tap) ) {
-					return false;
-				}
-
-				e = fixEvent(e, data.pageOffset);
-
-				// Ignore right or middle clicks on start #454
-				if ( events === actions.start && e.buttons !== undefined && e.buttons > 1 ) {
-					return false;
-				}
-
-				// Ignore right or middle clicks on start #454
-				if ( data.hover && e.buttons ) {
-					return false;
-				}
-
-				e.calcPoint = e.points[ options.ort ];
-
-				// Call the event handler with the event [ and additional data ].
-				callback ( e, data );
-			};
-
-			var methods = [];
-
-			// Bind a closure on the target for every event type.
-			events.split(' ').forEach(function( eventName ){
-				element.addEventListener(eventName, method, false);
-				methods.push([eventName, method]);
-			});
-
-			return methods;
-		}
-
-		// Provide a clean event with standardized offset values.
-		function fixEvent ( e, pageOffset ) {
-
-			// Prevent scrolling and panning on touch events, while
-			// attempting to slide. The tap event also depends on this.
-			e.preventDefault();
-
-			// Filter the event to register the type, which can be
-			// touch, mouse or pointer. Offset changes need to be
-			// made on an event specific basis.
-			var touch = e.type.indexOf('touch') === 0,
-				mouse = e.type.indexOf('mouse') === 0,
-				pointer = e.type.indexOf('pointer') === 0,
-				x,y, event = e;
-
-			// IE10 implemented pointer events with a prefix;
-			if ( e.type.indexOf('MSPointer') === 0 ) {
-				pointer = true;
-			}
-
-			if ( touch ) {
-
-				// Fix bug when user touches with two or more fingers on mobile devices.
-				// It's useful when you have two or more sliders on one page,
-				// that can be touched simultaneously.
-				// #649, #663, #668
-				if ( event.touches.length > 1 ) {
-					return false;
-				}
-
-				// noUiSlider supports one movement at a time,
-				// so we can select the first 'changedTouch'.
-				x = e.changedTouches[0].pageX;
-				y = e.changedTouches[0].pageY;
-			}
-
-			pageOffset = pageOffset || getPageOffset();
-
-			if ( mouse || pointer ) {
-				x = e.clientX + pageOffset.x;
-				y = e.clientY + pageOffset.y;
-			}
-
-			event.pageOffset = pageOffset;
-			event.points = [x, y];
-			event.cursor = mouse || pointer; // Fix #435
-
-			return event;
-		}
-
-		function calcPointToPercentage ( calcPoint ) {
-			var location = calcPoint - offset(scope_Base, options.ort);
-			var proposal = ( location * 100 ) / baseSize();
-			return options.dir ? 100 - proposal : proposal;
-		}
-
-		function getClosestHandle ( proposal ) {
-
-			var closest = 100;
-			var handleNumber = false;
-
-			scope_Handles.forEach(function(handle, index){
-
-				// Disabled handles are ignored
-				if ( handle.hasAttribute('disabled') ) {
-					return;
-				}
-
-				var pos = Math.abs(scope_Locations[index] - proposal);
-
-				if ( pos < closest ) {
-					handleNumber = index;
-					closest = pos;
-				}
-			});
-
-			return handleNumber;
-		}
-
-		// Moves handle(s) by a percentage
-		// (bool, % to move, [% where handle started, ...], [index in scope_Handles, ...])
-		function moveHandles ( upward, proposal, locations, handleNumbers ) {
-
-			var proposals = locations.slice();
-
-			var b = [!upward, upward];
-			var f = [upward, !upward];
-
-			// Copy handleNumbers so we don't change the dataset
-			handleNumbers = handleNumbers.slice();
-
-			// Check to see which handle is 'leading'.
-			// If that one can't move the second can't either.
-			if ( upward ) {
-				handleNumbers.reverse();
-			}
-
-			// Step 1: get the maximum percentage that any of the handles can move
-			if ( handleNumbers.length > 1 ) {
-
-				handleNumbers.forEach(function(handleNumber, o) {
-
-					var to = checkHandlePosition(proposals, handleNumber, proposals[handleNumber] + proposal, b[o], f[o]);
-
-					// Stop if one of the handles can't move.
-					if ( to === false ) {
-						proposal = 0;
-					} else {
-						proposal = to - proposals[handleNumber];
-						proposals[handleNumber] = to;
-					}
-				});
-			}
-
-			// If using one handle, check backward AND forward
-			else {
-				b = f = [true];
-			}
-
-			var state = false;
-
-			// Step 2: Try to set the handles with the found percentage
-			handleNumbers.forEach(function(handleNumber, o) {
-				state = setHandle(handleNumber, locations[handleNumber] + proposal, b[o], f[o]) || state;
-			});
-
-			// Step 3: If a handle moved, fire events
-			if ( state ) {
-				handleNumbers.forEach(function(handleNumber){
-					fireEvent('update', handleNumber);
-					fireEvent('slide', handleNumber);
-				});
-			}
-		}
-
-		// External event handling
-		function fireEvent ( eventName, handleNumber, tap ) {
-
-			Object.keys(scope_Events).forEach(function( targetEvent ) {
-
-				var eventType = targetEvent.split('.')[0];
-
-				if ( eventName === eventType ) {
-					scope_Events[targetEvent].forEach(function( callback ) {
-
-						callback.call(
-							// Use the slider public API as the scope ('this')
-							scope_Self,
-							// Return values as array, so arg_1[arg_2] is always valid.
-							scope_Values.map(options.format.to),
-							// Handle index, 0 or 1
-							handleNumber,
-							// Unformatted slider values
-							scope_Values.slice(),
-							// Event is fired by tap, true or false
-							tap || false,
-							// Left offset of the handle, in relation to the slider
-							scope_Locations.slice()
-						);
-					});
-				}
-			});
-		}
-
-
-		// Fire 'end' when a mouse or pen leaves the document.
-		function documentLeave ( event, data ) {
-			if ( event.type === "mouseout" && event.target.nodeName === "HTML" && event.relatedTarget === null ){
-				eventEnd (event, data);
-			}
-		}
-
-		// Handle movement on document for handle and range drag.
-		function eventMove ( event, data ) {
-
-			// Fix #498
-			// Check value of .buttons in 'start' to work around a bug in IE10 mobile (data.buttonsProperty).
-			// https://connect.microsoft.com/IE/feedback/details/927005/mobile-ie10-windows-phone-buttons-property-of-pointermove-event-always-zero
-			// IE9 has .buttons and .which zero on mousemove.
-			// Firefox breaks the spec MDN defines.
-			if ( navigator.appVersion.indexOf("MSIE 9") === -1 && event.buttons === 0 && data.buttonsProperty !== 0 ) {
-				return eventEnd(event, data);
-			}
-
-			// Check if we are moving up or down
-			var movement = (options.dir ? -1 : 1) * (event.calcPoint - data.startCalcPoint);
-
-			// Convert the movement into a percentage of the slider width/height
-			var proposal = (movement * 100) / data.baseSize;
-
-			moveHandles(movement > 0, proposal, data.locations, data.handleNumbers);
-		}
-
-		// Unbind move events on document, call callbacks.
-		function eventEnd ( event, data ) {
-
-			// The handle is no longer active, so remove the class.
-			var active = scope_Base.querySelector( '.' + options.cssClasses.active );
-
-			if ( active !== null ) {
-				removeClass(active, options.cssClasses.active);
-			}
-
-			// Remove cursor styles and text-selection events bound to the body.
-			if ( event.cursor ) {
-				document.body.style.cursor = '';
-				document.body.removeEventListener('selectstart', document.body.noUiListener);
-			}
-
-			// Unbind the move and end events, which are added on 'start'.
-			document.documentElement.noUiListeners.forEach(function( c ) {
-				document.documentElement.removeEventListener(c[0], c[1]);
-			});
-
-			// Remove dragging class.
-			removeClass(scope_Target, options.cssClasses.drag);
-
-			setZindex();
-
-			data.handleNumbers.forEach(function(handleNumber){
-				fireEvent('set', handleNumber);
-				fireEvent('change', handleNumber);
-				fireEvent('end', handleNumber);
-			});
-		}
-
-		// Bind move events on document.
-		function eventStart ( event, data ) {
-
-			// Mark the handle as 'active' so it can be styled.
-			if ( data.handleNumbers.length === 1 ) {
-
-				var handle = scope_Handles[data.handleNumbers[0]];
-
-				// Ignore 'disabled' handles
-				if ( handle.hasAttribute('disabled') ) {
-					return false;
-				}
-
-				addClass(handle.children[0], options.cssClasses.active);
-			}
-
-			// Fix #551, where a handle gets selected instead of dragged.
-			event.preventDefault();
-
-			// A drag should never propagate up to the 'tap' event.
-			event.stopPropagation();
-
-			// Attach the move and end events.
-			var moveEvent = attachEvent(actions.move, document.documentElement, eventMove, {
-				startCalcPoint: event.calcPoint,
-				baseSize: baseSize(),
-				pageOffset: event.pageOffset,
-				handleNumbers: data.handleNumbers,
-				buttonsProperty: event.buttons,
-				locations: scope_Locations.slice()
-			});
-
-			var endEvent = attachEvent(actions.end, document.documentElement, eventEnd, {
-				handleNumbers: data.handleNumbers
-			});
-
-			var outEvent = attachEvent("mouseout", document.documentElement, documentLeave, {
-				handleNumbers: data.handleNumbers
-			});
-
-			document.documentElement.noUiListeners = moveEvent.concat(endEvent, outEvent);
-
-			// Text selection isn't an issue on touch devices,
-			// so adding cursor styles can be skipped.
-			if ( event.cursor ) {
-
-				// Prevent the 'I' cursor and extend the range-drag cursor.
-				document.body.style.cursor = getComputedStyle(event.target).cursor;
-
-				// Mark the target with a dragging state.
-				if ( scope_Handles.length > 1 ) {
-					addClass(scope_Target, options.cssClasses.drag);
-				}
-
-				var f = function(){
-					return false;
-				};
-
-				document.body.noUiListener = f;
-
-				// Prevent text selection when dragging the handles.
-				document.body.addEventListener('selectstart', f, false);
-			}
-
-			data.handleNumbers.forEach(function(handleNumber){
-				fireEvent('start', handleNumber);
-			});
-		}
-
-		// Move closest handle to tapped location.
-		function eventTap ( event ) {
-
-			// The tap event shouldn't propagate up
-			event.stopPropagation();
-
-			var proposal = calcPointToPercentage(event.calcPoint);
-			var handleNumber = getClosestHandle(proposal);
-
-			// Tackle the case that all handles are 'disabled'.
-			if ( handleNumber === false ) {
-				return false;
-			}
-
-			// Flag the slider as it is now in a transitional state.
-			// Transition takes a configurable amount of ms (default 300). Re-enable the slider after that.
-			if ( !options.events.snap ) {
-				addClassFor(scope_Target, options.cssClasses.tap, options.animationDuration);
-			}
-
-			setHandle(handleNumber, proposal, true, true);
-
-			setZindex();
-
-			fireEvent('slide', handleNumber, true);
-			fireEvent('set', handleNumber, true);
-			fireEvent('change', handleNumber, true);
-			fireEvent('update', handleNumber, true);
-
-			if ( options.events.snap ) {
-				eventStart(event, { handleNumbers: [handleNumber] });
-			}
-		}
-
-		// Fires a 'hover' event for a hovered mouse/pen position.
-		function eventHover ( event ) {
-
-			var proposal = calcPointToPercentage(event.calcPoint);
-
-			var to = scope_Spectrum.getStep(proposal);
-			var value = scope_Spectrum.fromStepping(to);
-
-			Object.keys(scope_Events).forEach(function( targetEvent ) {
-				if ( 'hover' === targetEvent.split('.')[0] ) {
-					scope_Events[targetEvent].forEach(function( callback ) {
-						callback.call( scope_Self, value );
-					});
-				}
-			});
-		}
-
-		// Attach events to several slider parts.
-		function bindSliderEvents ( behaviour ) {
-
-			// Attach the standard drag event to the handles.
-			if ( !behaviour.fixed ) {
-
-				scope_Handles.forEach(function( handle, index ){
-
-					// These events are only bound to the visual handle
-					// element, not the 'real' origin element.
-					attachEvent ( actions.start, handle.children[0], eventStart, {
-						handleNumbers: [index]
-					});
-				});
-			}
-
-			// Attach the tap event to the slider base.
-			if ( behaviour.tap ) {
-				attachEvent (actions.start, scope_Base, eventTap, {});
-			}
-
-			// Fire hover events
-			if ( behaviour.hover ) {
-				attachEvent (actions.move, scope_Base, eventHover, { hover: true });
-			}
-
-			// Make the range draggable.
-			if ( behaviour.drag ){
-
-				scope_Connects.forEach(function( connect, index ){
-
-					if ( connect === false || index === 0 || index === scope_Connects.length - 1 ) {
-						return;
-					}
-
-					var handleBefore = scope_Handles[index - 1];
-					var handleAfter = scope_Handles[index];
-					var eventHolders = [connect];
-
-					addClass(connect, options.cssClasses.draggable);
-
-					// When the range is fixed, the entire range can
-					// be dragged by the handles. The handle in the first
-					// origin will propagate the start event upward,
-					// but it needs to be bound manually on the other.
-					if ( behaviour.fixed ) {
-						eventHolders.push(handleBefore.children[0]);
-						eventHolders.push(handleAfter.children[0]);
-					}
-
-					eventHolders.forEach(function( eventHolder ) {
-						attachEvent ( actions.start, eventHolder, eventStart, {
-							handles: [handleBefore, handleAfter],
-							handleNumbers: [index - 1, index]
-						});
-					});
-				});
-			}
-		}
-
-
-		// Split out the handle positioning logic so the Move event can use it, too
-		function checkHandlePosition ( reference, handleNumber, to, lookBackward, lookForward ) {
-
-			// For sliders with multiple handles, limit movement to the other handle.
-			// Apply the margin option by adding it to the handle positions.
-			if ( scope_Handles.length > 1 ) {
-
-				if ( lookBackward && handleNumber > 0 ) {
-					to = Math.max(to, reference[handleNumber - 1] + options.margin);
-				}
-
-				if ( lookForward && handleNumber < scope_Handles.length - 1 ) {
-					to = Math.min(to, reference[handleNumber + 1] - options.margin);
-				}
-			}
-
-			// The limit option has the opposite effect, limiting handles to a
-			// maximum distance from another. Limit must be > 0, as otherwise
-			// handles would be unmoveable.
-			if ( scope_Handles.length > 1 && options.limit ) {
-
-				if ( lookBackward && handleNumber > 0 ) {
-					to = Math.min(to, reference[handleNumber - 1] + options.limit);
-				}
-
-				if ( lookForward && handleNumber < scope_Handles.length - 1 ) {
-					to = Math.max(to, reference[handleNumber + 1] - options.limit);
-				}
-			}
-
-			to = scope_Spectrum.getStep(to);
-
-			// Limit percentage to the 0 - 100 range
-			to = limit(to);
-
-			// Return false if handle can't move
-			if ( to === reference[handleNumber] ) {
-				return false;
-			}
-
-			return to;
-		}
-
-		function toPct ( pct ) {
-			return pct + '%';
-		}
-
-		// Updates scope_Locations and scope_Values, updates visual state
-		function updateHandlePosition ( handleNumber, to ) {
-
-			// Update locations.
-			scope_Locations[handleNumber] = to;
-
-			// Convert the value to the slider stepping/range.
-			scope_Values[handleNumber] = scope_Spectrum.fromStepping(to);
-
-			// Called synchronously or on the next animationFrame
-			var stateUpdate = function() {
-				scope_Handles[handleNumber].style[options.style] = toPct(to);
-				updateConnect(handleNumber);
-				updateConnect(handleNumber + 1);
-			};
-
-			// Set the handle to the new position.
-			// Use requestAnimationFrame for efficient painting.
-			// No significant effect in Chrome, Edge sees dramatic performace improvements.
-			// Option to disable is useful for unit tests, and single-step debugging.
-			if ( window.requestAnimationFrame && options.useRequestAnimationFrame ) {
-				window.requestAnimationFrame(stateUpdate);
-			} else {
-				stateUpdate();
-			}
-		}
-
-		function setZindex ( ) {
-
-			scope_HandleNumbers.forEach(function(handleNumber){
-				// Handles before the slider middle are stacked later = higher,
-				// Handles after the middle later is lower
-				// [[7] [8] .......... | .......... [5] [4]
-				var dir = (scope_Locations[handleNumber] > 50 ? -1 : 1);
-				var zIndex = 3 + (scope_Handles.length + (dir * handleNumber));
-				scope_Handles[handleNumber].childNodes[0].style.zIndex = zIndex;
-			});
-		}
-
-		// Test suggested values and apply margin, step.
-		function setHandle ( handleNumber, to, lookBackward, lookForward ) {
-
-			to = checkHandlePosition(scope_Locations, handleNumber, to, lookBackward, lookForward);
-
-			if ( to === false ) {
-				return false;
-			}
-
-			updateHandlePosition(handleNumber, to);
-
-			return true;
-		}
-
-		// Updates style attribute for connect nodes
-		function updateConnect ( index ) {
-
-			// Skip connects set to false
-			if ( !scope_Connects[index] ) {
-				return;
-			}
-
-			var l = 0;
-			var h = 100;
-
-			if ( index !== 0 ) {
-				l = scope_Locations[index - 1];
-			}
-
-			if ( index !== scope_Connects.length - 1 ) {
-				h = scope_Locations[index];
-			}
-
-			scope_Connects[index].style[options.style] = toPct(l);
-			scope_Connects[index].style[options.styleOposite] = toPct(100 - h);
-		}
-
-		// ...
-		function setValue ( to, handleNumber ) {
-
-			// Setting with null indicates an 'ignore'.
-			// Inputting 'false' is invalid.
-			if ( to === null || to === false ) {
-				return;
-			}
-
-			// If a formatted number was passed, attemt to decode it.
-			if ( typeof to === 'number' ) {
-				to = String(to);
-			}
-
-			to = options.format.from(to);
-
-			// Request an update for all links if the value was invalid.
-			// Do so too if setting the handle fails.
-			if ( to !== false && !isNaN(to) ) {
-				setHandle(handleNumber, scope_Spectrum.toStepping(to), false, false);
-			}
-		}
-
-		// Set the slider value.
-		function valueSet ( input, fireSetEvent ) {
-
-			var values = asArray(input);
-			var isInit = scope_Locations[0] === undefined;
-
-			// Event fires by default
-			fireSetEvent = (fireSetEvent === undefined ? true : !!fireSetEvent);
-
-			values.forEach(setValue);
-
-			// Animation is optional.
-			// Make sure the initial values were set before using animated placement.
-			if ( options.animate && !isInit ) {
-				addClassFor(scope_Target, options.cssClasses.tap, options.animationDuration);
-			}
-
-			// Now that all base values are set, apply constraints
-			scope_HandleNumbers.forEach(function(handleNumber){
-				setHandle(handleNumber, scope_Locations[handleNumber], true, false);
-			});
-
-			setZindex();
-
-			scope_HandleNumbers.forEach(function(handleNumber){
-
-				fireEvent('update', handleNumber);
-
-				// Fire the event only for handles that received a new value, as per #579
-				if ( values[handleNumber] !== null && fireSetEvent ) {
-					fireEvent('set', handleNumber);
-				}
-			});
-		}
-
-		function valueReset ( fireSetEvent ) {
-			valueSet(options.start, fireSetEvent);
-		}
-
-		// Get the slider value.
-		function valueGet ( ) {
-
-			var values = scope_Values.map(options.format.to);
-
-			// If only one handle is used, return a single value.
-			if ( values.length === 1 ){
-				return values[0];
-			}
-
-			return values;
-		}
-
-		// Removes classes from the root and empties it.
-		function destroy ( ) {
-
-			for ( var key in options.cssClasses ) {
-				if ( !options.cssClasses.hasOwnProperty(key) ) { continue; }
-				removeClass(scope_Target, options.cssClasses[key]);
-			}
-
-			while (scope_Target.firstChild) {
-				scope_Target.removeChild(scope_Target.firstChild);
-			}
-
-			delete scope_Target.noUiSlider;
-		}
-
-		// Get the current step size for the slider.
-		function getCurrentStep ( ) {
-
-			// Check all locations, map them to their stepping point.
-			// Get the step point, then find it in the input list.
-			return scope_Locations.map(function( location, index ){
-
-				var nearbySteps = scope_Spectrum.getNearbySteps( location );
-				var value = scope_Values[index];
-				var increment = nearbySteps.thisStep.step;
-				var decrement = null;
-
-				// If the next value in this step moves into the next step,
-				// the increment is the start of the next step - the current value
-				if ( increment !== false ) {
-					if ( value + increment > nearbySteps.stepAfter.startValue ) {
-						increment = nearbySteps.stepAfter.startValue - value;
-					}
-				}
-
-				// If the value is beyond the starting point
-				if ( value > nearbySteps.thisStep.startValue ) {
-					decrement = nearbySteps.thisStep.step;
-				}
-
-				else if ( nearbySteps.stepBefore.step === false ) {
-					decrement = false;
-				}
-
-				// If a handle is at the start of a step, it always steps back into the previous step first
-				else {
-					decrement = value - nearbySteps.stepBefore.highestStep;
-				}
-
-				// Now, if at the slider edges, there is not in/decrement
-				if ( location === 100 ) {
-					increment = null;
-				}
-
-				else if ( location === 0 ) {
-					decrement = null;
-				}
-
-				// As per #391, the comparison for the decrement step can have some rounding issues.
-				var stepDecimals = scope_Spectrum.countStepDecimals();
-
-				// Round per #391
-				if ( increment !== null && increment !== false ) {
-					increment = Number(increment.toFixed(stepDecimals));
-				}
-
-				if ( decrement !== null && decrement !== false ) {
-					decrement = Number(decrement.toFixed(stepDecimals));
-				}
-
-				return [decrement, increment];
-			});
-		}
-
-		// Attach an event to this slider, possibly including a namespace
-		function bindEvent ( namespacedEvent, callback ) {
-			scope_Events[namespacedEvent] = scope_Events[namespacedEvent] || [];
-			scope_Events[namespacedEvent].push(callback);
-
-			// If the event bound is 'update,' fire it immediately for all handles.
-			if ( namespacedEvent.split('.')[0] === 'update' ) {
-				scope_Handles.forEach(function(a, index){
-					fireEvent('update', index);
-				});
-			}
-		}
-
-		// Undo attachment of event
-		function removeEvent ( namespacedEvent ) {
-
-			var event = namespacedEvent && namespacedEvent.split('.')[0],
-				namespace = event && namespacedEvent.substring(event.length);
-
-			Object.keys(scope_Events).forEach(function( bind ){
-
-				var tEvent = bind.split('.')[0],
-					tNamespace = bind.substring(tEvent.length);
-
-				if ( (!event || event === tEvent) && (!namespace || namespace === tNamespace) ) {
-					delete scope_Events[bind];
-				}
-			});
-		}
-
-		// Updateable: margin, limit, step, range, animate, snap
-		function updateOptions ( optionsToUpdate, fireSetEvent ) {
-
-			// Spectrum is created using the range, snap, direction and step options.
-			// 'snap' and 'step' can be updated, 'direction' cannot, due to event binding.
-			// If 'snap' and 'step' are not passed, they should remain unchanged.
-			var v = valueGet();
-
-			var updateAble = ['margin', 'limit', 'range', 'animate', 'snap', 'step', 'format'];
-
-			// Only change options that we're actually passed to update.
-			updateAble.forEach(function(name){
-				if ( optionsToUpdate[name] !== undefined ) {
-					originalOptions[name] = optionsToUpdate[name];
-				}
-			});
-
-			var newOptions = testOptions(originalOptions);
-
-			// Load new options into the slider state
-			updateAble.forEach(function(name){
-				if ( optionsToUpdate[name] !== undefined ) {
-					options[name] = newOptions[name];
-				}
-			});
-
-			// Save current spectrum direction as testOptions in testRange call
-			// doesn't rely on current direction
-			newOptions.spectrum.direction = scope_Spectrum.direction;
-			scope_Spectrum = newOptions.spectrum;
-
-			// Limit and margin depend on the spectrum but are stored outside of it. (#677)
-			options.margin = newOptions.margin;
-			options.limit = newOptions.limit;
-
-			// Invalidate the current positioning so valueSet forces an update.
-			scope_Locations = [];
-			valueSet(optionsToUpdate.start || v, fireSetEvent);
-		}
-
-		// Throw an error if the slider was already initialized.
-		if ( scope_Target.noUiSlider ) {
-			throw new Error('Slider was already initialized.');
-		}
-
-		// Create the base element, initialise HTML and set classes.
-		// Add handles and connect elements.
-		addSlider(scope_Target);
-		addElements(options.connect, scope_Base);
-
-		scope_Self = {
-			destroy: destroy,
-			steps: getCurrentStep,
-			on: bindEvent,
-			off: removeEvent,
-			get: valueGet,
-			set: valueSet,
-			reset: valueReset,
-			 // Exposed for unit testing, don't use this in your application.
-			__moveHandles: function(a, b, c) { moveHandles(a, b, scope_Locations, c); },
-			options: originalOptions, // Issue #600, #678
-			updateOptions: updateOptions,
-			target: scope_Target, // Issue #597
-			pips: pips // Issue #594
-		};
-
-		// Attach user events.
-		bindSliderEvents(options.events);
-
-		// Use the public value method to set the start values.
-		valueSet(options.start);
-
-		if ( options.pips ) {
-			pips(options.pips);
-		}
-
-		if ( options.tooltips ) {
-			tooltips();
-		}
-
-		return scope_Self;
-
-	}
-
-
-		// Run the standard initializer
-		function initialize ( target, originalOptions ) {
-
-			if ( !target.nodeName ) {
-				throw new Error('noUiSlider.create requires a single element.');
-			}
-
-			// Test the options and create the slider environment;
-			var options = testOptions( originalOptions, target );
-			var api = closure( target, options, originalOptions );
-
-			target.noUiSlider = api;
-
-			return api;
-		}
-
-		// Use an object instead of a function for future expansibility;
-		return {
-			create: initialize
-		};
-
-	}));
-
-/***/ },
-/* 15 */
-/***/ function(module, exports) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {// Best place to find information on XHR features is:
-	// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
-
-	var reqfields = [
-	  'responseType', 'withCredentials', 'timeout', 'onprogress'
-	]
-
-	// Simple and small ajax function
-	// Takes a parameters object and a callback function
-	// Parameters:
-	//  - url: string, required
-	//  - headers: object of `{header_name: header_value, ...}`
-	//  - body:
-	//      + string (sets content type to 'application/x-www-form-urlencoded' if not set in headers)
-	//      + FormData (doesn't set content type so that browser will set as appropriate)
-	//  - method: 'GET', 'POST', etc. Defaults to 'GET' or 'POST' based on body
-	//  - cors: If your using cross-origin, you will need this true for IE8-9
-	//
-	// The following parameters are passed onto the xhr object.
-	// IMPORTANT NOTE: The caller is responsible for compatibility checking.
-	//  - responseType: string, various compatability, see xhr docs for enum options
-	//  - withCredentials: boolean, IE10+, CORS only
-	//  - timeout: long, ms timeout, IE8+
-	//  - onprogress: callback, IE10+
-	//
-	// Callback function prototype:
-	//  - statusCode from request
-	//  - response
-	//    + if responseType set and supported by browser, this is an object of some type (see docs)
-	//    + otherwise if request completed, this is the string text of the response
-	//    + if request is aborted, this is "Abort"
-	//    + if request times out, this is "Timeout"
-	//    + if request errors before completing (probably a CORS issue), this is "Error"
-	//  - request object
-	//
-	// Returns the request object. So you can call .abort() or other methods
-	//
-	// DEPRECATIONS:
-	//  - Passing a string instead of the params object has been removed!
-	//
-	exports.ajax = function (params, callback) {
-	  // Any variable used more than once is var'd here because
-	  // minification will munge the variables whereas it can't munge
-	  // the object access.
-	  var headers = params.headers || {}
-	    , body = params.body
-	    , method = params.method || (body ? 'POST' : 'GET')
-	    , called = false
-
-	  var req = getRequest(params.cors)
-
-	  function cb(statusCode, responseText) {
-	    return function () {
-	      if (!called) {
-	        callback(req.status === undefined ? statusCode : req.status,
-	                 req.status === 0 ? "Error" : (req.response || req.responseText || responseText),
-	                 req)
-	        called = true
-	      }
-	    }
-	  }
-
-	  req.open(method, params.url, true)
-
-	  var success = req.onload = cb(200)
-	  req.onreadystatechange = function () {
-	    if (req.readyState === 4) success()
-	  }
-	  req.onerror = cb(null, 'Error')
-	  req.ontimeout = cb(null, 'Timeout')
-	  req.onabort = cb(null, 'Abort')
-
-	  if (body) {
-	    setDefault(headers, 'X-Requested-With', 'XMLHttpRequest')
-
-	    if (!global.FormData || !(body instanceof global.FormData)) {
-	      setDefault(headers, 'Content-Type', 'application/x-www-form-urlencoded')
-	    }
-	  }
-
-	  for (var i = 0, len = reqfields.length, field; i < len; i++) {
-	    field = reqfields[i]
-	    if (params[field] !== undefined)
-	      req[field] = params[field]
-	  }
-
-	  for (var field in headers)
-	    req.setRequestHeader(field, headers[field])
-
-	  req.send(body)
-
-	  return req
-	}
-
-	function getRequest(cors) {
-	  // XDomainRequest is only way to do CORS in IE 8 and 9
-	  // But XDomainRequest isn't standards-compatible
-	  // Notably, it doesn't allow cookies to be sent or set by servers
-	  // IE 10+ is standards-compatible in its XMLHttpRequest
-	  // but IE 10 can still have an XDomainRequest object, so we don't want to use it
-	  if (cors && global.XDomainRequest && !/MSIE 1/.test(navigator.userAgent))
-	    return new XDomainRequest
-	  if (global.XMLHttpRequest)
-	    return new XMLHttpRequest
-	}
-
-	function setDefault(obj, key, value) {
-	  obj[key] = obj[key] || value
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*
@@ -16462,6 +13190,3628 @@
 
 	}(window, document));
 	//# sourceMappingURL=leaflet-src.map
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	function addControlSection(title, parentSection, startCollapsed) {
+	    var header = document.createElement('h1');
+	    var section = document.createElement('section');
+	    parentSection.appendChild(section);
+	    section.appendChild(header);
+	    header.innerHTML = title;
+	    header.addEventListener('click', function (event) {
+	        section.classList.toggle('collapsed');
+	    });
+	    if (startCollapsed) {
+	        section.classList.add('collapsed');
+	    }
+	    return section;
+	}
+	exports.addControlSection = addControlSection;
+	;
+	var mapListeners = [];
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Ratings = __webpack_require__(5);
+	var Surveys = __webpack_require__(7);
+	var Controls = __webpack_require__(3);
+	var config_1 = __webpack_require__(6);
+	var timeTypes = {
+	    none: {
+	        label: 'No limit'
+	    },
+	    decaying: {
+	        label: 'Decaying',
+	        description: 'The older the survey, the more opaque it is'
+	    },
+	    ranged: {
+	        label: 'Ranged'
+	    }
+	};
+	function create(element) {
+	    var surveySection = Controls.addControlSection('Thames21 Surveys', element);
+	    var surveyButtonsSection = Controls.addControlSection('Surveys', surveySection);
+	    var ratingsSection = Controls.addControlSection('Overall Rating', surveySection);
+	    Surveys.createSurveyButtons(surveyButtonsSection);
+	    Ratings.createRatings(ratingsSection);
+	    if (config_1.default.startSurveysEnabled) {
+	        Surveys.toggleSurvey();
+	        Surveys.reloadData();
+	    }
+	}
+	exports.create = create;
+	;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = create;
+	//# sourceMappingURL=index.js.map
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var config_1 = __webpack_require__(6);
+	;
+	exports.ratings = [{
+	    label: 'Excellent',
+	    id: 'excellent',
+	    color: [114, 63, 54]
+	}, {
+	    label: 'Good',
+	    id: 'good',
+	    color: [74, 51, 54]
+	}, {
+	    label: 'Moderate',
+	    id: 'moderate',
+	    color: [52, 94, 50]
+	}, {
+	    label: 'Poor',
+	    id: 'poor',
+	    color: [33, 88, 55]
+	}, {
+	    label: 'Bad',
+	    id: 'bad',
+	    color: [358, 80, 51]
+	}];
+	var buttons = {};
+	var ratingListeners = [];
+	exports.scores = {};
+	exports.ratings.forEach(function (rating, i) {
+	    exports.scores[rating.id] = i;
+	});
+	exports.colors = {};
+	exports.ratings.forEach(function (rating, i) {
+	    exports.colors[rating.id] = rating.color;
+	});
+	function getColor(rating) {
+	    if (typeof rating === 'number') {
+	        rating = Math.min(Math.max(0, rating), exports.ratings.length);
+	        return exports.ratings[rating].color;
+	    } else {
+	        if (typeof exports.scores[rating] !== 'undefined') {
+	            return exports.ratings[exports.scores[rating]].color;
+	        }
+	    }
+	}
+	exports.getColor = getColor;
+	exports.selectedRatings = [];
+	exports.EXCLUSIVE = 1;
+	exports.LESS_THAN = 2;
+	exports.GREATER_THAN = 3;
+	function selected(rating) {
+	    if (typeof rating === 'number') {
+	        return exports.selectedRatings.indexOf(exports.ratings[rating].id) !== -1;
+	    } else if (typeof rating === 'string' && typeof exports.scores[rating] !== 'undefined') {
+	        return exports.selectedRatings.indexOf(rating) !== -1;
+	    }
+	    return exports.selectedRatings;
+	}
+	exports.selected = selected;
+	function selectRatings(rating, method, event) {
+	    if (event) {
+	        if (event.defaultPrevented) {
+	            return;
+	        }
+	        event.preventDefault();
+	    }
+	    if (typeof rating === 'string') {
+	        if (typeof exports.scores[rating] !== 'undefined') {
+	            switch (method) {
+	                case exports.EXCLUSIVE:
+	                    exports.selectedRatings = [rating];
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (ratingData.id === rating) {
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
+	                    break;
+	                case exports.LESS_THAN:
+	                    exports.selectedRatings = [];
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (score >= exports.scores[rating]) {
+	                            exports.selectedRatings.push(ratingData.id);
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
+	                    break;
+	                case exports.GREATER_THAN:
+	                    exports.selectedRatings = [];
+	                    exports.ratings.forEach(function (ratingData, score) {
+	                        if (score <= exports.scores[rating]) {
+	                            exports.selectedRatings.push(ratingData.id);
+	                            buttons[ratingData.id].classList.add('selected');
+	                        } else {
+	                            buttons[ratingData.id].classList.remove('selected');
+	                        }
+	                    });
+	                    break;
+	                default:
+	                    var i = void 0;
+	                    if ((i = exports.selectedRatings.indexOf(rating)) !== -1) {
+	                        exports.selectedRatings.splice(i, 1);
+	                        buttons[rating].classList.remove('selected');
+	                    } else {
+	                        exports.selectedRatings.push(rating);
+	                        buttons[rating].classList.add('selected');
+	                    }
+	            }
+	        }
+	    } else {
+	        if (typeof rating === 'boolean' && rating === false || exports.selectedRatings.length === exports.ratings.length) {
+	            exports.selectedRatings = [];
+	        } else {
+	            exports.selectedRatings = exports.ratings.map(function (rating) {
+	                return rating.id;
+	            });
+	        }
+	    }
+	    ratingListeners.forEach(function (callback) {
+	        callback();
+	    });
+	}
+	exports.selectRatings = selectRatings;
+	;
+	function addListener(func) {
+	    var id = void 0;
+	    if ((id = ratingListeners.indexOf(func)) !== -1) {
+	        return id;
+	    }
+	    return ratingListeners.push(func) - 1;
+	}
+	exports.addListener = addListener;
+	;
+	function removeListener(item) {
+	    var id = void 0;
+	    if (typeof item === 'number' && typeof ratingListeners[item] !== 'undefined') {
+	        delete ratingListeners[item];
+	    } else if (typeof item === 'function' && (id = ratingListeners.indexOf(item)) !== -1) {
+	        delete ratingListeners[id];
+	    }
+	}
+	exports.removeListener = removeListener;
+	;
+	function createRatings(parentElement) {
+	    var element = void 0;
+	    parentElement.appendChild(element = document.createElement('div'));
+	    parentElement.classList.add('ratings');
+	    exports.ratings.forEach(function (rating) {
+	        var button = document.createElement('div');
+	        var div = void 0;
+	        element.appendChild(button);
+	        button.classList.add('button', rating.id);
+	        button.innerHTML = rating.label;
+	        buttons[rating.id] = button;
+	        button.appendChild(div = document.createElement('div'));
+	        div.innerHTML = '&oplus;';
+	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.EXCLUSIVE));
+	        button.appendChild(div = document.createElement('div'));
+	        div.innerHTML = '&lt;';
+	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.LESS_THAN));
+	        button.addEventListener('click', selectRatings.bind(null, rating.id, false));
+	        if (config_1.default.startRatingsEnabled) {
+	            button.classList.add('selected');
+	            exports.selectedRatings.push(rating.id);
+	        }
+	    });
+	}
+	exports.createRatings = createRatings;
+	;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = createRatings;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	var config = {
+	    halflifeLengths: [{ label: "1 hour", time: 3600000 }, { label: "1 day", time: 86400000 }, { label: "1 week", time: 604800000 }, { label: "1 month", time: 2592000000 }, { label: "1 year", time: 31536000000 }],
+	    defaultMarkerOptions: {
+	        color: "#ffffff",
+	        interactive: true,
+	        weight: 2
+	    },
+	    startRatingsEnabled: true,
+	    expiredSaturation: 0,
+	    decaySaturation: false,
+	    expiredLightness: 60,
+	    decayLightness: false,
+	    decayOpacity: true,
+	    startSurveysEnabled: false,
+	    defaultTime: "decaying",
+	    mapMoveTimeout: 1000,
+	    defaultSurveys: {
+	        quality: {
+	            ph: true
+	        }
+	    }
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = config;
+	//# sourceMappingURL=config.js.map
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var Map = __webpack_require__(1);
+	var Quality = __webpack_require__(8);
+	var Time = __webpack_require__(14);
+	var Ratings = __webpack_require__(5);
+	var Controls = __webpack_require__(3);
+	var config_1 = __webpack_require__(6);
+	var nanoajax = __webpack_require__(17);
+	;
+	exports.surveyData = {};
+	exports.surveys = {
+	    quality: Quality
+	};
+	var activeSurveys = [];
+	var surveyParts = {};
+	var surveyLayers = {};
+	var surveyControls = {};
+	var requestedAreas = {};
+	var allSurveysButton = void 0;
+	var pointLatlng = function pointLatlng(survey) {
+	    return L.latLng([survey.location._wgs84[1], survey.location._wgs84[0]]);
+	};
+	var surveyScore = function surveyScore(surveyType, survey) {
+	    var total = 0;
+	    var items = void 0;
+	    var score = void 0;
+	    if (surveyParts[surveyType] instanceof Array && (items = surveyParts[surveyType].length) !== 0) {
+	        surveyParts[surveyType].forEach(function (part) {
+	            if (typeof (score = exports.surveys[surveyType].parts[part].score(survey)) === 'number') {
+	                total += score;
+	            } else {
+	                items--;
+	            }
+	        });
+	        if (items) {
+	            return Math.round(total / items);
+	        }
+	    }
+	};
+	var pointColor = function pointColor(surveyType, survey) {
+	    var score = 0;
+	    var items = 0;
+	    var currentTime = new Date().getTime();
+	    var h,
+	        s,
+	        l,
+	        o = 1;
+	    var value;
+	    var color = void 0;
+	    var length = surveyParts[surveyType].length;
+	    if (!length) {
+	        return;
+	    } else if (length === 1 && (!exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected || exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected().length)) {
+	        if (color = exports.surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey)) {
+	            var _color = color;
+
+	            var _color2 = _slicedToArray(_color, 3);
+
+	            h = _color2[0];
+	            s = _color2[1];
+	            l = _color2[2];
+	        }
+	    } else {
+	        if (color = Ratings.getColor(surveyScore(surveyType, survey))) {
+	            var _color3 = color;
+
+	            var _color4 = _slicedToArray(_color3, 3);
+
+	            h = _color4[0];
+	            s = _color4[1];
+	            l = _color4[2];
+	        }
+	    }
+	    if (Time.selectedTimeType === 'decaying') {
+	        var decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
+	        if (config_1.default.decaySaturation) {
+	            s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
+	        }
+	        if (config_1.default.decayLightness) {
+	            l = Math.round(l - (l - config_1.default.expiredLightness) * decay);
+	        }
+	        if (config_1.default.decayOpacity) {
+	            o = 1 - decay;
+	        }
+	    }
+	    if (typeof h === 'undefined') {
+	        return false;
+	    } else {
+	        return [h, s, l, o];
+	    }
+	};
+	function createSurveyButtons(parentElement) {
+	    parentElement.classList.add('surveys');
+	    var buttons = void 0,
+	        parts = void 0;
+	    Map.addListener(reloadData);
+	    Time.addListener(redrawAllActive);
+	    Ratings.addListener(redrawAllActive);
+	    parentElement.appendChild(buttons = document.createElement('div'));
+	    parentElement.appendChild(parts = document.createElement('div'));
+	    allSurveysButton = document.createElement('button');
+	    buttons.appendChild(allSurveysButton);
+	    allSurveysButton.innerHTML = 'All';
+	    allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
+	    Object.keys(exports.surveys).forEach(function (s) {
+	        var survey = exports.surveys[s];
+	        var button = document.createElement('button');
+	        var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s];
+	        buttons.appendChild(button);
+	        button.innerHTML = survey.label;
+	        button.addEventListener('click', toggleSurvey.bind(null, s));
+	        surveyParts[s] = [];
+	        if (defaults) {
+	            activeSurveys.push(s);
+	            button.classList.add('selected');
+	        }
+	        var pbuttons = Controls.addControlSection(survey.label, parentElement, true);
+	        var pdiv = void 0;
+	        pbuttons.appendChild(pdiv = document.createElement('div'));
+	        var pAllButton = document.createElement('button');
+	        pdiv.appendChild(pAllButton);
+	        pAllButton.innerHTML = 'All';
+	        pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
+	        surveyControls[s] = {
+	            button: button,
+	            allButton: pAllButton,
+	            partSection: pbuttons,
+	            partButtons: {},
+	            partFilters: {}
+	        };
+	        Object.keys(survey.parts).forEach(function (p) {
+	            var part = survey.parts[p];
+	            var pbutton = document.createElement('button');
+	            surveyControls[s].partButtons[p] = pbutton;
+	            pdiv.appendChild(pbutton);
+	            pbutton.innerHTML = part.label;
+	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
+	            if (defaults) {
+	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p]) {
+	                    surveyParts[s].push(p);
+	                    pbutton.classList.add('selected');
+	                }
+	            } else {
+	                pbuttons.style.display = 'none';
+	            }
+	            if (part.filterValues) {
+	                var pfilters = Controls.addControlSection(part.label, pbuttons, true);
+	                var div = void 0;
+	                surveyControls[s].partFilters[p] = pfilters;
+	                pfilters.appendChild(div = document.createElement('div'));
+	                if (defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object' && typeof config_1.default.defaultSurveys[s][p] !== 'undefined') {
+	                    part.select(config_1.default.defaultSurveys[s][p]);
+	                }
+	                part.createButtons(div);
+	                part.addListener(redrawSurveyData.bind(null, s));
+	            }
+	        });
+	    });
+	    reloadData();
+	}
+	exports.createSurveyButtons = createSurveyButtons;
+	;
+	function addSurveyData(type, data) {
+	    if (_typeof(exports.surveyData[type]) !== 'object') {
+	        exports.surveyData[type] = {};
+	    }
+	    data.forEach(function (survey) {
+	        exports.surveyData[type][survey._id['$oid']] = survey;
+	    });
+	}
+	exports.addSurveyData = addSurveyData;
+	;
+	function toggleSurvey(survey) {
+	    var index = void 0;
+	    var surveyKeys = Object.keys(exports.surveys);
+	    if (survey) {
+	        if (typeof exports.surveys[survey] !== 'undefined') {
+	            if ((index = activeSurveys.indexOf(survey)) !== -1) {
+	                activeSurveys.splice(index, 1);
+	                allSurveysButton.classList.remove('selected');
+	                if (surveyControls[survey].button) {
+	                    surveyControls[survey].button.classList.remove('selected');
+	                }
+	                if (typeof surveyLayers[survey] !== 'undefined') {
+	                    if (Map.map.hasLayer(surveyLayers[survey])) {
+	                        Map.map.removeLayer(surveyLayers[survey]);
+	                    }
+	                }
+	                surveyControls[survey].partSection.style.display = 'none';
+	            } else {
+	                activeSurveys.push(survey);
+	                if (surveyKeys.length === activeSurveys.length) {
+	                    allSurveysButton.classList.add('selected');
+	                }
+	                if (surveyControls[survey].button) {
+	                    surveyControls[survey].button.classList.add('selected');
+	                }
+	                if (typeof surveyLayers[survey] !== 'undefined') {
+	                    if (!Map.map.hasLayer(surveyLayers[survey])) {
+	                        Map.map.addLayer(surveyLayers[survey]);
+	                    }
+	                }
+	                surveyControls[survey].partSection.style.display = '';
+	                reloadData(survey);
+	            }
+	        }
+	    } else {
+	        if (activeSurveys.length === 0 || surveyKeys.length !== activeSurveys.length) {
+	            surveyKeys.forEach(function (survey) {
+	                if (activeSurveys.indexOf(survey) === -1) {
+	                    toggleSurvey(survey);
+	                }
+	            });
+	            allSurveysButton.classList.add('selected');
+	        } else {
+	            surveyKeys.forEach(function (survey) {
+	                toggleSurvey(survey);
+	            });
+	            allSurveysButton.classList.remove('selected');
+	        }
+	    }
+	}
+	exports.toggleSurvey = toggleSurvey;
+	;
+	function toggleSurveyPart(survey, part) {
+	    var index = void 0;
+	    if (typeof exports.surveys[survey] !== 'undefined') {
+	        var partKeys = Object.keys(exports.surveys[survey].parts);
+	        if (part) {
+	            if (typeof exports.surveys[survey].parts[part] !== 'undefined') {
+	                if (typeof surveyParts[survey] === 'undefined') {
+	                    surveyParts[survey] = [];
+	                }
+	                if ((index = surveyParts[survey].indexOf(part)) !== -1) {
+	                    surveyParts[survey].splice(index, 1);
+	                    surveyControls[survey].allButton.classList.remove('selected');
+	                    if (surveyControls[survey].partButtons[part]) {
+	                        surveyControls[survey].partButtons[part].classList.remove('selected');
+	                    }
+	                    if (surveyControls[survey].partFilters[part]) {
+	                        surveyControls[survey].partFilters[part].style.display = 'none';
+	                    }
+	                } else {
+	                    surveyParts[survey].push(part);
+	                    if (partKeys.length === surveyParts[survey].length) {
+	                        surveyControls[survey].allButton.classList.add('selected');
+	                    }
+	                    if (surveyControls[survey].partButtons[part]) {
+	                        surveyControls[survey].partButtons[part].classList.add('selected');
+	                    }
+	                    if (surveyControls[survey].partFilters[part]) {
+	                        surveyControls[survey].partFilters[part].style.display = '';
+	                    }
+	                }
+	            }
+	        } else {
+	            if (surveyParts[survey].length === 0 || partKeys.length !== surveyParts[survey].length) {
+	                partKeys.forEach(function (p) {
+	                    surveyControls[survey].partButtons[p].classList.add('selected');
+	                });
+	                surveyParts[survey] = partKeys;
+	                surveyControls[survey].allButton.classList.add('selected');
+	            } else {
+	                partKeys.forEach(function (p) {
+	                    surveyControls[survey].partButtons[p].classList.remove('selected');
+	                });
+	                surveyParts[survey] = [];
+	                surveyControls[survey].allButton.classList.remove('selected');
+	            }
+	        }
+	        if (activeSurveys.indexOf(survey) !== -1) {
+	            redrawSurveyData(survey);
+	        }
+	    }
+	}
+	exports.toggleSurveyPart = toggleSurveyPart;
+	;
+	function reloadData(survey) {
+	    var toFetch = [];
+	    if (typeof survey === 'string' && typeof exports.surveys[survey] === 'undefined') {
+	        throw new Error("Unknown survey " + survey);
+	    }
+	    var bounds = Map.map.getBounds();
+	    var getParams = {
+	        ne: bounds.getNorth() + ',' + bounds.getEast(),
+	        sw: bounds.getSouth() + ',' + bounds.getWest()
+	    };
+	    var checkPreviousLoads = function checkPreviousLoads(survey) {
+	        if (typeof requestedAreas[survey] !== 'undefined') {
+	            if (typeof requestedAreas[survey].find(function (area) {
+	                if (area.contains(bounds)) {
+	                    return true;
+	                }
+	            }) === 'undefined') {
+	                toFetch.push(survey);
+	            }
+	        } else {
+	            toFetch.push(survey);
+	        }
+	    };
+	    if (typeof survey === 'string') {
+	        checkPreviousLoads(survey);
+	    } else {
+	        activeSurveys.forEach(checkPreviousLoads);
+	    }
+	    toFetch.forEach(function (survey) {
+	        var params = Object.assign({}, getParams, exports.surveys[survey].getParams);
+	        var get = [];
+	        Object.keys(params).forEach(function (param) {
+	            get.push(param + '=' + encodeURIComponent(params[param]));
+	        });
+	        if (get.length) {
+	            get = '?' + get.join('&');
+	        } else {
+	            get = '';
+	        }
+	        nanoajax.ajax({
+	            url: exports.surveys[survey].url + get,
+	            headers: {
+	                Accept: 'javascript/json'
+	            }
+	        }, function (code, responseText) {
+	            var data;
+	            if (code === 200) {
+	                try {
+	                    data = JSON.parse(responseText);
+	                    console.log('get response for', exports.surveys[survey].url, get, data);
+	                } catch (err) {
+	                    console.error('Error parsing response', exports.surveys[survey].url, get, responseText);
+	                    return;
+	                }
+	                if ((typeof data === "undefined" ? "undefined" : _typeof(data)) === 'object' && data.results && data.results instanceof Array) {
+	                    addSurveyData(survey, data.results);
+	                    if (typeof requestedAreas[survey] === 'undefined') {
+	                        requestedAreas[survey] = [];
+	                    }
+	                    requestedAreas[survey].push(bounds);
+	                    redrawSurveyData(survey);
+	                } else {
+	                    console.error('Unknown data received');
+	                }
+	            }
+	        });
+	    });
+	    if (typeof survey === 'string' && !toFetch.length) {
+	        redrawSurveyData(survey);
+	    }
+	}
+	exports.reloadData = reloadData;
+	function redrawSurveyData(survey) {
+	    if (typeof exports.surveyData[survey] !== 'undefined') {
+	        if (typeof surveyLayers[survey] === 'undefined') {
+	            surveyLayers[survey] = L.layerGroup([]);
+	        } else {
+	            surveyLayers[survey].clearLayers();
+	        }
+	        var markers = [];
+	        Object.keys(exports.surveyData[survey]).forEach(function (point) {
+	            var surveyPoint = exports.surveyData[survey][point];
+	            var score = surveyScore(survey, surveyPoint);
+	            if (!Ratings.selected(score)) {
+	                return;
+	            }
+	            var length = surveyParts[survey].length;
+	            for (var i = 0; i < length; i++) {
+	                var part = surveyParts[survey][i];
+	                if (exports.surveys[survey].parts[part].selected && !exports.surveys[survey].parts[part].selected(surveyPoint)) {
+	                    return;
+	                }
+	            }
+	            var latlng = pointLatlng(surveyPoint);
+	            var color = pointColor(survey, surveyPoint);
+	            if (color) {
+	                var marker = L.circleMarker(latlng, Object.assign({}, config_1.default.defaultMarkerOptions, {
+	                    color: surveyPoint.status === 'approved' ? '#ffffff' : '#666666',
+	                    fillColor: 'hsl(' + color[0] + ', ' + color[1] + '%, ' + color[2] + '%)',
+	                    opacity: 1 - Math.pow(1 - color[3], 2),
+	                    fillOpacity: color[3]
+	                }));
+	                markers.push({
+	                    marker: marker,
+	                    time: surveyPoint.timestamp._epoch
+	                });
+	            }
+	        });
+	        markers.forEach(function (marker) {
+	            surveyLayers[survey].addLayer(marker.marker);
+	        });
+	        if (!Map.map.hasLayer(surveyLayers[survey])) {
+	            Map.map.addLayer(surveyLayers[survey]);
+	        }
+	    }
+	}
+	exports.redrawSurveyData = redrawSurveyData;
+	;
+	function redrawAllActive() {
+	    activeSurveys.forEach(redrawSurveyData);
+	}
+	exports.redrawAllActive = redrawAllActive;
+	;
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Coliforms = __webpack_require__(9);
+	var O2 = __webpack_require__(10);
+	var Ph = __webpack_require__(11);
+	var Temperature = __webpack_require__(12);
+	var Turbidity = __webpack_require__(13);
+	exports.label = 'Water Quality';
+	exports.layerId = 'thames21ThamesWaterQuality';
+	exports.url = 'https://widget.cartographer.io/api/v1/map';
+	exports.getParams = {
+	    subdomain: 'thames21',
+	    layer: 'thames21ThamesWaterQuality'
+	};
+	exports.parts = {
+	    coliforms: Coliforms,
+	    o2: O2,
+	    ph: Ph,
+	    temperature: Temperature,
+	    turbidity: Turbidity
+	};
+	//# sourceMappingURL=index.js.map
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	exports.label = 'Coliforms';
+	exports.description = "Volunteers carry out one-off tests to indicate the\npresence of coliform bacteria which are found in the intestinal tract of\nanimals and humans. Although harmless themselves, they can indicate presence\nof pathogens and viruses. These enter the water when there is sewage or\nanimal waste discharged into the Thames.";
+	function color(survey) {
+	    var value = survey.attributes.thames21Coliforms;
+	    if (value === true) {
+	        return ratings_1.colors['good'];
+	    } else if (value === false) {
+	        return ratings_1.colors['bad'];
+	    }
+	}
+	exports.color = color;
+	function score(survey) {
+	    var value = survey.attributes.thames21Coliforms;
+	    if (value === true) {
+	        return ratings_1.scores['good'];
+	    } else if (value === false) {
+	        return ratings_1.scores['bad'];
+	    }
+	}
+	exports.score = score;
+	//# sourceMappingURL=coliforms.js.map
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	exports.label = 'Dissolved Oxygen';
+	exports.description = "Volunteers measure the amount of dissolved oxygen\n(DO) in the water which tells us how much oxygen there is available for river\nlife to use (e.g. fish and insects). Dissolved oxygen is measured in \u2018parts\nper million\u2019 (ppm); high levels (above 10ppm) indicate a healthy river. When\nuntreated sewage is discharged into the Thames, microorganisms use the\ndissolved oxygen to break down the sewage meaning that oxygen is no longer\navailable for other forms of life. This can lead to large scale fish kills\nsuch as those in 2004 and 2011, when thousands of fish died after sewage\nentered the river.";
+	function color(survey) {
+	    var value = survey.attributes.thames21DissolvedOxygen;
+	    if (typeof value === 'number') {
+	        if (value >= 10) {
+	            return [152, 91, 21];
+	        } else if (value >= 8) {
+	            return [128, 52, 47];
+	        } else if (value >= 6) {
+	            return [63, 75, 50];
+	        } else if (value >= 4) {
+	            return [36, 97, 62];
+	        } else if (value >= 2) {
+	            return [14, 88, 55];
+	        } else if (value >= 1) {
+	            return [3, 85, 57];
+	        } else if (value >= 0) {
+	            return [354, 73, 43];
+	        }
+	    }
+	}
+	exports.color = color;
+	function score(survey) {
+	    var value = survey.attributes.thames21DissolvedOxygen;
+	    if (typeof value === 'number') {
+	        if (value >= 8) {
+	            return ratings_1.scores['excellent'];
+	        } else if (value >= 6) {
+	            return ratings_1.scores['good'];
+	        } else if (value >= 4) {
+	            return ratings_1.scores['moderate'];
+	        } else if (value >= 2) {
+	            return ratings_1.scores['poor'];
+	        } else if (value >= 0) {
+	            return ratings_1.scores['bad'];
+	        }
+	    }
+	}
+	exports.score = score;
+	//# sourceMappingURL=dissolved.js.map
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(16);
+	exports.label = 'pH';
+	exports.description = "For the Thames to support a variety of wildlife, the\nwater mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would\nhave been affected by pollution from industry, killing all wildlife. These\ndays, we would expect the water to be neutral (neither acid nor alkali) which\nis better for wildlife. Volunteers measure the pH of the water to find\nthis out.";
+	exports.filterOptions = {
+	    numeric: true,
+	    rounding: Math.round,
+	    operationButtons: true,
+	    noneIsSelected: true
+	};
+	exports.filterValues = [{
+	    color: [358, 80, 51]
+	}, {
+	    color: [358, 80, 51]
+	}, {
+	    color: [26, 85, 53]
+	}, {
+	    color: [35, 90, 54]
+	}, {
+	    color: [45, 91, 52]
+	}, {
+	    color: [52, 94, 50]
+	}, {
+	    color: [58, 90, 51]
+	}, {
+	    color: [65, 68, 51]
+	}, {
+	    color: [74, 51, 54]
+	}, {
+	    color: [170, 22, 57]
+	}, {
+	    color: [202, 54, 50]
+	}, {
+	    color: [211, 52, 51]
+	}, {
+	    color: [217, 48, 48]
+	}, {
+	    color: [251, 34, 47]
+	}, {
+	    color: [264, 40, 43]
+	}];
+	var filterButtons = filterButtons_1.default(exports.filterValues, exports.filterOptions);
+	function selected(survey) {
+	    if (survey === undefined) {
+	        return filterButtons.selected();
+	    }
+	    var value = survey.attributes.thames21Ph;
+	    var selected = filterButtons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    } else {
+	        return filterButtons.selected(Math.round(value));
+	    }
+	}
+	exports.selected = selected;
+	exports.createButtons = filterButtons.createButtons, exports.select = filterButtons.select, exports.addListener = filterButtons.addListener;
+	function color(survey) {
+	    var value = survey.attributes.thames21Ph;
+	    if (typeof value === 'number') {
+	        switch (Math.round(value)) {
+	            case 0:
+	            case 1:
+	                return [358, 80, 51];
+	            case 2:
+	                return [26, 85, 53];
+	            case 3:
+	                return [35, 90, 54];
+	            case 4:
+	                return [45, 91, 52];
+	            case 5:
+	                return [52, 94, 50];
+	            case 6:
+	                return [58, 90, 51];
+	            case 7:
+	                return [65, 68, 51];
+	            case 8:
+	                return [74, 51, 54];
+	            case 9:
+	                return [170, 22, 57];
+	            case 10:
+	                return [202, 54, 50];
+	            case 11:
+	                return [211, 52, 51];
+	            case 12:
+	                return [217, 48, 48];
+	            case 13:
+	                return [251, 34, 47];
+	            case 14:
+	                return [264, 40, 43];
+	        }
+	    }
+	}
+	exports.color = color;
+	function score(survey) {
+	    var value = survey.attributes.thames21Ph;
+	    if (typeof value === 'number') {
+	        switch (Math.round(value)) {
+	            case 1:
+	            case 2:
+	            case 3:
+	            case 4:
+	            case 5:
+	            case 10:
+	            case 11:
+	            case 12:
+	            case 13:
+	            case 14:
+	                return ratings_1.scores['bad'];
+	            case 6:
+	            case 9:
+	                return ratings_1.scores['good'];
+	            case 7:
+	            case 8:
+	                return ratings_1.scores['excellent'];
+	        }
+	    }
+	}
+	exports.score = score;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	exports.label = 'Temperature';
+	exports.description = "High water temperatures can have a negative impact\non river life \u2013 both directly and by reducing the amount of dissolved oxygen\nthat the water can hold. Unnatural warming of the water is called 'thermal\npollution'. In the past, this would have been discharged directly from an\nindustrial source (such as power stations like Battersea).  These days, a\npossible source is rainwater run-off, which is heated up as it moves across\nthe warmer roads and ends up in the river.";
+	function color(survey) {
+	    var value = survey.attributes.thames21Temperature;
+	    if (typeof value === 'number') {
+	        if (value < 3) {
+	            return [238, 52, 38];
+	        } else if (value < 6) {
+	            return [214, 86, 34];
+	        } else if (value < 9) {
+	            return [206, 100, 35];
+	        } else if (value < 12) {
+	            return [202, 100, 39];
+	        } else if (value < 15) {
+	            return [199, 100, 43];
+	        } else if (value < 18) {
+	            return [196, 100, 47];
+	        } else if (value < 21) {
+	            return [188, 95, 39];
+	        } else if (value < 24) {
+	            return [173, 24, 54];
+	        } else if (value < 29) {
+	            return [27, 83, 53];
+	        } else {
+	            return [354, 73, 43];
+	        }
+	    }
+	}
+	exports.color = color;
+	function score(survey) {
+	    var value = survey.attributes.thames21Temperature;
+	    if (typeof value === 'number') {
+	        if (value < 21) {
+	            return ratings_1.scores['excellent'];
+	        } else if (value < 24) {
+	            return ratings_1.scores['good'];
+	        } else if (value < 29) {
+	            return ratings_1.scores['moderate'];
+	        } else {
+	            return ratings_1.scores['bad'];
+	        }
+	    }
+	}
+	exports.score = score;
+	//# sourceMappingURL=temperature.js.map
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	exports.label = 'Turbidity';
+	exports.description = "Volunteers record how much algae, soil particles\nand other tiny substances are carried in the water. This is called turbidity\nand it is a measure of how far light can travel through the water. Turbidity\nreduces the light available to plants for photosynthesis and can increase\nwater temperature (as particles absorb more heat). The particles can also\naffect fish directly by clogging their gills. On the tidal Thames we would\nexpect it to be muddy and turbid but it is important to measure because of\nits possible impacts when conditions are particularly poor.";
+	function color(survey) {
+	    var value = survey.attributes.thames21Turbidity;
+	    if (typeof value === 'number') {
+	        if (value < 12) {
+	            return [196, 100, 47];
+	        } else if (value < 13) {
+	            return [191, 100, 41];
+	        } else if (value < 14) {
+	            return [187, 75, 42];
+	        } else if (value < 15) {
+	            return [177, 27, 52];
+	        } else if (value < 17) {
+	            return [125, 13, 59];
+	        } else if (value < 19) {
+	            return [51, 23, 56];
+	        } else if (value < 21) {
+	            return [38, 48, 57];
+	        } else if (value < 25) {
+	            return [34, 71, 56];
+	        } else if (value < 30) {
+	            return [33, 93, 54];
+	        } else if (value < 40) {
+	            return [32, 78, 51];
+	        } else if (value < 50) {
+	            return [31, 68, 48];
+	        } else if (value < 75) {
+	            return [30, 65, 45];
+	        } else if (value < 100) {
+	            return [30, 61, 43];
+	        } else if (value < 150) {
+	            return [29, 57, 40];
+	        } else if (value < 200) {
+	            return [29, 55, 36];
+	        } else if (value < 240) {
+	            return [28, 51, 34];
+	        } else {
+	            return [28, 49, 31];
+	        }
+	    }
+	}
+	exports.color = color;
+	function score(survey) {
+	    var value = survey.attributes.thames21Turbidity;
+	    if (typeof value === 'number') {
+	        if (value < 20) {
+	            return ratings_1.scores['excellent'];
+	        } else if (value < 75) {
+	            return ratings_1.scores['good'];
+	        } else {
+	            return ratings_1.scores['moderate'];
+	        }
+	    }
+	}
+	exports.score = score;
+	//# sourceMappingURL=turbidity.js.map
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var config_1 = __webpack_require__(6);
+	var noUiSlider = __webpack_require__(15);
+	var timeSlider = void 0;
+	var rangeDiv = void 0;
+	var timeListeners = [];
+	var lowerValue = void 0;
+	var upperValue = void 0;
+	var minLimit = void 0;
+	var maxLimit = void 0;
+	var limitSeparator = void 0;
+	var rangeTitle = void 0;
+	exports.timeTypes = {
+	    none: {
+	        label: 'No limit'
+	    },
+	    decaying: {
+	        label: 'Decaying',
+	        description: 'The older the survey, the more opaque it is'
+	    },
+	    ranged: {
+	        label: 'Ranged'
+	    }
+	};
+	function getDecayAmount(amount, date) {
+	    if (exports.selectedTimeType === 'decaying') {
+	        var halflife = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].time;
+	        if (amount instanceof Date) {
+	            if (date instanceof Date) {} else if (typeof date === 'amount') {
+	                date = new Date(date);
+	            } else {
+	                date = new Date();
+	            }
+	            amount = date.getTime() - amount.getTime();
+	        }
+	        amount = amount / halflife;
+	        amount = 1 - Math.pow(0.5, amount);
+	        return amount;
+	    }
+	}
+	exports.getDecayAmount = getDecayAmount;
+	;
+	var callListeners = function callListeners() {
+	    timeListeners.forEach(function (callback) {
+	        callback();
+	    });
+	};
+	function addListener(callback) {
+	    timeListeners.push(callback);
+	}
+	exports.addListener = addListener;
+	;
+	function selectTimeType(type) {
+	    if (typeof exports.timeTypes[type] !== 'undefined') {
+	        Object.keys(exports.timeTypes).forEach(function (time) {
+	            var timeType = exports.timeTypes[time];
+	            if (time === type) {
+	                timeType.button.classList.add('selected');
+	            } else {
+	                timeType.button.classList.remove('selected');
+	            }
+	        });
+	        if (exports.selectedTimeType !== type) {
+	            exports.selectedTimeType = type;
+	            switch (type) {
+	                case 'decaying':
+	                    rangeDiv.style.display = '';
+	                    timeSlider.noUiSlider.updateOptions({
+	                        range: {
+	                            min: 0,
+	                            max: config_1.default.halflifeLengths.length - 1
+	                        }
+	                    });
+	                    timeSlider.noUiSlider.set([3]);
+	                    rangeTitle.innerHTML = 'Survey Halflife:';
+	                    minLimit.innerHTML = config_1.default.halflifeLengths[0].label;
+	                    maxLimit.innerHTML = config_1.default.halflifeLengths[config_1.default.halflifeLengths.length - 1].label;
+	                    break;
+	                case 'none':
+	                    rangeDiv.style.display = 'none';
+	                    break;
+	            }
+	            callListeners();
+	        } else {
+	            exports.selectedTimeType = type;
+	        }
+	    }
+	}
+	exports.selectTimeType = selectTimeType;
+	;
+	function createTimeSection(parentElement) {
+	    var element = void 0,
+	        div = void 0;
+	    parentElement.classList.add('time');
+	    parentElement.appendChild(element = document.createElement('div'));
+	    Object.keys(exports.timeTypes).forEach(function (time) {
+	        var button = document.createElement('button');
+	        var timeType = exports.timeTypes[time];
+	        timeType.button = button;
+	        element.appendChild(button);
+	        button.innerHTML = timeType.label;
+	        if (timeType.description) {
+	            button.title = timeType.description;
+	        }
+	        if (timeType.id === exports.selectedTimeType) {
+	            button.classList.add('selected');
+	        }
+	        button.addEventListener('click', selectTimeType.bind(null, time));
+	    });
+	    parentElement.appendChild(rangeDiv = document.createElement('div'));
+	    rangeDiv.appendChild(rangeTitle = document.createElement('div'));
+	    rangeTitle.innerHTML = 'Range:';
+	    rangeDiv.appendChild(div = document.createElement('div'));
+	    div.classList.add('range', 'key');
+	    div.appendChild(minLimit = document.createElement('div'));
+	    minLimit.classList.add('min');
+	    div.appendChild(maxLimit = document.createElement('div'));
+	    maxLimit.classList.add('max');
+	    rangeDiv.appendChild(timeSlider = document.createElement('div'));
+	    rangeDiv.appendChild(div = document.createElement('div'));
+	    div.classList.add('separatedRange');
+	    div.appendChild(lowerValue = document.createElement('div'));
+	    lowerValue.classList.add('min');
+	    div.appendChild(limitSeparator = document.createElement('div'));
+	    limitSeparator.classList.add('separator');
+	    div.appendChild(upperValue = document.createElement('div'));
+	    upperValue.classList.add('max');
+	    noUiSlider.create(timeSlider, {
+	        start: [0],
+	        step: 1,
+	        range: {
+	            min: 0,
+	            max: config_1.default.halflifeLengths.length - 1
+	        }
+	    });
+	    var sliderUpdate = function sliderUpdate() {
+	        switch (exports.selectedTimeType) {
+	            case 'decaying':
+	                lowerValue.innerText = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].label;
+	                break;
+	        }
+	    };
+	    timeSlider.noUiSlider.on('update', sliderUpdate);
+	    timeSlider.noUiSlider.on('change', callListeners);
+	    selectTimeType(config_1.default.defaultTime);
+	}
+	exports.createTimeSection = createTimeSection;
+	;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = createTimeSection;
+	//# sourceMappingURL=time.js.map
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! nouislider - 9.0.0 - 2016-09-29 21:44:02 */
+
+	(function (factory) {
+
+	    if ( true ) {
+
+	        // AMD. Register as an anonymous module.
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+	    } else if ( typeof exports === 'object' ) {
+
+	        // Node/CommonJS
+	        module.exports = factory();
+
+	    } else {
+
+	        // Browser globals
+	        window.noUiSlider = factory();
+	    }
+
+	}(function( ){
+
+		'use strict';
+
+
+		// Creates a node, adds it to target, returns the new node.
+		function addNodeTo ( target, className ) {
+			var div = document.createElement('div');
+			addClass(div, className);
+			target.appendChild(div);
+			return div;
+		}
+
+		// Removes duplicates from an array.
+		function unique ( array ) {
+			return array.filter(function(a){
+				return !this[a] ? this[a] = true : false;
+			}, {});
+		}
+
+		// Round a value to the closest 'to'.
+		function closest ( value, to ) {
+			return Math.round(value / to) * to;
+		}
+
+		// Current position of an element relative to the document.
+		function offset ( elem, orientation ) {
+
+		var rect = elem.getBoundingClientRect(),
+			doc = elem.ownerDocument,
+			docElem = doc.documentElement,
+			pageOffset = getPageOffset();
+
+			// getBoundingClientRect contains left scroll in Chrome on Android.
+			// I haven't found a feature detection that proves this. Worst case
+			// scenario on mis-match: the 'tap' feature on horizontal sliders breaks.
+			if ( /webkit.*Chrome.*Mobile/i.test(navigator.userAgent) ) {
+				pageOffset.x = 0;
+			}
+
+			return orientation ? (rect.top + pageOffset.y - docElem.clientTop) : (rect.left + pageOffset.x - docElem.clientLeft);
+		}
+
+		// Checks whether a value is numerical.
+		function isNumeric ( a ) {
+			return typeof a === 'number' && !isNaN( a ) && isFinite( a );
+		}
+
+		// Sets a class and removes it after [duration] ms.
+		function addClassFor ( element, className, duration ) {
+			if (duration > 0) {
+			addClass(element, className);
+				setTimeout(function(){
+					removeClass(element, className);
+				}, duration);
+			}
+		}
+
+		// Limits a value to 0 - 100
+		function limit ( a ) {
+			return Math.max(Math.min(a, 100), 0);
+		}
+
+		// Wraps a variable as an array, if it isn't one yet.
+		// Note that an input array is returned by reference!
+		function asArray ( a ) {
+			return Array.isArray(a) ? a : [a];
+		}
+
+		// Counts decimals
+		function countDecimals ( numStr ) {
+			numStr = String(numStr);
+			var pieces = numStr.split(".");
+			return pieces.length > 1 ? pieces[1].length : 0;
+		}
+
+		// http://youmightnotneedjquery.com/#add_class
+		function addClass ( el, className ) {
+			if ( el.classList ) {
+				el.classList.add(className);
+			} else {
+				el.className += ' ' + className;
+			}
+		}
+
+		// http://youmightnotneedjquery.com/#remove_class
+		function removeClass ( el, className ) {
+			if ( el.classList ) {
+				el.classList.remove(className);
+			} else {
+				el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+			}
+		}
+
+		// https://plainjs.com/javascript/attributes/adding-removing-and-testing-for-classes-9/
+		function hasClass ( el, className ) {
+			return el.classList ? el.classList.contains(className) : new RegExp('\\b' + className + '\\b').test(el.className);
+		}
+
+		// https://developer.mozilla.org/en-US/docs/Web/API/Window/scrollY#Notes
+		function getPageOffset ( ) {
+
+			var supportPageOffset = window.pageXOffset !== undefined,
+				isCSS1Compat = ((document.compatMode || "") === "CSS1Compat"),
+				x = supportPageOffset ? window.pageXOffset : isCSS1Compat ? document.documentElement.scrollLeft : document.body.scrollLeft,
+				y = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop;
+
+			return {
+				x: x,
+				y: y
+			};
+		}
+
+		// we provide a function to compute constants instead
+		// of accessing window.* as soon as the module needs it
+		// so that we do not compute anything if not needed
+		function getActions ( ) {
+
+			// Determine the events to bind. IE11 implements pointerEvents without
+			// a prefix, which breaks compatibility with the IE10 implementation.
+			return window.navigator.pointerEnabled ? {
+				start: 'pointerdown',
+				move: 'pointermove',
+				end: 'pointerup'
+			} : window.navigator.msPointerEnabled ? {
+				start: 'MSPointerDown',
+				move: 'MSPointerMove',
+				end: 'MSPointerUp'
+			} : {
+				start: 'mousedown touchstart',
+				move: 'mousemove touchmove',
+				end: 'mouseup touchend'
+			};
+		}
+
+
+	// Value calculation
+
+		// Determine the size of a sub-range in relation to a full range.
+		function subRangeRatio ( pa, pb ) {
+			return (100 / (pb - pa));
+		}
+
+		// (percentage) How many percent is this value of this range?
+		function fromPercentage ( range, value ) {
+			return (value * 100) / ( range[1] - range[0] );
+		}
+
+		// (percentage) Where is this value on this range?
+		function toPercentage ( range, value ) {
+			return fromPercentage( range, range[0] < 0 ?
+				value + Math.abs(range[0]) :
+					value - range[0] );
+		}
+
+		// (value) How much is this percentage on this range?
+		function isPercentage ( range, value ) {
+			return ((value * ( range[1] - range[0] )) / 100) + range[0];
+		}
+
+
+	// Range conversion
+
+		function getJ ( value, arr ) {
+
+			var j = 1;
+
+			while ( value >= arr[j] ){
+				j += 1;
+			}
+
+			return j;
+		}
+
+		// (percentage) Input a value, find where, on a scale of 0-100, it applies.
+		function toStepping ( xVal, xPct, value ) {
+
+			if ( value >= xVal.slice(-1)[0] ){
+				return 100;
+			}
+
+			var j = getJ( value, xVal ), va, vb, pa, pb;
+
+			va = xVal[j-1];
+			vb = xVal[j];
+			pa = xPct[j-1];
+			pb = xPct[j];
+
+			return pa + (toPercentage([va, vb], value) / subRangeRatio (pa, pb));
+		}
+
+		// (value) Input a percentage, find where it is on the specified range.
+		function fromStepping ( xVal, xPct, value ) {
+
+			// There is no range group that fits 100
+			if ( value >= 100 ){
+				return xVal.slice(-1)[0];
+			}
+
+			var j = getJ( value, xPct ), va, vb, pa, pb;
+
+			va = xVal[j-1];
+			vb = xVal[j];
+			pa = xPct[j-1];
+			pb = xPct[j];
+
+			return isPercentage([va, vb], (value - pa) * subRangeRatio (pa, pb));
+		}
+
+		// (percentage) Get the step that applies at a certain value.
+		function getStep ( xPct, xSteps, snap, value ) {
+
+			if ( value === 100 ) {
+				return value;
+			}
+
+			var j = getJ( value, xPct ), a, b;
+
+			// If 'snap' is set, steps are used as fixed points on the slider.
+			if ( snap ) {
+
+				a = xPct[j-1];
+				b = xPct[j];
+
+				// Find the closest position, a or b.
+				if ((value - a) > ((b-a)/2)){
+					return b;
+				}
+
+				return a;
+			}
+
+			if ( !xSteps[j-1] ){
+				return value;
+			}
+
+			return xPct[j-1] + closest(
+				value - xPct[j-1],
+				xSteps[j-1]
+			);
+		}
+
+
+	// Entry parsing
+
+		function handleEntryPoint ( index, value, that ) {
+
+			var percentage;
+
+			// Wrap numerical input in an array.
+			if ( typeof value === "number" ) {
+				value = [value];
+			}
+
+			// Reject any invalid input, by testing whether value is an array.
+			if ( Object.prototype.toString.call( value ) !== '[object Array]' ){
+				throw new Error("noUiSlider: 'range' contains invalid value.");
+			}
+
+			// Covert min/max syntax to 0 and 100.
+			if ( index === 'min' ) {
+				percentage = 0;
+			} else if ( index === 'max' ) {
+				percentage = 100;
+			} else {
+				percentage = parseFloat( index );
+			}
+
+			// Check for correct input.
+			if ( !isNumeric( percentage ) || !isNumeric( value[0] ) ) {
+				throw new Error("noUiSlider: 'range' value isn't numeric.");
+			}
+
+			// Store values.
+			that.xPct.push( percentage );
+			that.xVal.push( value[0] );
+
+			// NaN will evaluate to false too, but to keep
+			// logging clear, set step explicitly. Make sure
+			// not to override the 'step' setting with false.
+			if ( !percentage ) {
+				if ( !isNaN( value[1] ) ) {
+					that.xSteps[0] = value[1];
+				}
+			} else {
+				that.xSteps.push( isNaN(value[1]) ? false : value[1] );
+			}
+
+			that.xHighestCompleteStep.push(0);
+		}
+
+		function handleStepPoint ( i, n, that ) {
+
+			// Ignore 'false' stepping.
+			if ( !n ) {
+				return true;
+			}
+
+			// Factor to range ratio
+			that.xSteps[i] = fromPercentage([
+				 that.xVal[i]
+				,that.xVal[i+1]
+			], n) / subRangeRatio (
+				that.xPct[i],
+				that.xPct[i+1] );
+
+			var totalSteps = (that.xVal[i+1] - that.xVal[i]) / that.xNumSteps[i];
+			var highestStep = Math.ceil(Number(totalSteps.toFixed(3)) - 1);
+			var step = that.xVal[i] + (that.xNumSteps[i] * highestStep);
+
+			that.xHighestCompleteStep[i] = step;
+		}
+
+
+	// Interface
+
+		// The interface to Spectrum handles all direction-based
+		// conversions, so the above values are unaware.
+
+		function Spectrum ( entry, snap, direction, singleStep ) {
+
+			this.xPct = [];
+			this.xVal = [];
+			this.xSteps = [ singleStep || false ];
+			this.xNumSteps = [ false ];
+			this.xHighestCompleteStep = [];
+
+			this.snap = snap;
+			this.direction = direction;
+
+			var index, ordered = [ /* [0, 'min'], [1, '50%'], [2, 'max'] */ ];
+
+			// Map the object keys to an array.
+			for ( index in entry ) {
+				if ( entry.hasOwnProperty(index) ) {
+					ordered.push([entry[index], index]);
+				}
+			}
+
+			// Sort all entries by value (numeric sort).
+			if ( ordered.length && typeof ordered[0][0] === "object" ) {
+				ordered.sort(function(a, b) { return a[0][0] - b[0][0]; });
+			} else {
+				ordered.sort(function(a, b) { return a[0] - b[0]; });
+			}
+
+
+			// Convert all entries to subranges.
+			for ( index = 0; index < ordered.length; index++ ) {
+				handleEntryPoint(ordered[index][1], ordered[index][0], this);
+			}
+
+			// Store the actual step values.
+			// xSteps is sorted in the same order as xPct and xVal.
+			this.xNumSteps = this.xSteps.slice(0);
+
+			// Convert all numeric steps to the percentage of the subrange they represent.
+			for ( index = 0; index < this.xNumSteps.length; index++ ) {
+				handleStepPoint(index, this.xNumSteps[index], this);
+			}
+		}
+
+		Spectrum.prototype.getMargin = function ( value ) {
+
+			var step = this.xNumSteps[0];
+
+			if ( step && (value % step) ) {
+				throw new Error("noUiSlider: 'limit' and 'margin' must be divisible by step.");
+			}
+
+			return this.xPct.length === 2 ? fromPercentage(this.xVal, value) : false;
+		};
+
+		Spectrum.prototype.toStepping = function ( value ) {
+
+			value = toStepping( this.xVal, this.xPct, value );
+
+			return value;
+		};
+
+		Spectrum.prototype.fromStepping = function ( value ) {
+
+			return fromStepping( this.xVal, this.xPct, value );
+		};
+
+		Spectrum.prototype.getStep = function ( value ) {
+
+			value = getStep(this.xPct, this.xSteps, this.snap, value );
+
+			return value;
+		};
+
+		Spectrum.prototype.getNearbySteps = function ( value ) {
+
+			var j = getJ(value, this.xPct);
+
+			return {
+				stepBefore: { startValue: this.xVal[j-2], step: this.xNumSteps[j-2], highestStep: this.xHighestCompleteStep[j-2] },
+				thisStep: { startValue: this.xVal[j-1], step: this.xNumSteps[j-1], highestStep: this.xHighestCompleteStep[j-1] },
+				stepAfter: { startValue: this.xVal[j-0], step: this.xNumSteps[j-0], highestStep: this.xHighestCompleteStep[j-0] }
+			};
+		};
+
+		Spectrum.prototype.countStepDecimals = function () {
+			var stepDecimals = this.xNumSteps.map(countDecimals);
+			return Math.max.apply(null, stepDecimals);
+	 	};
+
+		// Outside testing
+		Spectrum.prototype.convert = function ( value ) {
+			return this.getStep(this.toStepping(value));
+		};
+
+	/*	Every input option is tested and parsed. This'll prevent
+		endless validation in internal methods. These tests are
+		structured with an item for every option available. An
+		option can be marked as required by setting the 'r' flag.
+		The testing function is provided with three arguments:
+			- The provided value for the option;
+			- A reference to the options object;
+			- The name for the option;
+
+		The testing function returns false when an error is detected,
+		or true when everything is OK. It can also modify the option
+		object, to make sure all values can be correctly looped elsewhere. */
+
+		var defaultFormatter = { 'to': function( value ){
+			return value !== undefined && value.toFixed(2);
+		}, 'from': Number };
+
+		function testStep ( parsed, entry ) {
+
+			if ( !isNumeric( entry ) ) {
+				throw new Error("noUiSlider: 'step' is not numeric.");
+			}
+
+			// The step option can still be used to set stepping
+			// for linear sliders. Overwritten if set in 'range'.
+			parsed.singleStep = entry;
+		}
+
+		function testRange ( parsed, entry ) {
+
+			// Filter incorrect input.
+			if ( typeof entry !== 'object' || Array.isArray(entry) ) {
+				throw new Error("noUiSlider: 'range' is not an object.");
+			}
+
+			// Catch missing start or end.
+			if ( entry.min === undefined || entry.max === undefined ) {
+				throw new Error("noUiSlider: Missing 'min' or 'max' in 'range'.");
+			}
+
+			// Catch equal start or end.
+			if ( entry.min === entry.max ) {
+				throw new Error("noUiSlider: 'range' 'min' and 'max' cannot be equal.");
+			}
+
+			parsed.spectrum = new Spectrum(entry, parsed.snap, parsed.dir, parsed.singleStep);
+		}
+
+		function testStart ( parsed, entry ) {
+
+			entry = asArray(entry);
+
+			// Validate input. Values aren't tested, as the public .val method
+			// will always provide a valid location.
+			if ( !Array.isArray( entry ) || !entry.length ) {
+				throw new Error("noUiSlider: 'start' option is incorrect.");
+			}
+
+			// Store the number of handles.
+			parsed.handles = entry.length;
+
+			// When the slider is initialized, the .val method will
+			// be called with the start options.
+			parsed.start = entry;
+		}
+
+		function testSnap ( parsed, entry ) {
+
+			// Enforce 100% stepping within subranges.
+			parsed.snap = entry;
+
+			if ( typeof entry !== 'boolean' ){
+				throw new Error("noUiSlider: 'snap' option must be a boolean.");
+			}
+		}
+
+		function testAnimate ( parsed, entry ) {
+
+			// Enforce 100% stepping within subranges.
+			parsed.animate = entry;
+
+			if ( typeof entry !== 'boolean' ){
+				throw new Error("noUiSlider: 'animate' option must be a boolean.");
+			}
+		}
+
+		function testAnimationDuration ( parsed, entry ) {
+
+			parsed.animationDuration = entry;
+
+			if ( typeof entry !== 'number' ){
+				throw new Error("noUiSlider: 'animationDuration' option must be a number.");
+			}
+		}
+
+		function testConnect ( parsed, entry ) {
+
+			var connect = [false];
+			var i;
+
+			if ( entry === true || entry === false ) {
+
+				for ( i = 1; i < parsed.handles; i++ ) {
+					connect.push(entry);
+				}
+
+				connect.push(false);
+			}
+
+			else if ( !Array.isArray( entry ) || !entry.length || entry.length !== parsed.handles + 1 ) {
+				throw new Error("noUiSlider: 'connect' option doesn't match handle count.");
+			}
+
+			else {
+				connect = entry;
+			}
+
+			parsed.connect = connect;
+		}
+
+		function testOrientation ( parsed, entry ) {
+
+			// Set orientation to an a numerical value for easy
+			// array selection.
+			switch ( entry ){
+			  case 'horizontal':
+				parsed.ort = 0;
+				break;
+			  case 'vertical':
+				parsed.ort = 1;
+				break;
+			  default:
+				throw new Error("noUiSlider: 'orientation' option is invalid.");
+			}
+		}
+
+		function testMargin ( parsed, entry ) {
+
+			if ( !isNumeric(entry) ){
+				throw new Error("noUiSlider: 'margin' option must be numeric.");
+			}
+
+			// Issue #582
+			if ( entry === 0 ) {
+				return;
+			}
+
+			parsed.margin = parsed.spectrum.getMargin(entry);
+
+			if ( !parsed.margin ) {
+				throw new Error("noUiSlider: 'margin' option is only supported on linear sliders.");
+			}
+		}
+
+		function testLimit ( parsed, entry ) {
+
+			if ( !isNumeric(entry) ){
+				throw new Error("noUiSlider: 'limit' option must be numeric.");
+			}
+
+			parsed.limit = parsed.spectrum.getMargin(entry);
+
+			if ( !parsed.limit || parsed.handles < 2 ) {
+				throw new Error("noUiSlider: 'limit' option is only supported on linear sliders with 2 or more handles.");
+			}
+		}
+
+		function testDirection ( parsed, entry ) {
+
+			// Set direction as a numerical value for easy parsing.
+			// Invert connection for RTL sliders, so that the proper
+			// handles get the connect/background classes.
+			switch ( entry ) {
+			  case 'ltr':
+				parsed.dir = 0;
+				break;
+			  case 'rtl':
+				parsed.dir = 1;
+				break;
+			  default:
+				throw new Error("noUiSlider: 'direction' option was not recognized.");
+			}
+		}
+
+		function testBehaviour ( parsed, entry ) {
+
+			// Make sure the input is a string.
+			if ( typeof entry !== 'string' ) {
+				throw new Error("noUiSlider: 'behaviour' must be a string containing options.");
+			}
+
+			// Check if the string contains any keywords.
+			// None are required.
+			var tap = entry.indexOf('tap') >= 0;
+			var drag = entry.indexOf('drag') >= 0;
+			var fixed = entry.indexOf('fixed') >= 0;
+			var snap = entry.indexOf('snap') >= 0;
+			var hover = entry.indexOf('hover') >= 0;
+
+			if ( fixed ) {
+
+				if ( parsed.handles !== 2 ) {
+					throw new Error("noUiSlider: 'fixed' behaviour must be used with 2 handles");
+				}
+
+				// Use margin to enforce fixed state
+				testMargin(parsed, parsed.start[1] - parsed.start[0]);
+			}
+
+			parsed.events = {
+				tap: tap || snap,
+				drag: drag,
+				fixed: fixed,
+				snap: snap,
+				hover: hover
+			};
+		}
+
+		function testTooltips ( parsed, entry ) {
+
+			if ( entry === false ) {
+				return;
+			}
+
+			else if ( entry === true ) {
+
+				parsed.tooltips = [];
+
+				for ( var i = 0; i < parsed.handles; i++ ) {
+					parsed.tooltips.push(true);
+				}
+			}
+
+			else {
+
+				parsed.tooltips = asArray(entry);
+
+				if ( parsed.tooltips.length !== parsed.handles ) {
+					throw new Error("noUiSlider: must pass a formatter for all handles.");
+				}
+
+				parsed.tooltips.forEach(function(formatter){
+					if ( typeof formatter !== 'boolean' && (typeof formatter !== 'object' || typeof formatter.to !== 'function') ) {
+						throw new Error("noUiSlider: 'tooltips' must be passed a formatter or 'false'.");
+					}
+				});
+			}
+		}
+
+		function testFormat ( parsed, entry ) {
+
+			parsed.format = entry;
+
+			// Any object with a to and from method is supported.
+			if ( typeof entry.to === 'function' && typeof entry.from === 'function' ) {
+				return true;
+			}
+
+			throw new Error("noUiSlider: 'format' requires 'to' and 'from' methods.");
+		}
+
+		function testCssPrefix ( parsed, entry ) {
+
+			if ( entry !== undefined && typeof entry !== 'string' && entry !== false ) {
+				throw new Error("noUiSlider: 'cssPrefix' must be a string or `false`.");
+			}
+
+			parsed.cssPrefix = entry;
+		}
+
+		function testCssClasses ( parsed, entry ) {
+
+			if ( entry !== undefined && typeof entry !== 'object' ) {
+				throw new Error("noUiSlider: 'cssClasses' must be an object.");
+			}
+
+			if ( typeof parsed.cssPrefix === 'string' ) {
+				parsed.cssClasses = {};
+
+				for ( var key in entry ) {
+					if ( !entry.hasOwnProperty(key) ) { continue; }
+
+					parsed.cssClasses[key] = parsed.cssPrefix + entry[key];
+				}
+			} else {
+				parsed.cssClasses = entry;
+			}
+		}
+
+		function testUseRaf ( parsed, entry ) {
+			if ( entry === true || entry === false ) {
+				parsed.useRequestAnimationFrame = entry;
+			} else {
+				throw new Error("noUiSlider: 'useRequestAnimationFrame' option should be true (default) or false.");
+			}
+		}
+
+		// Test all developer settings and parse to assumption-safe values.
+		function testOptions ( options ) {
+
+			// To prove a fix for #537, freeze options here.
+			// If the object is modified, an error will be thrown.
+			// Object.freeze(options);
+
+			var parsed = {
+				margin: 0,
+				limit: 0,
+				animate: true,
+				animationDuration: 300,
+				format: defaultFormatter
+			}, tests;
+
+			// Tests are executed in the order they are presented here.
+			tests = {
+				'step': { r: false, t: testStep },
+				'start': { r: true, t: testStart },
+				'connect': { r: true, t: testConnect },
+				'direction': { r: true, t: testDirection },
+				'snap': { r: false, t: testSnap },
+				'animate': { r: false, t: testAnimate },
+				'animationDuration': { r: false, t: testAnimationDuration },
+				'range': { r: true, t: testRange },
+				'orientation': { r: false, t: testOrientation },
+				'margin': { r: false, t: testMargin },
+				'limit': { r: false, t: testLimit },
+				'behaviour': { r: true, t: testBehaviour },
+				'format': { r: false, t: testFormat },
+				'tooltips': { r: false, t: testTooltips },
+				'cssPrefix': { r: false, t: testCssPrefix },
+				'cssClasses': { r: false, t: testCssClasses },
+				'useRequestAnimationFrame': { r: false, t: testUseRaf }
+			};
+
+			var defaults = {
+				'connect': false,
+				'direction': 'ltr',
+				'behaviour': 'tap',
+				'orientation': 'horizontal',
+				'cssPrefix' : 'noUi-',
+				'cssClasses': {
+					target: 'target',
+					base: 'base',
+					origin: 'origin',
+					handle: 'handle',
+					horizontal: 'horizontal',
+					vertical: 'vertical',
+					background: 'background',
+					connect: 'connect',
+					ltr: 'ltr',
+					rtl: 'rtl',
+					draggable: 'draggable',
+					drag: 'state-drag',
+					tap: 'state-tap',
+					active: 'active',
+					tooltip: 'tooltip',
+					pips: 'pips',
+					pipsHorizontal: 'pips-horizontal',
+					pipsVertical: 'pips-vertical',
+					marker: 'marker',
+					markerHorizontal: 'marker-horizontal',
+					markerVertical: 'marker-vertical',
+					markerNormal: 'marker-normal',
+					markerLarge: 'marker-large',
+					markerSub: 'marker-sub',
+					value: 'value',
+					valueHorizontal: 'value-horizontal',
+					valueVertical: 'value-vertical',
+					valueNormal: 'value-normal',
+					valueLarge: 'value-large',
+					valueSub: 'value-sub'
+				},
+				'useRequestAnimationFrame': true
+			};
+
+			// Run all options through a testing mechanism to ensure correct
+			// input. It should be noted that options might get modified to
+			// be handled properly. E.g. wrapping integers in arrays.
+			Object.keys(tests).forEach(function( name ){
+
+				// If the option isn't set, but it is required, throw an error.
+				if ( options[name] === undefined && defaults[name] === undefined ) {
+
+					if ( tests[name].r ) {
+						throw new Error("noUiSlider: '" + name + "' is required.");
+					}
+
+					return true;
+				}
+
+				tests[name].t( parsed, options[name] === undefined ? defaults[name] : options[name] );
+			});
+
+			// Forward pips options
+			parsed.pips = options.pips;
+
+			var styles = [['left', 'top'], ['right', 'bottom']];
+
+			// Pre-define the styles.
+			parsed.style = styles[parsed.dir][parsed.ort];
+			parsed.styleOposite = styles[parsed.dir?0:1][parsed.ort];
+
+			return parsed;
+		}
+
+
+	function closure ( target, options, originalOptions ){
+
+		var actions = getActions( );
+
+		// All variables local to 'closure' are prefixed with 'scope_'
+		var scope_Target = target;
+		var scope_Locations = [];
+		var scope_Base;
+		var scope_Handles;
+		var scope_HandleNumbers = [];
+		var scope_Connects;
+		var scope_Spectrum = options.spectrum;
+		var scope_Values = [];
+		var scope_Events = {};
+		var scope_Self;
+
+
+		// Append a origin to the base
+		function addOrigin ( base, handleNumber ) {
+			var origin = addNodeTo(base, options.cssClasses.origin);
+			var handle = addNodeTo(origin, options.cssClasses.handle);
+			handle.setAttribute('data-handle', handleNumber);
+			return origin;
+		}
+
+		// Insert nodes for connect elements
+		function addConnect ( base, add ) {
+
+			if ( !add ) {
+				return false;
+			}
+
+			return addNodeTo(base, options.cssClasses.connect);
+		}
+
+		// Add handles to the slider base.
+		function addElements ( connectOptions, base ) {
+
+			scope_Handles = [];
+			scope_Connects = [];
+
+			scope_Connects.push(addConnect(base, connectOptions[0]));
+
+			// [::::O====O====O====]
+			// connectOptions = [0, 1, 1, 1]
+
+			for ( var i = 0; i < options.handles; i++ ) {
+				// Keep a list of all added handles.
+				scope_Handles.push(addOrigin(base, i));
+				scope_HandleNumbers[i] = i;
+				scope_Connects.push(addConnect(base, connectOptions[i + 1]));
+			}
+		}
+
+		// Initialize a single slider.
+		function addSlider ( target ) {
+
+			// Apply classes and data to the target.
+			addClass(target, options.cssClasses.target);
+
+			if ( options.dir === 0 ) {
+				addClass(target, options.cssClasses.ltr);
+			} else {
+				addClass(target, options.cssClasses.rtl);
+			}
+
+			if ( options.ort === 0 ) {
+				addClass(target, options.cssClasses.horizontal);
+			} else {
+				addClass(target, options.cssClasses.vertical);
+			}
+
+			scope_Base = addNodeTo(target, options.cssClasses.base);
+		}
+
+
+		function addTooltip ( handle, handleNumber ) {
+
+			if ( !options.tooltips[handleNumber] ) {
+				return false;
+			}
+
+			return addNodeTo(handle.firstChild, options.cssClasses.tooltip);
+		}
+
+		// The tooltips option is a shorthand for using the 'update' event.
+		function tooltips ( ) {
+
+			// Tooltips are added with options.tooltips in original order.
+			var tips = scope_Handles.map(addTooltip);
+
+			bindEvent('update', function(values, handleNumber, unencoded) {
+
+				if ( !tips[handleNumber] ) {
+					return;
+				}
+
+				var formattedValue = values[handleNumber];
+
+				if ( options.tooltips[handleNumber] !== true ) {
+					formattedValue = options.tooltips[handleNumber].to(unencoded[handleNumber]);
+				}
+
+				tips[handleNumber].innerHTML = formattedValue;
+			});
+		}
+
+
+		function getGroup ( mode, values, stepped ) {
+
+			// Use the range.
+			if ( mode === 'range' || mode === 'steps' ) {
+				return scope_Spectrum.xVal;
+			}
+
+			if ( mode === 'count' ) {
+
+				// Divide 0 - 100 in 'count' parts.
+				var spread = ( 100 / (values-1) ), v, i = 0;
+				values = [];
+
+				// List these parts and have them handled as 'positions'.
+				while ((v=i++*spread) <= 100 ) {
+					values.push(v);
+				}
+
+				mode = 'positions';
+			}
+
+			if ( mode === 'positions' ) {
+
+				// Map all percentages to on-range values.
+				return values.map(function( value ){
+					return scope_Spectrum.fromStepping( stepped ? scope_Spectrum.getStep( value ) : value );
+				});
+			}
+
+			if ( mode === 'values' ) {
+
+				// If the value must be stepped, it needs to be converted to a percentage first.
+				if ( stepped ) {
+
+					return values.map(function( value ){
+
+						// Convert to percentage, apply step, return to value.
+						return scope_Spectrum.fromStepping( scope_Spectrum.getStep( scope_Spectrum.toStepping( value ) ) );
+					});
+
+				}
+
+				// Otherwise, we can simply use the values.
+				return values;
+			}
+		}
+
+		function generateSpread ( density, mode, group ) {
+
+			function safeIncrement(value, increment) {
+				// Avoid floating point variance by dropping the smallest decimal places.
+				return (value + increment).toFixed(7) / 1;
+			}
+
+			var indexes = {},
+				firstInRange = scope_Spectrum.xVal[0],
+				lastInRange = scope_Spectrum.xVal[scope_Spectrum.xVal.length-1],
+				ignoreFirst = false,
+				ignoreLast = false,
+				prevPct = 0;
+
+			// Create a copy of the group, sort it and filter away all duplicates.
+			group = unique(group.slice().sort(function(a, b){ return a - b; }));
+
+			// Make sure the range starts with the first element.
+			if ( group[0] !== firstInRange ) {
+				group.unshift(firstInRange);
+				ignoreFirst = true;
+			}
+
+			// Likewise for the last one.
+			if ( group[group.length - 1] !== lastInRange ) {
+				group.push(lastInRange);
+				ignoreLast = true;
+			}
+
+			group.forEach(function ( current, index ) {
+
+				// Get the current step and the lower + upper positions.
+				var step, i, q,
+					low = current,
+					high = group[index+1],
+					newPct, pctDifference, pctPos, type,
+					steps, realSteps, stepsize;
+
+				// When using 'steps' mode, use the provided steps.
+				// Otherwise, we'll step on to the next subrange.
+				if ( mode === 'steps' ) {
+					step = scope_Spectrum.xNumSteps[ index ];
+				}
+
+				// Default to a 'full' step.
+				if ( !step ) {
+					step = high-low;
+				}
+
+				// Low can be 0, so test for false. If high is undefined,
+				// we are at the last subrange. Index 0 is already handled.
+				if ( low === false || high === undefined ) {
+					return;
+				}
+
+				// Make sure step isn't 0, which would cause an infinite loop (#654)
+				step = Math.max(step, 0.0000001);
+
+				// Find all steps in the subrange.
+				for ( i = low; i <= high; i = safeIncrement(i, step) ) {
+
+					// Get the percentage value for the current step,
+					// calculate the size for the subrange.
+					newPct = scope_Spectrum.toStepping( i );
+					pctDifference = newPct - prevPct;
+
+					steps = pctDifference / density;
+					realSteps = Math.round(steps);
+
+					// This ratio represents the ammount of percentage-space a point indicates.
+					// For a density 1 the points/percentage = 1. For density 2, that percentage needs to be re-devided.
+					// Round the percentage offset to an even number, then divide by two
+					// to spread the offset on both sides of the range.
+					stepsize = pctDifference/realSteps;
+
+					// Divide all points evenly, adding the correct number to this subrange.
+					// Run up to <= so that 100% gets a point, event if ignoreLast is set.
+					for ( q = 1; q <= realSteps; q += 1 ) {
+
+						// The ratio between the rounded value and the actual size might be ~1% off.
+						// Correct the percentage offset by the number of points
+						// per subrange. density = 1 will result in 100 points on the
+						// full range, 2 for 50, 4 for 25, etc.
+						pctPos = prevPct + ( q * stepsize );
+						indexes[pctPos.toFixed(5)] = ['x', 0];
+					}
+
+					// Determine the point type.
+					type = (group.indexOf(i) > -1) ? 1 : ( mode === 'steps' ? 2 : 0 );
+
+					// Enforce the 'ignoreFirst' option by overwriting the type for 0.
+					if ( !index && ignoreFirst ) {
+						type = 0;
+					}
+
+					if ( !(i === high && ignoreLast)) {
+						// Mark the 'type' of this point. 0 = plain, 1 = real value, 2 = step value.
+						indexes[newPct.toFixed(5)] = [i, type];
+					}
+
+					// Update the percentage count.
+					prevPct = newPct;
+				}
+			});
+
+			return indexes;
+		}
+
+		function addMarking ( spread, filterFunc, formatter ) {
+
+			var element = document.createElement('div'),
+				out = '',
+				valueSizeClasses = [
+					options.cssClasses.valueNormal,
+					options.cssClasses.valueLarge,
+					options.cssClasses.valueSub
+				],
+				markerSizeClasses = [
+					options.cssClasses.markerNormal,
+					options.cssClasses.markerLarge,
+					options.cssClasses.markerSub
+				],
+				valueOrientationClasses = [
+					options.cssClasses.valueHorizontal,
+					options.cssClasses.valueVertical
+				],
+				markerOrientationClasses = [
+					options.cssClasses.markerHorizontal,
+					options.cssClasses.markerVertical
+				];
+
+			addClass(element, options.cssClasses.pips);
+			addClass(element, options.ort === 0 ? options.cssClasses.pipsHorizontal : options.cssClasses.pipsVertical);
+
+			function getClasses( type, source ){
+				var a = source === options.cssClasses.value,
+					orientationClasses = a ? valueOrientationClasses : markerOrientationClasses,
+					sizeClasses = a ? valueSizeClasses : markerSizeClasses;
+
+				return source + ' ' + orientationClasses[options.ort] + ' ' + sizeClasses[type];
+			}
+
+			function getTags( offset, source, values ) {
+				return 'class="' + getClasses(values[1], source) + '" style="' + options.style + ': ' + offset + '%"';
+			}
+
+			function addSpread ( offset, values ){
+
+				// Apply the filter function, if it is set.
+				values[1] = (values[1] && filterFunc) ? filterFunc(values[0], values[1]) : values[1];
+
+				// Add a marker for every point
+				out += '<div ' + getTags(offset, options.cssClasses.marker, values) + '></div>';
+
+				// Values are only appended for points marked '1' or '2'.
+				if ( values[1] ) {
+					out += '<div ' + getTags(offset, options.cssClasses.value, values) + '>' + formatter.to(values[0]) + '</div>';
+				}
+			}
+
+			// Append all points.
+			Object.keys(spread).forEach(function(a){
+				addSpread(a, spread[a]);
+			});
+
+			element.innerHTML = out;
+
+			return element;
+		}
+
+		function pips ( grid ) {
+
+		var mode = grid.mode,
+			density = grid.density || 1,
+			filter = grid.filter || false,
+			values = grid.values || false,
+			stepped = grid.stepped || false,
+			group = getGroup( mode, values, stepped ),
+			spread = generateSpread( density, mode, group ),
+			format = grid.format || {
+				to: Math.round
+			};
+
+			return scope_Target.appendChild(addMarking(
+				spread,
+				filter,
+				format
+			));
+		}
+
+
+		// Shorthand for base dimensions.
+		function baseSize ( ) {
+			var rect = scope_Base.getBoundingClientRect(), alt = 'offset' + ['Width', 'Height'][options.ort];
+			return options.ort === 0 ? (rect.width||scope_Base[alt]) : (rect.height||scope_Base[alt]);
+		}
+
+		// Handler for attaching events trough a proxy.
+		function attachEvent ( events, element, callback, data ) {
+
+			// This function can be used to 'filter' events to the slider.
+			// element is a node, not a nodeList
+
+			var method = function ( e ){
+
+				if ( scope_Target.hasAttribute('disabled') ) {
+					return false;
+				}
+
+				// Stop if an active 'tap' transition is taking place.
+				if ( hasClass(scope_Target, options.cssClasses.tap) ) {
+					return false;
+				}
+
+				e = fixEvent(e, data.pageOffset);
+
+				// Ignore right or middle clicks on start #454
+				if ( events === actions.start && e.buttons !== undefined && e.buttons > 1 ) {
+					return false;
+				}
+
+				// Ignore right or middle clicks on start #454
+				if ( data.hover && e.buttons ) {
+					return false;
+				}
+
+				e.calcPoint = e.points[ options.ort ];
+
+				// Call the event handler with the event [ and additional data ].
+				callback ( e, data );
+			};
+
+			var methods = [];
+
+			// Bind a closure on the target for every event type.
+			events.split(' ').forEach(function( eventName ){
+				element.addEventListener(eventName, method, false);
+				methods.push([eventName, method]);
+			});
+
+			return methods;
+		}
+
+		// Provide a clean event with standardized offset values.
+		function fixEvent ( e, pageOffset ) {
+
+			// Prevent scrolling and panning on touch events, while
+			// attempting to slide. The tap event also depends on this.
+			e.preventDefault();
+
+			// Filter the event to register the type, which can be
+			// touch, mouse or pointer. Offset changes need to be
+			// made on an event specific basis.
+			var touch = e.type.indexOf('touch') === 0,
+				mouse = e.type.indexOf('mouse') === 0,
+				pointer = e.type.indexOf('pointer') === 0,
+				x,y, event = e;
+
+			// IE10 implemented pointer events with a prefix;
+			if ( e.type.indexOf('MSPointer') === 0 ) {
+				pointer = true;
+			}
+
+			if ( touch ) {
+
+				// Fix bug when user touches with two or more fingers on mobile devices.
+				// It's useful when you have two or more sliders on one page,
+				// that can be touched simultaneously.
+				// #649, #663, #668
+				if ( event.touches.length > 1 ) {
+					return false;
+				}
+
+				// noUiSlider supports one movement at a time,
+				// so we can select the first 'changedTouch'.
+				x = e.changedTouches[0].pageX;
+				y = e.changedTouches[0].pageY;
+			}
+
+			pageOffset = pageOffset || getPageOffset();
+
+			if ( mouse || pointer ) {
+				x = e.clientX + pageOffset.x;
+				y = e.clientY + pageOffset.y;
+			}
+
+			event.pageOffset = pageOffset;
+			event.points = [x, y];
+			event.cursor = mouse || pointer; // Fix #435
+
+			return event;
+		}
+
+		function calcPointToPercentage ( calcPoint ) {
+			var location = calcPoint - offset(scope_Base, options.ort);
+			var proposal = ( location * 100 ) / baseSize();
+			return options.dir ? 100 - proposal : proposal;
+		}
+
+		function getClosestHandle ( proposal ) {
+
+			var closest = 100;
+			var handleNumber = false;
+
+			scope_Handles.forEach(function(handle, index){
+
+				// Disabled handles are ignored
+				if ( handle.hasAttribute('disabled') ) {
+					return;
+				}
+
+				var pos = Math.abs(scope_Locations[index] - proposal);
+
+				if ( pos < closest ) {
+					handleNumber = index;
+					closest = pos;
+				}
+			});
+
+			return handleNumber;
+		}
+
+		// Moves handle(s) by a percentage
+		// (bool, % to move, [% where handle started, ...], [index in scope_Handles, ...])
+		function moveHandles ( upward, proposal, locations, handleNumbers ) {
+
+			var proposals = locations.slice();
+
+			var b = [!upward, upward];
+			var f = [upward, !upward];
+
+			// Copy handleNumbers so we don't change the dataset
+			handleNumbers = handleNumbers.slice();
+
+			// Check to see which handle is 'leading'.
+			// If that one can't move the second can't either.
+			if ( upward ) {
+				handleNumbers.reverse();
+			}
+
+			// Step 1: get the maximum percentage that any of the handles can move
+			if ( handleNumbers.length > 1 ) {
+
+				handleNumbers.forEach(function(handleNumber, o) {
+
+					var to = checkHandlePosition(proposals, handleNumber, proposals[handleNumber] + proposal, b[o], f[o]);
+
+					// Stop if one of the handles can't move.
+					if ( to === false ) {
+						proposal = 0;
+					} else {
+						proposal = to - proposals[handleNumber];
+						proposals[handleNumber] = to;
+					}
+				});
+			}
+
+			// If using one handle, check backward AND forward
+			else {
+				b = f = [true];
+			}
+
+			var state = false;
+
+			// Step 2: Try to set the handles with the found percentage
+			handleNumbers.forEach(function(handleNumber, o) {
+				state = setHandle(handleNumber, locations[handleNumber] + proposal, b[o], f[o]) || state;
+			});
+
+			// Step 3: If a handle moved, fire events
+			if ( state ) {
+				handleNumbers.forEach(function(handleNumber){
+					fireEvent('update', handleNumber);
+					fireEvent('slide', handleNumber);
+				});
+			}
+		}
+
+		// External event handling
+		function fireEvent ( eventName, handleNumber, tap ) {
+
+			Object.keys(scope_Events).forEach(function( targetEvent ) {
+
+				var eventType = targetEvent.split('.')[0];
+
+				if ( eventName === eventType ) {
+					scope_Events[targetEvent].forEach(function( callback ) {
+
+						callback.call(
+							// Use the slider public API as the scope ('this')
+							scope_Self,
+							// Return values as array, so arg_1[arg_2] is always valid.
+							scope_Values.map(options.format.to),
+							// Handle index, 0 or 1
+							handleNumber,
+							// Unformatted slider values
+							scope_Values.slice(),
+							// Event is fired by tap, true or false
+							tap || false,
+							// Left offset of the handle, in relation to the slider
+							scope_Locations.slice()
+						);
+					});
+				}
+			});
+		}
+
+
+		// Fire 'end' when a mouse or pen leaves the document.
+		function documentLeave ( event, data ) {
+			if ( event.type === "mouseout" && event.target.nodeName === "HTML" && event.relatedTarget === null ){
+				eventEnd (event, data);
+			}
+		}
+
+		// Handle movement on document for handle and range drag.
+		function eventMove ( event, data ) {
+
+			// Fix #498
+			// Check value of .buttons in 'start' to work around a bug in IE10 mobile (data.buttonsProperty).
+			// https://connect.microsoft.com/IE/feedback/details/927005/mobile-ie10-windows-phone-buttons-property-of-pointermove-event-always-zero
+			// IE9 has .buttons and .which zero on mousemove.
+			// Firefox breaks the spec MDN defines.
+			if ( navigator.appVersion.indexOf("MSIE 9") === -1 && event.buttons === 0 && data.buttonsProperty !== 0 ) {
+				return eventEnd(event, data);
+			}
+
+			// Check if we are moving up or down
+			var movement = (options.dir ? -1 : 1) * (event.calcPoint - data.startCalcPoint);
+
+			// Convert the movement into a percentage of the slider width/height
+			var proposal = (movement * 100) / data.baseSize;
+
+			moveHandles(movement > 0, proposal, data.locations, data.handleNumbers);
+		}
+
+		// Unbind move events on document, call callbacks.
+		function eventEnd ( event, data ) {
+
+			// The handle is no longer active, so remove the class.
+			var active = scope_Base.querySelector( '.' + options.cssClasses.active );
+
+			if ( active !== null ) {
+				removeClass(active, options.cssClasses.active);
+			}
+
+			// Remove cursor styles and text-selection events bound to the body.
+			if ( event.cursor ) {
+				document.body.style.cursor = '';
+				document.body.removeEventListener('selectstart', document.body.noUiListener);
+			}
+
+			// Unbind the move and end events, which are added on 'start'.
+			document.documentElement.noUiListeners.forEach(function( c ) {
+				document.documentElement.removeEventListener(c[0], c[1]);
+			});
+
+			// Remove dragging class.
+			removeClass(scope_Target, options.cssClasses.drag);
+
+			setZindex();
+
+			data.handleNumbers.forEach(function(handleNumber){
+				fireEvent('set', handleNumber);
+				fireEvent('change', handleNumber);
+				fireEvent('end', handleNumber);
+			});
+		}
+
+		// Bind move events on document.
+		function eventStart ( event, data ) {
+
+			// Mark the handle as 'active' so it can be styled.
+			if ( data.handleNumbers.length === 1 ) {
+
+				var handle = scope_Handles[data.handleNumbers[0]];
+
+				// Ignore 'disabled' handles
+				if ( handle.hasAttribute('disabled') ) {
+					return false;
+				}
+
+				addClass(handle.children[0], options.cssClasses.active);
+			}
+
+			// Fix #551, where a handle gets selected instead of dragged.
+			event.preventDefault();
+
+			// A drag should never propagate up to the 'tap' event.
+			event.stopPropagation();
+
+			// Attach the move and end events.
+			var moveEvent = attachEvent(actions.move, document.documentElement, eventMove, {
+				startCalcPoint: event.calcPoint,
+				baseSize: baseSize(),
+				pageOffset: event.pageOffset,
+				handleNumbers: data.handleNumbers,
+				buttonsProperty: event.buttons,
+				locations: scope_Locations.slice()
+			});
+
+			var endEvent = attachEvent(actions.end, document.documentElement, eventEnd, {
+				handleNumbers: data.handleNumbers
+			});
+
+			var outEvent = attachEvent("mouseout", document.documentElement, documentLeave, {
+				handleNumbers: data.handleNumbers
+			});
+
+			document.documentElement.noUiListeners = moveEvent.concat(endEvent, outEvent);
+
+			// Text selection isn't an issue on touch devices,
+			// so adding cursor styles can be skipped.
+			if ( event.cursor ) {
+
+				// Prevent the 'I' cursor and extend the range-drag cursor.
+				document.body.style.cursor = getComputedStyle(event.target).cursor;
+
+				// Mark the target with a dragging state.
+				if ( scope_Handles.length > 1 ) {
+					addClass(scope_Target, options.cssClasses.drag);
+				}
+
+				var f = function(){
+					return false;
+				};
+
+				document.body.noUiListener = f;
+
+				// Prevent text selection when dragging the handles.
+				document.body.addEventListener('selectstart', f, false);
+			}
+
+			data.handleNumbers.forEach(function(handleNumber){
+				fireEvent('start', handleNumber);
+			});
+		}
+
+		// Move closest handle to tapped location.
+		function eventTap ( event ) {
+
+			// The tap event shouldn't propagate up
+			event.stopPropagation();
+
+			var proposal = calcPointToPercentage(event.calcPoint);
+			var handleNumber = getClosestHandle(proposal);
+
+			// Tackle the case that all handles are 'disabled'.
+			if ( handleNumber === false ) {
+				return false;
+			}
+
+			// Flag the slider as it is now in a transitional state.
+			// Transition takes a configurable amount of ms (default 300). Re-enable the slider after that.
+			if ( !options.events.snap ) {
+				addClassFor(scope_Target, options.cssClasses.tap, options.animationDuration);
+			}
+
+			setHandle(handleNumber, proposal, true, true);
+
+			setZindex();
+
+			fireEvent('slide', handleNumber, true);
+			fireEvent('set', handleNumber, true);
+			fireEvent('change', handleNumber, true);
+			fireEvent('update', handleNumber, true);
+
+			if ( options.events.snap ) {
+				eventStart(event, { handleNumbers: [handleNumber] });
+			}
+		}
+
+		// Fires a 'hover' event for a hovered mouse/pen position.
+		function eventHover ( event ) {
+
+			var proposal = calcPointToPercentage(event.calcPoint);
+
+			var to = scope_Spectrum.getStep(proposal);
+			var value = scope_Spectrum.fromStepping(to);
+
+			Object.keys(scope_Events).forEach(function( targetEvent ) {
+				if ( 'hover' === targetEvent.split('.')[0] ) {
+					scope_Events[targetEvent].forEach(function( callback ) {
+						callback.call( scope_Self, value );
+					});
+				}
+			});
+		}
+
+		// Attach events to several slider parts.
+		function bindSliderEvents ( behaviour ) {
+
+			// Attach the standard drag event to the handles.
+			if ( !behaviour.fixed ) {
+
+				scope_Handles.forEach(function( handle, index ){
+
+					// These events are only bound to the visual handle
+					// element, not the 'real' origin element.
+					attachEvent ( actions.start, handle.children[0], eventStart, {
+						handleNumbers: [index]
+					});
+				});
+			}
+
+			// Attach the tap event to the slider base.
+			if ( behaviour.tap ) {
+				attachEvent (actions.start, scope_Base, eventTap, {});
+			}
+
+			// Fire hover events
+			if ( behaviour.hover ) {
+				attachEvent (actions.move, scope_Base, eventHover, { hover: true });
+			}
+
+			// Make the range draggable.
+			if ( behaviour.drag ){
+
+				scope_Connects.forEach(function( connect, index ){
+
+					if ( connect === false || index === 0 || index === scope_Connects.length - 1 ) {
+						return;
+					}
+
+					var handleBefore = scope_Handles[index - 1];
+					var handleAfter = scope_Handles[index];
+					var eventHolders = [connect];
+
+					addClass(connect, options.cssClasses.draggable);
+
+					// When the range is fixed, the entire range can
+					// be dragged by the handles. The handle in the first
+					// origin will propagate the start event upward,
+					// but it needs to be bound manually on the other.
+					if ( behaviour.fixed ) {
+						eventHolders.push(handleBefore.children[0]);
+						eventHolders.push(handleAfter.children[0]);
+					}
+
+					eventHolders.forEach(function( eventHolder ) {
+						attachEvent ( actions.start, eventHolder, eventStart, {
+							handles: [handleBefore, handleAfter],
+							handleNumbers: [index - 1, index]
+						});
+					});
+				});
+			}
+		}
+
+
+		// Split out the handle positioning logic so the Move event can use it, too
+		function checkHandlePosition ( reference, handleNumber, to, lookBackward, lookForward ) {
+
+			// For sliders with multiple handles, limit movement to the other handle.
+			// Apply the margin option by adding it to the handle positions.
+			if ( scope_Handles.length > 1 ) {
+
+				if ( lookBackward && handleNumber > 0 ) {
+					to = Math.max(to, reference[handleNumber - 1] + options.margin);
+				}
+
+				if ( lookForward && handleNumber < scope_Handles.length - 1 ) {
+					to = Math.min(to, reference[handleNumber + 1] - options.margin);
+				}
+			}
+
+			// The limit option has the opposite effect, limiting handles to a
+			// maximum distance from another. Limit must be > 0, as otherwise
+			// handles would be unmoveable.
+			if ( scope_Handles.length > 1 && options.limit ) {
+
+				if ( lookBackward && handleNumber > 0 ) {
+					to = Math.min(to, reference[handleNumber - 1] + options.limit);
+				}
+
+				if ( lookForward && handleNumber < scope_Handles.length - 1 ) {
+					to = Math.max(to, reference[handleNumber + 1] - options.limit);
+				}
+			}
+
+			to = scope_Spectrum.getStep(to);
+
+			// Limit percentage to the 0 - 100 range
+			to = limit(to);
+
+			// Return false if handle can't move
+			if ( to === reference[handleNumber] ) {
+				return false;
+			}
+
+			return to;
+		}
+
+		function toPct ( pct ) {
+			return pct + '%';
+		}
+
+		// Updates scope_Locations and scope_Values, updates visual state
+		function updateHandlePosition ( handleNumber, to ) {
+
+			// Update locations.
+			scope_Locations[handleNumber] = to;
+
+			// Convert the value to the slider stepping/range.
+			scope_Values[handleNumber] = scope_Spectrum.fromStepping(to);
+
+			// Called synchronously or on the next animationFrame
+			var stateUpdate = function() {
+				scope_Handles[handleNumber].style[options.style] = toPct(to);
+				updateConnect(handleNumber);
+				updateConnect(handleNumber + 1);
+			};
+
+			// Set the handle to the new position.
+			// Use requestAnimationFrame for efficient painting.
+			// No significant effect in Chrome, Edge sees dramatic performace improvements.
+			// Option to disable is useful for unit tests, and single-step debugging.
+			if ( window.requestAnimationFrame && options.useRequestAnimationFrame ) {
+				window.requestAnimationFrame(stateUpdate);
+			} else {
+				stateUpdate();
+			}
+		}
+
+		function setZindex ( ) {
+
+			scope_HandleNumbers.forEach(function(handleNumber){
+				// Handles before the slider middle are stacked later = higher,
+				// Handles after the middle later is lower
+				// [[7] [8] .......... | .......... [5] [4]
+				var dir = (scope_Locations[handleNumber] > 50 ? -1 : 1);
+				var zIndex = 3 + (scope_Handles.length + (dir * handleNumber));
+				scope_Handles[handleNumber].childNodes[0].style.zIndex = zIndex;
+			});
+		}
+
+		// Test suggested values and apply margin, step.
+		function setHandle ( handleNumber, to, lookBackward, lookForward ) {
+
+			to = checkHandlePosition(scope_Locations, handleNumber, to, lookBackward, lookForward);
+
+			if ( to === false ) {
+				return false;
+			}
+
+			updateHandlePosition(handleNumber, to);
+
+			return true;
+		}
+
+		// Updates style attribute for connect nodes
+		function updateConnect ( index ) {
+
+			// Skip connects set to false
+			if ( !scope_Connects[index] ) {
+				return;
+			}
+
+			var l = 0;
+			var h = 100;
+
+			if ( index !== 0 ) {
+				l = scope_Locations[index - 1];
+			}
+
+			if ( index !== scope_Connects.length - 1 ) {
+				h = scope_Locations[index];
+			}
+
+			scope_Connects[index].style[options.style] = toPct(l);
+			scope_Connects[index].style[options.styleOposite] = toPct(100 - h);
+		}
+
+		// ...
+		function setValue ( to, handleNumber ) {
+
+			// Setting with null indicates an 'ignore'.
+			// Inputting 'false' is invalid.
+			if ( to === null || to === false ) {
+				return;
+			}
+
+			// If a formatted number was passed, attemt to decode it.
+			if ( typeof to === 'number' ) {
+				to = String(to);
+			}
+
+			to = options.format.from(to);
+
+			// Request an update for all links if the value was invalid.
+			// Do so too if setting the handle fails.
+			if ( to !== false && !isNaN(to) ) {
+				setHandle(handleNumber, scope_Spectrum.toStepping(to), false, false);
+			}
+		}
+
+		// Set the slider value.
+		function valueSet ( input, fireSetEvent ) {
+
+			var values = asArray(input);
+			var isInit = scope_Locations[0] === undefined;
+
+			// Event fires by default
+			fireSetEvent = (fireSetEvent === undefined ? true : !!fireSetEvent);
+
+			values.forEach(setValue);
+
+			// Animation is optional.
+			// Make sure the initial values were set before using animated placement.
+			if ( options.animate && !isInit ) {
+				addClassFor(scope_Target, options.cssClasses.tap, options.animationDuration);
+			}
+
+			// Now that all base values are set, apply constraints
+			scope_HandleNumbers.forEach(function(handleNumber){
+				setHandle(handleNumber, scope_Locations[handleNumber], true, false);
+			});
+
+			setZindex();
+
+			scope_HandleNumbers.forEach(function(handleNumber){
+
+				fireEvent('update', handleNumber);
+
+				// Fire the event only for handles that received a new value, as per #579
+				if ( values[handleNumber] !== null && fireSetEvent ) {
+					fireEvent('set', handleNumber);
+				}
+			});
+		}
+
+		function valueReset ( fireSetEvent ) {
+			valueSet(options.start, fireSetEvent);
+		}
+
+		// Get the slider value.
+		function valueGet ( ) {
+
+			var values = scope_Values.map(options.format.to);
+
+			// If only one handle is used, return a single value.
+			if ( values.length === 1 ){
+				return values[0];
+			}
+
+			return values;
+		}
+
+		// Removes classes from the root and empties it.
+		function destroy ( ) {
+
+			for ( var key in options.cssClasses ) {
+				if ( !options.cssClasses.hasOwnProperty(key) ) { continue; }
+				removeClass(scope_Target, options.cssClasses[key]);
+			}
+
+			while (scope_Target.firstChild) {
+				scope_Target.removeChild(scope_Target.firstChild);
+			}
+
+			delete scope_Target.noUiSlider;
+		}
+
+		// Get the current step size for the slider.
+		function getCurrentStep ( ) {
+
+			// Check all locations, map them to their stepping point.
+			// Get the step point, then find it in the input list.
+			return scope_Locations.map(function( location, index ){
+
+				var nearbySteps = scope_Spectrum.getNearbySteps( location );
+				var value = scope_Values[index];
+				var increment = nearbySteps.thisStep.step;
+				var decrement = null;
+
+				// If the next value in this step moves into the next step,
+				// the increment is the start of the next step - the current value
+				if ( increment !== false ) {
+					if ( value + increment > nearbySteps.stepAfter.startValue ) {
+						increment = nearbySteps.stepAfter.startValue - value;
+					}
+				}
+
+				// If the value is beyond the starting point
+				if ( value > nearbySteps.thisStep.startValue ) {
+					decrement = nearbySteps.thisStep.step;
+				}
+
+				else if ( nearbySteps.stepBefore.step === false ) {
+					decrement = false;
+				}
+
+				// If a handle is at the start of a step, it always steps back into the previous step first
+				else {
+					decrement = value - nearbySteps.stepBefore.highestStep;
+				}
+
+				// Now, if at the slider edges, there is not in/decrement
+				if ( location === 100 ) {
+					increment = null;
+				}
+
+				else if ( location === 0 ) {
+					decrement = null;
+				}
+
+				// As per #391, the comparison for the decrement step can have some rounding issues.
+				var stepDecimals = scope_Spectrum.countStepDecimals();
+
+				// Round per #391
+				if ( increment !== null && increment !== false ) {
+					increment = Number(increment.toFixed(stepDecimals));
+				}
+
+				if ( decrement !== null && decrement !== false ) {
+					decrement = Number(decrement.toFixed(stepDecimals));
+				}
+
+				return [decrement, increment];
+			});
+		}
+
+		// Attach an event to this slider, possibly including a namespace
+		function bindEvent ( namespacedEvent, callback ) {
+			scope_Events[namespacedEvent] = scope_Events[namespacedEvent] || [];
+			scope_Events[namespacedEvent].push(callback);
+
+			// If the event bound is 'update,' fire it immediately for all handles.
+			if ( namespacedEvent.split('.')[0] === 'update' ) {
+				scope_Handles.forEach(function(a, index){
+					fireEvent('update', index);
+				});
+			}
+		}
+
+		// Undo attachment of event
+		function removeEvent ( namespacedEvent ) {
+
+			var event = namespacedEvent && namespacedEvent.split('.')[0],
+				namespace = event && namespacedEvent.substring(event.length);
+
+			Object.keys(scope_Events).forEach(function( bind ){
+
+				var tEvent = bind.split('.')[0],
+					tNamespace = bind.substring(tEvent.length);
+
+				if ( (!event || event === tEvent) && (!namespace || namespace === tNamespace) ) {
+					delete scope_Events[bind];
+				}
+			});
+		}
+
+		// Updateable: margin, limit, step, range, animate, snap
+		function updateOptions ( optionsToUpdate, fireSetEvent ) {
+
+			// Spectrum is created using the range, snap, direction and step options.
+			// 'snap' and 'step' can be updated, 'direction' cannot, due to event binding.
+			// If 'snap' and 'step' are not passed, they should remain unchanged.
+			var v = valueGet();
+
+			var updateAble = ['margin', 'limit', 'range', 'animate', 'snap', 'step', 'format'];
+
+			// Only change options that we're actually passed to update.
+			updateAble.forEach(function(name){
+				if ( optionsToUpdate[name] !== undefined ) {
+					originalOptions[name] = optionsToUpdate[name];
+				}
+			});
+
+			var newOptions = testOptions(originalOptions);
+
+			// Load new options into the slider state
+			updateAble.forEach(function(name){
+				if ( optionsToUpdate[name] !== undefined ) {
+					options[name] = newOptions[name];
+				}
+			});
+
+			// Save current spectrum direction as testOptions in testRange call
+			// doesn't rely on current direction
+			newOptions.spectrum.direction = scope_Spectrum.direction;
+			scope_Spectrum = newOptions.spectrum;
+
+			// Limit and margin depend on the spectrum but are stored outside of it. (#677)
+			options.margin = newOptions.margin;
+			options.limit = newOptions.limit;
+
+			// Invalidate the current positioning so valueSet forces an update.
+			scope_Locations = [];
+			valueSet(optionsToUpdate.start || v, fireSetEvent);
+		}
+
+		// Throw an error if the slider was already initialized.
+		if ( scope_Target.noUiSlider ) {
+			throw new Error('Slider was already initialized.');
+		}
+
+		// Create the base element, initialise HTML and set classes.
+		// Add handles and connect elements.
+		addSlider(scope_Target);
+		addElements(options.connect, scope_Base);
+
+		scope_Self = {
+			destroy: destroy,
+			steps: getCurrentStep,
+			on: bindEvent,
+			off: removeEvent,
+			get: valueGet,
+			set: valueSet,
+			reset: valueReset,
+			 // Exposed for unit testing, don't use this in your application.
+			__moveHandles: function(a, b, c) { moveHandles(a, b, scope_Locations, c); },
+			options: originalOptions, // Issue #600, #678
+			updateOptions: updateOptions,
+			target: scope_Target, // Issue #597
+			pips: pips // Issue #594
+		};
+
+		// Attach user events.
+		bindSliderEvents(options.events);
+
+		// Use the public value method to set the start values.
+		valueSet(options.start);
+
+		if ( options.pips ) {
+			pips(options.pips);
+		}
+
+		if ( options.tooltips ) {
+			tooltips();
+		}
+
+		return scope_Self;
+
+	}
+
+
+		// Run the standard initializer
+		function initialize ( target, originalOptions ) {
+
+			if ( !target.nodeName ) {
+				throw new Error('noUiSlider.create requires a single element.');
+			}
+
+			// Test the options and create the slider environment;
+			var options = testOptions( originalOptions, target );
+			var api = closure( target, options, originalOptions );
+
+			target.noUiSlider = api;
+
+			return api;
+		}
+
+		// Use an object instead of a function for future expansibility;
+		return {
+			create: initialize
+		};
+
+	}));
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	;
+	;
+	var operationSymbols = ['&lt;', '&oplus;', '&gt;'];
+	_a = [0, 1, 2], exports.LESS_EQUAL = _a[0], exports.EXCLUSIVE = _a[1], exports.GREATER_EQUAL = _a[2];
+	function FilterButtons(buttons, options, element, _selected) {
+	    if (_selected === true) {
+	        _selected = [];
+	        buttons.forEach(function (buttonData, buttonIndex) {
+	            _selected.push(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+	        });
+	    } else {
+	        _selected = _selected || [];
+	    }
+	    options = options || {};
+	    var listeners = [];
+	    var buttonDivs = [];
+	    var allButtons = [];
+	    var lastOperation = void 0;
+	    var lastOperationIndex = void 0;
+	    var lastOperationTimeout = void 0;
+	    var map = {};
+	    buttons.forEach(function (buttonData, buttonIndex) {
+	        map[buttonData.id !== undefined ? buttonData.id : buttonIndex] = buttonIndex;
+	    });
+	    var clearLastOperation = function clearLastOperation() {
+	        lastOperation = undefined;
+	        lastOperationIndex = undefined;
+	        lastOperationTimeout = undefined;
+	    };
+	    var trueOrIn = function trueOrIn(variable, operation) {
+	        return variable === true || variable instanceof Array && variable.indexOf(operation) !== -1;
+	    };
+	    var select = function select(id, operation, event) {
+	        if (event instanceof Event) {
+	            if (event.defaultPrevented) {
+	                return false;
+	            }
+	            event.preventDefault();
+	        }
+	        if (lastOperationTimeout !== undefined) {
+	            clearTimeout(lastOperationTimeout);
+	            lastOperationTimeout = undefined;
+	        }
+	        if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
+	            if (id === undefined) {
+	                if (_selected.length === buttons.length) {
+	                    _selected.length = 0;
+	                } else {
+	                    _selected.length = 0;
+	                    _selected.push.apply(_selected, Object.keys(map));
+	                }
+	            } else {
+	                _selected.length = 0;
+	                if (id === true) {
+	                    _selected.push.apply(_selected, Object.keys(map));
+	                } else if (id instanceof Array) {
+	                    _selected.concat(id);
+	                }
+	            }
+	            buttons.forEach(function (buttonData, buttonIndex) {
+	                var value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+	                if (buttonDivs[buttonIndex]) {
+	                    buttonDivs[buttonIndex].forEach(function (div) {
+	                        if (_selected.indexOf(value) !== -1) {
+	                            div.classList.add('selected');
+	                        } else {
+	                            div.classList.remove('selected');
+	                        }
+	                    });
+	                }
+	            });
+	        } else {
+	            var _ret = function () {
+	                var exclusive = void 0;
+	                var index = void 0;
+	                if (map[id] !== undefined) {
+	                    index = map[id];
+	                } else if (typeof id === 'number' && id >= 0 && id < buttons.length) {
+	                    index = id;
+	                } else {
+	                    return {
+	                        v: false
+	                    };
+	                }
+	                id = buttons[id].id !== undefined ? buttons[id] : index;
+	                if (typeof operation === 'number') {
+	                    exclusive = typeof event === 'boolean' ? event : lastOperation === operation && lastOperationIndex === index ? true : false;
+	                    lastOperation = undefined;
+	                    lastOperationIndex = undefined;
+	                }
+	                switch (operation) {
+	                    case exports.EXCLUSIVE:
+	                        _selected.length = 0;
+	                        _selected.push(id);
+	                        buttonDivs.forEach(function (buttons, b) {
+	                            buttons.forEach(function (div) {
+	                                if (b === index) {
+	                                    div.classList.add('selected');
+	                                } else {
+	                                    div.classList.remove('selected');
+	                                }
+	                            });
+	                        });
+	                        break;
+	                    case exports.LESS_EQUAL:
+	                    case exports.GREATER_EQUAL:
+	                        if (exclusive) {
+	                            _selected.length = 0;
+	                            buttonDivs.forEach(function (buttons, b) {
+	                                buttons.forEach(function (div) {
+	                                    div.classList.remove('selected');
+	                                });
+	                            });
+	                        } else {
+	                            lastOperation = operation;
+	                            lastOperationIndex = index;
+	                        }
+	                        if (operation === exports.LESS_EQUAL) {
+	                            for (var i = index; i >= 0; i--) {
+	                                var value = buttons[i].id !== undefined ? buttons[i].id : i;
+	                                if (_selected.indexOf(value) === -1) {
+	                                    _selected.push(value);
+	                                    buttonDivs[i].forEach(function (div) {
+	                                        div.classList.add('selected');
+	                                    });
+	                                }
+	                            }
+	                        } else {
+	                            for (var _i = index; _i < buttons.length; _i++) {
+	                                var _value = buttons[_i].id !== undefined ? buttons[_i].id : _i;
+	                                if (_selected.indexOf(_value) === -1) {
+	                                    _selected.push(_value);
+	                                    buttonDivs[_i].forEach(function (div) {
+	                                        div.classList.add('selected');
+	                                    });
+	                                }
+	                            }
+	                        }
+	                        if (lastOperation !== undefined && options.operationTimeout) {
+	                            lastOperationTimeout = setTimeout(clearLastOperation, options.operationTimeout);
+	                        }
+	                        break;
+	                    default:
+	                        var selectedIndex = void 0;
+	                        if ((selectedIndex = _selected.indexOf(id)) === -1) {
+	                            _selected.push(id);
+	                            buttonDivs[index].forEach(function (div) {
+	                                div.classList.add('selected');
+	                            });
+	                        } else {
+	                            _selected.splice(selectedIndex, 1);
+	                            buttonDivs[index].forEach(function (div) {
+	                                div.classList.remove('selected');
+	                            });
+	                        }
+	                        break;
+	                }
+	            }();
+
+	            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	        }
+	        allButtons.forEach(function (button) {
+	            if (_selected.length === buttons.length) {
+	                button.classList.add('selected');
+	            } else {
+	                button.classList.remove('selected');
+	            }
+	        });
+	        listeners.forEach(function (callback) {
+	            callback();
+	        });
+	    };
+	    var createButtons = function createButtons(element) {
+	        var button = document.createElement('button');
+	        button.innerHTML = 'All';
+	        button.addEventListener('click', select.bind(null, undefined, undefined));
+	        if (_selected.length === buttons.length) {
+	            button.classList.add('selected');
+	        }
+	        allButtons.push(button);
+	        element.appendChild(button);
+	        buttons.forEach(function (buttonData, buttonIndex) {
+	            var button = document.createElement('div');
+	            if (buttonDivs[buttonIndex] === undefined) {
+	                buttonDivs[buttonIndex] = [];
+	            }
+	            buttonDivs[buttonIndex].push(button);
+	            var operationButton = void 0;
+	            element.appendChild(button);
+	            button.classList.add('button');
+	            if (typeof buttonData.id === 'string') {
+	                button.classList.add(buttonData.id);
+	            }
+	            button.innerHTML = buttonData.label || String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+	            buttons[buttonData.id] = button;
+	            operationSymbols.forEach(function (symbol, operation) {
+	                if (trueOrIn(options.operationButtons, operation)) {
+	                    button.appendChild(operationButton = document.createElement('div'));
+	                    operationButton.innerHTML = symbol;
+	                    operationButton.addEventListener('click', select.bind(null, buttonIndex, operation));
+	                }
+	            });
+	            button.addEventListener('click', select.bind(null, buttonIndex, undefined));
+	            if (trueOrIn(_selected, String(buttonData.id ? buttonData.id : buttonIndex))) {
+	                button.classList.add('selected');
+	            }
+	        });
+	    };
+	    if (element) {
+	        createButtons(element);
+	    }
+	    return {
+	        createButtons: createButtons,
+	        select: select,
+	        addListener: function addListener(func) {
+	            var id = void 0;
+	            if ((id = listeners.indexOf(func)) !== -1) {
+	                return id;
+	            }
+	            return listeners.push(func) - 1;
+	        },
+	        removeListener: function removeListener(item) {
+	            var id = void 0;
+	            if (typeof item === 'number' && typeof listeners[item] !== 'undefined') {
+	                delete listeners[item];
+	            } else if (typeof item === 'function' && (id = listeners.indexOf(item)) !== -1) {
+	                delete listeners[id];
+	            }
+	        },
+	        selected: function selected(id) {
+	            if (id === undefined) {
+	                return _selected;
+	            } else if (_selected.length == buttons.length || options.noneIsSelected && _selected.length === 0) {
+	                return true;
+	            } else if (map[id] !== undefined) {
+	                return _selected.indexOf(id) !== -1;
+	            } else if (options.numeric) {
+	                if (typeof options.rounding === 'function') {
+	                    return _selected.indexOf(options.rounding(id)) !== -1;
+	                } else if (options.rounding === 'ceiling') {} else if (options.rounding === 'floor') {}
+	            }
+	        }
+	    };
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = FilterButtons;
+	var _a;
+
+/***/ },
+/* 17 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {// Best place to find information on XHR features is:
+	// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+
+	var reqfields = [
+	  'responseType', 'withCredentials', 'timeout', 'onprogress'
+	]
+
+	// Simple and small ajax function
+	// Takes a parameters object and a callback function
+	// Parameters:
+	//  - url: string, required
+	//  - headers: object of `{header_name: header_value, ...}`
+	//  - body:
+	//      + string (sets content type to 'application/x-www-form-urlencoded' if not set in headers)
+	//      + FormData (doesn't set content type so that browser will set as appropriate)
+	//  - method: 'GET', 'POST', etc. Defaults to 'GET' or 'POST' based on body
+	//  - cors: If your using cross-origin, you will need this true for IE8-9
+	//
+	// The following parameters are passed onto the xhr object.
+	// IMPORTANT NOTE: The caller is responsible for compatibility checking.
+	//  - responseType: string, various compatability, see xhr docs for enum options
+	//  - withCredentials: boolean, IE10+, CORS only
+	//  - timeout: long, ms timeout, IE8+
+	//  - onprogress: callback, IE10+
+	//
+	// Callback function prototype:
+	//  - statusCode from request
+	//  - response
+	//    + if responseType set and supported by browser, this is an object of some type (see docs)
+	//    + otherwise if request completed, this is the string text of the response
+	//    + if request is aborted, this is "Abort"
+	//    + if request times out, this is "Timeout"
+	//    + if request errors before completing (probably a CORS issue), this is "Error"
+	//  - request object
+	//
+	// Returns the request object. So you can call .abort() or other methods
+	//
+	// DEPRECATIONS:
+	//  - Passing a string instead of the params object has been removed!
+	//
+	exports.ajax = function (params, callback) {
+	  // Any variable used more than once is var'd here because
+	  // minification will munge the variables whereas it can't munge
+	  // the object access.
+	  var headers = params.headers || {}
+	    , body = params.body
+	    , method = params.method || (body ? 'POST' : 'GET')
+	    , called = false
+
+	  var req = getRequest(params.cors)
+
+	  function cb(statusCode, responseText) {
+	    return function () {
+	      if (!called) {
+	        callback(req.status === undefined ? statusCode : req.status,
+	                 req.status === 0 ? "Error" : (req.response || req.responseText || responseText),
+	                 req)
+	        called = true
+	      }
+	    }
+	  }
+
+	  req.open(method, params.url, true)
+
+	  var success = req.onload = cb(200)
+	  req.onreadystatechange = function () {
+	    if (req.readyState === 4) success()
+	  }
+	  req.onerror = cb(null, 'Error')
+	  req.ontimeout = cb(null, 'Timeout')
+	  req.onabort = cb(null, 'Abort')
+
+	  if (body) {
+	    setDefault(headers, 'X-Requested-With', 'XMLHttpRequest')
+
+	    if (!global.FormData || !(body instanceof global.FormData)) {
+	      setDefault(headers, 'Content-Type', 'application/x-www-form-urlencoded')
+	    }
+	  }
+
+	  for (var i = 0, len = reqfields.length, field; i < len; i++) {
+	    field = reqfields[i]
+	    if (params[field] !== undefined)
+	      req[field] = params[field]
+	  }
+
+	  for (var field in headers)
+	    req.setRequestHeader(field, headers[field])
+
+	  req.send(body)
+
+	  return req
+	}
+
+	function getRequest(cors) {
+	  // XDomainRequest is only way to do CORS in IE 8 and 9
+	  // But XDomainRequest isn't standards-compatible
+	  // Notably, it doesn't allow cookies to be sent or set by servers
+	  // IE 10+ is standards-compatible in its XMLHttpRequest
+	  // but IE 10 can still have an XDomainRequest object, so we don't want to use it
+	  if (cors && global.XDomainRequest && !/MSIE 1/.test(navigator.userAgent))
+	    return new XDomainRequest
+	  if (global.XMLHttpRequest)
+	    return new XMLHttpRequest
+	}
+
+	function setDefault(obj, key, value) {
+	  obj[key] = obj[key] || value
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }
 /******/ ]);

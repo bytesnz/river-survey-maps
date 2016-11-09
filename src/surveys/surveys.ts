@@ -3,6 +3,7 @@ import * as Quality from './quality';
 import * as Time from '../lib/time';
 import * as Ratings from './ratings';
 import * as Controls from '../lib/controls';
+import FilterButtons from '../lib/filterButtons';
 import config from '../config';
 
 import nanoajax = require('nanoajax');
@@ -81,22 +82,19 @@ let pointColor = (surveyType: string, survey: Survey): HSLColor | false => {
   var h, s, l, o = 1;
   var value;
   let color;
+  const length = surveyParts[surveyType].length;
 
   // Determine color based on the selected survey parts
-  switch (surveyParts[surveyType].length) {
-    case 0:
-      return;
-    case 1:
-      // Single survey part active, so get color from survey part
-      if ((color = surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey))) {
-        [h, s, l] = color;
-      }
-      break;
-    default:
-      if ((color = Ratings.getColor(surveyScore(surveyType, survey)))) {
-        [h, s, l] = color;
-      }
-      break;
+  if (!length) {
+    return;
+  } else if (length === 1 && (!surveys[surveyType].parts[surveyParts[surveyType][0]].selected || (surveys[surveyType].parts[surveyParts[surveyType][0]].selected()).length)) {
+    if ((color = surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey))) {
+      [h, s, l] = color;
+    }
+  } else {
+    if ((color = Ratings.getColor(surveyScore(surveyType, survey)))) {
+      [h, s, l] = color;
+    }
   }
 
   // grey it based on the halflife
@@ -154,14 +152,22 @@ export function createSurveyButtons(parentElement: HTMLElement) {
   // Add survey buttons to the section div
   Object.keys(surveys).forEach((s) => {
     let survey = surveys[s];
-    surveyParts[s] = [];
     let button = document.createElement('button');
+    let defaults = (typeof config.defaultSurveys === 'object' && config.defaultSurveys[s]);
+
     buttons.appendChild(button);
     button.innerHTML = survey.label;
     button.addEventListener('click', toggleSurvey.bind(null, s));
 
-    let pbuttons = Controls.addControlSection(survey.label, parentElement);
-    pbuttons.style.display = 'none';
+    surveyParts[s] = [];
+
+    if (defaults) {
+      activeSurveys.push(s);
+      button.classList.add('selected');
+    }
+
+    // Move to another function
+    let pbuttons = Controls.addControlSection(survey.label, parentElement, true);
     let pdiv;
     pbuttons.appendChild((pdiv = document.createElement('div')));
     let pAllButton = document.createElement('button');
@@ -173,17 +179,46 @@ export function createSurveyButtons(parentElement: HTMLElement) {
       button: button,
       allButton: pAllButton,
       partSection: pbuttons,
-      partButtons: {}
+      partButtons: {},
+      partFilters: {},
     };
 
-    Object.keys(survey.parts).forEach((p) => {
+    // Create parts filter buttons
+    Object.keys(survey.parts).forEach(p => {
+      let part = survey.parts[p];
       let pbutton = document.createElement('button');
       surveyControls[s].partButtons[p] = pbutton;
       pdiv.appendChild(pbutton);
-      pbutton.innerHTML = survey.parts[p].label;
+      pbutton.innerHTML = part.label;
       pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
+
+      if (defaults) {
+        if (config.defaultSurveys[s] === true
+            || (typeof config.defaultSurveys[s] === 'object' && config.defaultSurveys[s][p])) {
+          surveyParts[s].push(p);
+          pbutton.classList.add('selected');
+        }
+      } else {
+        pbuttons.style.display = 'none';
+      }
+
+      // Create parts value filter buttons
+      if (part.filterValues) {
+        let pfilters = Controls.addControlSection(part.label, pbuttons, true);
+        let div;
+        surveyControls[s].partFilters[p] = pfilters;
+        pfilters.appendChild((div = document.createElement('div')));
+        if (defaults && typeof config.defaultSurveys[s] === 'object'
+            && typeof config.defaultSurveys[s][p] !== 'undefined') {
+          part.select(config.defaultSurveys[s][p]);
+        }
+        part.createButtons(div);
+        part.addListener(redrawSurveyData.bind(null, s));
+      }
     });
   });
+
+  reloadData();
 };
 
 /**
@@ -297,6 +332,9 @@ export function toggleSurveyPart(survey: string, part?: string) {
           if (surveyControls[survey].partButtons[part]) {
             surveyControls[survey].partButtons[part].classList.remove('selected');
           }
+          if (surveyControls[survey].partFilters[part]) {
+            surveyControls[survey].partFilters[part].style.display = 'none';
+          }
         } else {
           // Enable
           surveyParts[survey].push(part);
@@ -306,6 +344,10 @@ export function toggleSurveyPart(survey: string, part?: string) {
 
           if (surveyControls[survey].partButtons[part]) {
             surveyControls[survey].partButtons[part].classList.add('selected');
+          }
+
+          if (surveyControls[survey].partFilters[part]) {
+            surveyControls[survey].partFilters[part].style.display = '';
           }
         }
       }
@@ -442,7 +484,6 @@ export function reloadData(survey?: string) {
  */
 export function redrawSurveyData(survey: string) {
   if (typeof surveyData[survey] !== 'undefined') {
-    console.log('redrawing', survey)
     // Create layer group if we don't already have one
     if (typeof surveyLayers[survey] === 'undefined') {
       surveyLayers[survey] = L.layerGroup([]); // TODO Interface is wrong - parameter is optional
@@ -464,6 +505,15 @@ export function redrawSurveyData(survey: string) {
       }
 
       // TODO time filtering
+
+      // Part filtering
+      let length = surveyParts[survey].length;
+      for (let i = 0; i < length; i++) {
+        let part = surveyParts[survey][i];
+        if (surveys[survey].parts[part].selected && !surveys[survey].parts[part].selected(surveyPoint)) {
+          return;
+        }
+      }
 
       // Create latlong from data
       let latlng = pointLatlng(surveyPoint);

@@ -20,8 +20,10 @@ const config = {
   startSurveysEnabled: false,
   defaultTime: "decaying",
   mapMoveTimeout: 1000,
-  defautSurveys: {
-    quality: ['ph']
+  defaultSurveys: {
+    quality: {
+      ph: true
+    }
   }
 }
 

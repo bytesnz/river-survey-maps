@@ -83,8 +83,6 @@ export function selected(rating?: string | number): string[] | boolean {
 }
 
 export function selectRatings(rating?: string | boolean, method?: number, event?: Event) {
-  console.log('selectRatings called', arguments);
-
   if (event) {
     if (event.defaultPrevented) {
       return;
