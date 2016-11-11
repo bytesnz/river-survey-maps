@@ -14,10 +14,11 @@ export const filterOptions = {
     numeric: true,
     rounding: Math.round,
     operationButtons: true,
-    noneIsSelected: true
+    noneIsSelected: true,
+    enableColor: true
 };
 
-export const filterValues = [
+export const filterValues: Button[] = [
   {
     color: [358, 80, 51]
   },
@@ -72,7 +73,7 @@ export function selected(survey?: Survey) {
     return filterButtons.selected();
   }
   let value = survey.attributes.thames21Ph;
-  let selected = filterButtons.selected();
+  let selected = <string[]>filterButtons.selected();
   if (value === null) {
     if (selected.length === 0) {
       return true;

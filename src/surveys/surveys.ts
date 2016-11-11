@@ -153,7 +153,7 @@ export function createSurveyButtons(parentElement: HTMLElement) {
   Object.keys(surveys).forEach((s) => {
     let survey = surveys[s];
     let button = document.createElement('button');
-    let defaults = (typeof config.defaultSurveys === 'object' && config.defaultSurveys[s]);
+    let defaults = (typeof config.defaultSurveys === 'object' && config.defaultSurveys[s] !== undefined);
 
     buttons.appendChild(button);
     button.innerHTML = survey.label;
@@ -194,7 +194,7 @@ export function createSurveyButtons(parentElement: HTMLElement) {
 
       if (defaults) {
         if (config.defaultSurveys[s] === true
-            || (typeof config.defaultSurveys[s] === 'object' && config.defaultSurveys[s][p])) {
+            || (typeof config.defaultSurveys[s] === 'object' && config.defaultSurveys[s][p] !== undefined)) {
           surveyParts[s].push(p);
           pbutton.classList.add('selected');
         }
@@ -483,6 +483,7 @@ export function reloadData(survey?: string) {
  * @returns {undefined}
  */
 export function redrawSurveyData(survey: string) {
+  console.log('Redrawing', survey);
   if (typeof surveyData[survey] !== 'undefined') {
     // Create layer group if we don't already have one
     if (typeof surveyLayers[survey] === 'undefined') {

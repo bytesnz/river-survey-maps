@@ -13463,7 +13463,6 @@
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = config;
-	//# sourceMappingURL=config.js.map
 
 /***/ },
 /* 7 */
@@ -13581,7 +13580,7 @@
 	    Object.keys(exports.surveys).forEach(function (s) {
 	        var survey = exports.surveys[s];
 	        var button = document.createElement('button');
-	        var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s];
+	        var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s] !== undefined;
 	        buttons.appendChild(button);
 	        button.innerHTML = survey.label;
 	        button.addEventListener('click', toggleSurvey.bind(null, s));
@@ -13612,7 +13611,7 @@
 	            pbutton.innerHTML = part.label;
 	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 	            if (defaults) {
-	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p]) {
+	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p] !== undefined) {
 	                    surveyParts[s].push(p);
 	                    pbutton.classList.add('selected');
 	                }
@@ -13824,6 +13823,7 @@
 	}
 	exports.reloadData = reloadData;
 	function redrawSurveyData(survey) {
+	    console.log('Redrawing', survey);
 	    if (typeof exports.surveyData[survey] !== 'undefined') {
 	        if (typeof surveyLayers[survey] === 'undefined') {
 	            surveyLayers[survey] = L.layerGroup([]);
@@ -13994,7 +13994,8 @@
 	    numeric: true,
 	    rounding: Math.round,
 	    operationButtons: true,
-	    noneIsSelected: true
+	    noneIsSelected: true,
+	    enableColor: true
 	};
 	exports.filterValues = [{
 	    color: [358, 80, 51]
@@ -16443,24 +16444,23 @@
 
 /***/ },
 /* 16 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-	;
-	;
-	var operationSymbols = ['&lt;', '&oplus;', '&gt;'];
+	var color_1 = __webpack_require__(18);
+	var operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
 	_a = [0, 1, 2], exports.LESS_EQUAL = _a[0], exports.EXCLUSIVE = _a[1], exports.GREATER_EQUAL = _a[2];
 	function FilterButtons(buttons, options, element, _selected) {
 	    if (_selected === true) {
 	        _selected = [];
 	        buttons.forEach(function (buttonData, buttonIndex) {
-	            _selected.push(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+	            _selected.push(String(buttonData.id !== undefined ? buttonData.id : buttonIndex));
 	        });
-	    } else {
-	        _selected = _selected || [];
+	    } else if (!(_selected instanceof Array)) {
+	        _selected = [];
 	    }
 	    options = options || {};
 	    var listeners = [];
@@ -16470,6 +16470,7 @@
 	    var lastOperationIndex = void 0;
 	    var lastOperationTimeout = void 0;
 	    var map = {};
+	    var colored = Boolean(options.enableColor);
 	    buttons.forEach(function (buttonData, buttonIndex) {
 	        map[buttonData.id !== undefined ? buttonData.id : buttonIndex] = buttonIndex;
 	    });
@@ -16480,6 +16481,43 @@
 	    };
 	    var trueOrIn = function trueOrIn(variable, operation) {
 	        return variable === true || variable instanceof Array && variable.indexOf(operation) !== -1;
+	    };
+	    var updateButtonStyle = function updateButtonStyle(id, div, select) {
+	        console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
+	        if (select) {
+	            div.classList.add('selected');
+	            if (colored && buttons[id].color instanceof Array) {
+	                div.style.borderColor = color_1.default(buttons[id].color);
+	            } else {
+	                div.style.borderColor = '';
+	            }
+	        } else {
+	            div.classList.remove('selected');
+	            div.style.borderColor = '';
+	        }
+	    };
+	    var updateStyle = function updateStyle(buttonId, select, div) {
+	        console.log('updateStyle called', buttonId, select, div);
+	        if (buttonId !== undefined) {
+	            if (map[buttonId] !== undefined) {
+	                if (select === undefined) {
+	                    select = _selected.indexOf(buttonId) !== -1;
+	                }
+	                if (div) {
+	                    updateButtonStyle(map[buttonId], div, select);
+	                } else {
+	                    if (buttonDivs[map[buttonId]] instanceof Array && buttonDivs[map[buttonId]].length) {
+	                        buttonDivs[map[buttonId]].forEach(function (div, id) {
+	                            updateButtonStyle(buttonId, div, select);
+	                        });
+	                    }
+	                }
+	            }
+	        } else {
+	            Object.keys(map).forEach(function (id) {
+	                updateStyle(id.toString(), select);
+	            });
+	        }
 	    };
 	    var select = function select(id, operation, event) {
 	        if (event instanceof Event) {
@@ -16508,18 +16546,8 @@
 	                    _selected.concat(id);
 	                }
 	            }
-	            buttons.forEach(function (buttonData, buttonIndex) {
-	                var value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
-	                if (buttonDivs[buttonIndex]) {
-	                    buttonDivs[buttonIndex].forEach(function (div) {
-	                        if (_selected.indexOf(value) !== -1) {
-	                            div.classList.add('selected');
-	                        } else {
-	                            div.classList.remove('selected');
-	                        }
-	                    });
-	                }
-	            });
+	            console.log('xxxxxxxxxxxxxxxxxxxx');
+	            updateStyle();
 	        } else {
 	            var _ret = function () {
 	                var exclusive = void 0;
@@ -16542,48 +16570,32 @@
 	                switch (operation) {
 	                    case exports.EXCLUSIVE:
 	                        _selected.length = 0;
-	                        _selected.push(id);
-	                        buttonDivs.forEach(function (buttons, b) {
-	                            buttons.forEach(function (div) {
-	                                if (b === index) {
-	                                    div.classList.add('selected');
-	                                } else {
-	                                    div.classList.remove('selected');
-	                                }
-	                            });
-	                        });
+	                        _selected.push(id.toString());
+	                        updateStyle();
 	                        break;
 	                    case exports.LESS_EQUAL:
 	                    case exports.GREATER_EQUAL:
 	                        if (exclusive) {
 	                            _selected.length = 0;
-	                            buttonDivs.forEach(function (buttons, b) {
-	                                buttons.forEach(function (div) {
-	                                    div.classList.remove('selected');
-	                                });
-	                            });
+	                            updateStyle();
 	                        } else {
 	                            lastOperation = operation;
 	                            lastOperationIndex = index;
 	                        }
 	                        if (operation === exports.LESS_EQUAL) {
 	                            for (var i = index; i >= 0; i--) {
-	                                var value = buttons[i].id !== undefined ? buttons[i].id : i;
+	                                var value = String(buttons[i].id !== undefined ? buttons[i].id : i);
 	                                if (_selected.indexOf(value) === -1) {
 	                                    _selected.push(value);
-	                                    buttonDivs[i].forEach(function (div) {
-	                                        div.classList.add('selected');
-	                                    });
+	                                    updateStyle(value, true);
 	                                }
 	                            }
 	                        } else {
 	                            for (var _i = index; _i < buttons.length; _i++) {
-	                                var _value = buttons[_i].id !== undefined ? buttons[_i].id : _i;
+	                                var _value = String(buttons[_i].id !== undefined ? buttons[_i].id : _i);
 	                                if (_selected.indexOf(_value) === -1) {
 	                                    _selected.push(_value);
-	                                    buttonDivs[_i].forEach(function (div) {
-	                                        div.classList.add('selected');
-	                                    });
+	                                    updateStyle(_value, true);
 	                                }
 	                            }
 	                        }
@@ -16594,21 +16606,21 @@
 	                    default:
 	                        var selectedIndex = void 0;
 	                        if ((selectedIndex = _selected.indexOf(id)) === -1) {
-	                            _selected.push(id);
+	                            _selected.push(id.toString());
 	                            buttonDivs[index].forEach(function (div) {
-	                                div.classList.add('selected');
+	                                updateButtonStyle(index, div, true);
 	                            });
 	                        } else {
 	                            _selected.splice(selectedIndex, 1);
 	                            buttonDivs[index].forEach(function (div) {
-	                                div.classList.remove('selected');
+	                                updateButtonStyle(index, div, false);
 	                            });
 	                        }
 	                        break;
 	                }
 	            }();
 
-	            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	            if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
 	        }
 	        allButtons.forEach(function (button) {
 	            if (_selected.length === buttons.length) {
@@ -16617,11 +16629,13 @@
 	                button.classList.remove('selected');
 	            }
 	        });
+	        console.log('selected is now', _selected);
 	        listeners.forEach(function (callback) {
 	            callback();
 	        });
 	    };
 	    var createButtons = function createButtons(element) {
+	        console.log('createButtons', _selected);
 	        var button = document.createElement('button');
 	        button.innerHTML = 'All';
 	        button.addEventListener('click', select.bind(null, undefined, undefined));
@@ -16631,6 +16645,7 @@
 	        allButtons.push(button);
 	        element.appendChild(button);
 	        buttons.forEach(function (buttonData, buttonIndex) {
+	            var value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
 	            var button = document.createElement('div');
 	            if (buttonDivs[buttonIndex] === undefined) {
 	                buttonDivs[buttonIndex] = [];
@@ -16642,7 +16657,7 @@
 	            if (typeof buttonData.id === 'string') {
 	                button.classList.add(buttonData.id);
 	            }
-	            button.innerHTML = buttonData.label || String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+	            button.innerHTML = buttonData.label || value;
 	            buttons[buttonData.id] = button;
 	            operationSymbols.forEach(function (symbol, operation) {
 	                if (trueOrIn(options.operationButtons, operation)) {
@@ -16652,9 +16667,8 @@
 	                }
 	            });
 	            button.addEventListener('click', select.bind(null, buttonIndex, undefined));
-	            if (trueOrIn(_selected, String(buttonData.id ? buttonData.id : buttonIndex))) {
-	                button.classList.add('selected');
-	            }
+	            console.log(_selected, value);
+	            updateButtonStyle(buttonIndex, button, _selected.indexOf(value) !== -1);
 	        });
 	    };
 	    if (element) {
@@ -16683,13 +16697,27 @@
 	                return _selected;
 	            } else if (_selected.length == buttons.length || options.noneIsSelected && _selected.length === 0) {
 	                return true;
-	            } else if (map[id] !== undefined) {
-	                return _selected.indexOf(id) !== -1;
+	            } else if (map[id.toString()] !== undefined) {
+	                return _selected.indexOf(id.toString()) !== -1;
 	            } else if (options.numeric) {
 	                if (typeof options.rounding === 'function') {
 	                    return _selected.indexOf(options.rounding(id)) !== -1;
 	                } else if (options.rounding === 'ceiling') {} else if (options.rounding === 'floor') {}
 	            }
+	        },
+	        color: function color(enable) {
+	            var current = colored;
+	            if (enable === true) {
+	                colored = true;
+	            } else if (enable === false) {
+	                colored = false;
+	            } else {
+	                colored = !colored;
+	            }
+	            if (current === colored) {
+	                updateStyle();
+	            }
+	            return colored;
 	        }
 	    };
 	}
@@ -16812,6 +16840,21 @@
 	}
 
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	function hslColor(color) {
+	    if (color.length === 4) {
+	        return "hsla(" + color[0] + ", " + color[1] + "%, " + color[2] + "%, " + color[3] + ")";
+	    }
+	    return "hsl(" + color[0] + ", " + color[1] + "%, " + color[2] + "%)";
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = hslColor;
 
 /***/ }
 /******/ ]);

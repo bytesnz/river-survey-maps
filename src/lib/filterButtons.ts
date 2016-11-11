@@ -1,28 +1,16 @@
-interface Button {
-  label?: string,
-  id?: string | number,
-  color: HSLColor
-};
+import Color from './color';
 
-interface FilterButtonOptions {
-  operationButtons?: boolean | number[],
-  operationTimeout?: number,
-  numeric?: boolean,
-  rounding?: 'ceiling' | 'floor' | Function,
-  noneIsSelected?: boolean
-};
-
-const operationSymbols = ['&lt;', '&oplus;', '&gt;'];
+const operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
 export const [LESS_EQUAL, EXCLUSIVE, GREATER_EQUAL] = [0, 1, 2];
 
-export default function FilterButtons(buttons: Button[], options?: FilterButtonOptions, element?: HTMLElement, selected?: any[]) {
+export default function FilterButtons(buttons: Button[], options?: FilterButtonOptions, element?: HTMLElement, selected?/*TODO : string[] | true*/) {
   if (selected === true) {
     selected = [];
     buttons.forEach((buttonData, buttonIndex) => {
-      selected.push(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+      selected.push(String(buttonData.id !== undefined ? buttonData.id : buttonIndex));
     });
-  } else {
-    selected = selected || [];
+  } else if (!(selected instanceof Array)) {
+    selected = [];
   }
 
   options = options || {};
@@ -34,6 +22,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
   let lastOperationIndex: number;
   let lastOperationTimeout: number;
   let map = {};
+  let colored = Boolean(options.enableColor);
 
   buttons.forEach((buttonData, buttonIndex) => {
     map[(buttonData.id !== undefined ? buttonData.id : buttonIndex)] = buttonIndex;
@@ -50,6 +39,45 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         || (variable instanceof Array
         && variable.indexOf(operation) !== -1));
   };
+
+  let updateButtonStyle = (id: number, div: HTMLElement, select: boolean) => {
+    console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
+    if (select) {
+      div.classList.add('selected');
+      if (colored && buttons[id].color instanceof Array) {
+        div.style.borderColor = Color(buttons[id].color);
+      } else {
+        div.style.borderColor = '';
+      }
+    } else {
+      div.classList.remove('selected');
+      div.style.borderColor = '';
+    }
+  }
+
+  let updateStyle = (buttonId?: string, select?: boolean, div?: HTMLElement) => {
+    console.log('updateStyle called', buttonId, select, div);
+    if (buttonId !== undefined) {
+      if (map[buttonId] !== undefined) {
+        if (select === undefined) {
+          select = (selected.indexOf(buttonId) !== -1);
+        }
+        if (div) {
+          updateButtonStyle(map[buttonId], div, select);
+        } else {
+          if (buttonDivs[map[buttonId]] instanceof Array && buttonDivs[map[buttonId]].length) {
+            buttonDivs[map[buttonId]].forEach((div, id) => {
+              updateButtonStyle(buttonId, div, select);
+            });
+          }
+        }
+      }
+    } else {
+      Object.keys(map).forEach((id) => {
+        updateStyle(id.toString(), select);
+      });
+    }
+  }
 
   /**
    * Changes the selected values based on a given value and an operation
@@ -96,18 +124,8 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         }
       }
 
-      buttons.forEach((buttonData, buttonIndex) => {
-        let value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
-        if (buttonDivs[buttonIndex]) {
-          buttonDivs[buttonIndex].forEach((div) => {
-            if (selected.indexOf(value) !== -1) {
-              div.classList.add('selected');
-            } else {
-              div.classList.remove('selected');
-            }
-          });
-        }
-      });
+      console.log('xxxxxxxxxxxxxxxxxxxx')
+      updateStyle();
     } else {
       let exclusive;
 
@@ -135,28 +153,16 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         case EXCLUSIVE:
           // Clear the currently selected
           selected.length = 0;
-          selected.push(id);
+          selected.push(id.toString());
 
-          buttonDivs.forEach((buttons, b) => {
-            buttons.forEach(div => {
-              if (b === index) {
-                div.classList.add('selected');
-              } else {
-                div.classList.remove('selected');
-              }
-            });
-          });
+          updateStyle();
           break;
         case LESS_EQUAL:
         case GREATER_EQUAL:
           if (exclusive) {
             // Clear the currently selected
             selected.length = 0;
-            buttonDivs.forEach((buttons, b) => {
-              buttons.forEach(div => {
-                div.classList.remove('selected');
-              });
-            });
+            updateStyle();
           } else {
             lastOperation = operation;
             lastOperationIndex = index;
@@ -164,24 +170,20 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
 
           if (operation === LESS_EQUAL) {
             for (let i = index; i >= 0; i--) {
-              let value = (buttons[i].id !== undefined ? buttons[i].id : i);
+              let value = String(buttons[i].id !== undefined ? buttons[i].id : i);
               // Add to selected if not already in there
               if (selected.indexOf(value) === -1) {
                 selected.push(value);
-                buttonDivs[i].forEach(div => {
-                  div.classList.add('selected');
-                })
+                updateStyle(value, true);
               }
             }
           } else {
             for (let i = index; i < buttons.length; i++) {
-              let value = (buttons[i].id !== undefined ? buttons[i].id : i);
+              let value = String(buttons[i].id !== undefined ? buttons[i].id : i);
               // Add to selected if not already in there
               if (selected.indexOf(value) === -1) {
                 selected.push(value);
-                buttonDivs[i].forEach(div => {
-                  div.classList.add('selected');
-                })
+                updateStyle(value, true);
               }
             }
           }
@@ -197,14 +199,14 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
           // Toggle given id value
           let selectedIndex;
           if ((selectedIndex = selected.indexOf(id)) === -1) {
-            selected.push(id);
+            selected.push(id.toString());
             buttonDivs[index].forEach(div => {
-              div.classList.add('selected');
+              updateButtonStyle(index, div, true);
             });
           } else {
             selected.splice(selectedIndex, 1);
             buttonDivs[index].forEach(div => {
-              div.classList.remove('selected');
+              updateButtonStyle(index, div, false);
             });
           }
           break;
@@ -220,6 +222,8 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       }
     });
 
+    console.log('selected is now', selected);
+
     // Run listeners
     listeners.forEach(callback => {
       callback();
@@ -227,6 +231,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
   }
 
   let createButtons = (element: HTMLElement) => {
+    console.log('createButtons', selected);
     let button = document.createElement('button');
     button.innerHTML = 'All';
     button.addEventListener('click', select.bind(null, undefined, undefined));
@@ -237,6 +242,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
     element.appendChild(button);
 
     buttons.forEach((buttonData, buttonIndex) => {
+      let value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex)
       let button = document.createElement('div');
       if (buttonDivs[buttonIndex] === undefined) {
         buttonDivs[buttonIndex] = [];
@@ -249,8 +255,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       if (typeof buttonData.id === 'string') {
         button.classList.add(buttonData.id);
       }
-      button.innerHTML = buttonData.label
-          || String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
+      button.innerHTML = buttonData.label || value;
       buttons[buttonData.id] = button;
 
       // Add the operation buttons
@@ -264,9 +269,8 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
 
       button.addEventListener('click', select.bind(null, buttonIndex, undefined));
 
-      if (trueOrIn(selected, String(buttonData.id ? buttonData.id : buttonIndex))) {
-        button.classList.add('selected');
-      }
+      console.log(selected, value);
+      updateButtonStyle(buttonIndex, button, (selected.indexOf(value) !== -1));
     });
   };
 
@@ -300,8 +304,8 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         return selected;
       } else if (selected.length == buttons.length || options.noneIsSelected && selected.length === 0) {
         return true;
-      } else if (map[id] !== undefined) {
-        return (selected.indexOf(id) !== -1);
+      } else if (map[id.toString()] !== undefined) {
+        return (selected.indexOf(id.toString()) !== -1);
       } else if (options.numeric) {
         if (typeof options.rounding === 'function') {
           return (selected.indexOf(options.rounding(id)) !== -1);
@@ -311,6 +315,22 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
           // TODO
         }
       }
+    },
+    color: (enable?: boolean) => {
+      let current = colored;
+      if (enable === true) {
+        colored = true;
+      } else if (enable === false) {
+        colored = false;
+      } else {
+        colored = !colored;
+      }
+
+      if (current === colored) {
+        updateStyle();
+      }
+
+      return colored;
     }
   };
 }

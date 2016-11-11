@@ -84,7 +84,7 @@ body {
     }
 
     &.selected {
-      background: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.6);
       border-color: rgba(255, 255, 255, 0.7);
 
       &:hover {
@@ -102,38 +102,6 @@ body {
       &:hover {
         background: rgba(255,255,255,1);
       }
-    }
-  }
-
-  .time button {
-    border-color: hsla(214, 10%, 56%, 0.40);
-
-    &:hover {
-      border-color: hsla(214, 15%, 56%, 0.77);
-    }
-
-    &.selected {
-      border-color: hsla(214, 35%, 56%, 0.77);
-
-      &:hover {
-        border-color: hsla(214, 61%, 56%, 0.77);
-      }
-    }
-  }
-
-  .surveys button {
-    border-color: hsla(135, 10%, 56%, 0.40);
-
-    &:hover {
-      border-color: hsla(135, 15%, 50%, 0.77);
-    }
-
-    &.selected {
-      border-color: hsla(135, 35%, 46%, 0.77);
-
-    &:hover {
-      border-color: hsla(135, 61%, 46%, 0.77);
-    }
     }
   }
 
