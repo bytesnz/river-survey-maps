@@ -49,7 +49,7 @@
 	var map_1 = __webpack_require__(1);
 	var Controls = __webpack_require__(3);
 	var surveys_1 = __webpack_require__(4);
-	var time_1 = __webpack_require__(14);
+	var time_1 = __webpack_require__(16);
 	var mapElement = document.getElementById('map');
 	var controlsLayer = document.getElementById('controls');
 	var disableBubbling = function disableBubbling(event) {
@@ -79,7 +79,7 @@
 	        if (typeof (height = window.innerHeight) === 'undefined') {
 	            height = document.body.clientHeight;
 	        }
-	        height = height / 2;
+	        height = height * .80;
 	    }
 	    mapElement.style.height = height + 'px';
 	}
@@ -140,7 +140,6 @@
 	}
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = create;
-	//# sourceMappingURL=map.js.map
 
 /***/ },
 /* 2 */
@@ -13200,20 +13199,32 @@
 	function addControlSection(title, parentSection, startCollapsed) {
 	    var header = document.createElement('h1');
 	    var section = document.createElement('section');
+	    section.collapse = function (collapse) {
+	        if (typeof collapse === 'boolean') {
+	            if (collapse) {
+	                section.classList.add('collapsed');
+	            } else {
+	                section.classList.remove('collapsed');
+	            }
+	        } else {
+	            section.classList.toggle('collapsed');
+	        }
+	    };
+	    section.clicked = false;
 	    parentSection.appendChild(section);
 	    section.appendChild(header);
 	    header.innerHTML = title;
 	    header.addEventListener('click', function (event) {
-	        section.classList.toggle('collapsed');
+	        section.collapse();
 	    });
 	    if (startCollapsed) {
-	        section.classList.add('collapsed');
+	        console.log(title, 'starting collapsed');
+	        section.collapse(true);
 	    }
 	    return section;
 	}
 	exports.addControlSection = addControlSection;
 	;
-	var mapListeners = [];
 
 /***/ },
 /* 4 */
@@ -13222,7 +13233,7 @@
 	"use strict";
 
 	var Ratings = __webpack_require__(5);
-	var Surveys = __webpack_require__(7);
+	var Surveys = __webpack_require__(9);
 	var Controls = __webpack_require__(3);
 	var config_1 = __webpack_require__(6);
 	var timeTypes = {
@@ -13261,6 +13272,7 @@
 	"use strict";
 
 	var config_1 = __webpack_require__(6);
+	var filterButtons_1 = __webpack_require__(7);
 	;
 	exports.ratings = [{
 	    label: 'Excellent',
@@ -13283,7 +13295,10 @@
 	    id: 'bad',
 	    color: [358, 80, 51]
 	}];
-	var buttons = {};
+	var buttons = filterButtons_1.default(exports.ratings, {
+	    operationButtons: true,
+	    noneIsSelected: true
+	}, undefined, config_1.default.startRatingsEnabled);
 	var ratingListeners = [];
 	exports.scores = {};
 	exports.ratings.forEach(function (rating, i) {
@@ -13305,128 +13320,12 @@
 	}
 	exports.getColor = getColor;
 	exports.selectedRatings = [];
-	exports.EXCLUSIVE = 1;
-	exports.LESS_THAN = 2;
-	exports.GREATER_THAN = 3;
-	function selected(rating) {
-	    if (typeof rating === 'number') {
-	        return exports.selectedRatings.indexOf(exports.ratings[rating].id) !== -1;
-	    } else if (typeof rating === 'string' && typeof exports.scores[rating] !== 'undefined') {
-	        return exports.selectedRatings.indexOf(rating) !== -1;
-	    }
-	    return exports.selectedRatings;
-	}
-	exports.selected = selected;
-	function selectRatings(rating, method, event) {
-	    if (event) {
-	        if (event.defaultPrevented) {
-	            return;
-	        }
-	        event.preventDefault();
-	    }
-	    if (typeof rating === 'string') {
-	        if (typeof exports.scores[rating] !== 'undefined') {
-	            switch (method) {
-	                case exports.EXCLUSIVE:
-	                    exports.selectedRatings = [rating];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (ratingData.id === rating) {
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                case exports.LESS_THAN:
-	                    exports.selectedRatings = [];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (score >= exports.scores[rating]) {
-	                            exports.selectedRatings.push(ratingData.id);
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                case exports.GREATER_THAN:
-	                    exports.selectedRatings = [];
-	                    exports.ratings.forEach(function (ratingData, score) {
-	                        if (score <= exports.scores[rating]) {
-	                            exports.selectedRatings.push(ratingData.id);
-	                            buttons[ratingData.id].classList.add('selected');
-	                        } else {
-	                            buttons[ratingData.id].classList.remove('selected');
-	                        }
-	                    });
-	                    break;
-	                default:
-	                    var i = void 0;
-	                    if ((i = exports.selectedRatings.indexOf(rating)) !== -1) {
-	                        exports.selectedRatings.splice(i, 1);
-	                        buttons[rating].classList.remove('selected');
-	                    } else {
-	                        exports.selectedRatings.push(rating);
-	                        buttons[rating].classList.add('selected');
-	                    }
-	            }
-	        }
-	    } else {
-	        if (typeof rating === 'boolean' && rating === false || exports.selectedRatings.length === exports.ratings.length) {
-	            exports.selectedRatings = [];
-	        } else {
-	            exports.selectedRatings = exports.ratings.map(function (rating) {
-	                return rating.id;
-	            });
-	        }
-	    }
-	    ratingListeners.forEach(function (callback) {
-	        callback();
-	    });
-	}
-	exports.selectRatings = selectRatings;
-	;
-	function addListener(func) {
-	    var id = void 0;
-	    if ((id = ratingListeners.indexOf(func)) !== -1) {
-	        return id;
-	    }
-	    return ratingListeners.push(func) - 1;
-	}
-	exports.addListener = addListener;
-	;
-	function removeListener(item) {
-	    var id = void 0;
-	    if (typeof item === 'number' && typeof ratingListeners[item] !== 'undefined') {
-	        delete ratingListeners[item];
-	    } else if (typeof item === 'function' && (id = ratingListeners.indexOf(item)) !== -1) {
-	        delete ratingListeners[id];
-	    }
-	}
-	exports.removeListener = removeListener;
-	;
+	exports.selected = buttons.selected, exports.select = buttons.select, exports.createButtons = buttons.createButtons, exports.addListener = buttons.addListener, exports.removeListener = buttons.removeListener, exports.color = buttons.color;
 	function createRatings(parentElement) {
 	    var element = void 0;
 	    parentElement.appendChild(element = document.createElement('div'));
 	    parentElement.classList.add('ratings');
-	    exports.ratings.forEach(function (rating) {
-	        var button = document.createElement('div');
-	        var div = void 0;
-	        element.appendChild(button);
-	        button.classList.add('button', rating.id);
-	        button.innerHTML = rating.label;
-	        buttons[rating.id] = button;
-	        button.appendChild(div = document.createElement('div'));
-	        div.innerHTML = '&oplus;';
-	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.EXCLUSIVE));
-	        button.appendChild(div = document.createElement('div'));
-	        div.innerHTML = '&lt;';
-	        div.addEventListener('click', selectRatings.bind(null, rating.id, exports.LESS_THAN));
-	        button.addEventListener('click', selectRatings.bind(null, rating.id, false));
-	        if (config_1.default.startRatingsEnabled) {
-	            button.classList.add('selected');
-	            exports.selectedRatings.push(rating.id);
-	        }
-	    });
+	    buttons.createButtons(element);
 	}
 	exports.createRatings = createRatings;
 	;
@@ -13447,6 +13346,7 @@
 	        weight: 2
 	    },
 	    startRatingsEnabled: true,
+	    startFiltersEnabled: true,
 	    expiredSaturation: 0,
 	    decaySaturation: false,
 	    expiredLightness: 60,
@@ -13470,17 +13370,478 @@
 
 	"use strict";
 
+	var color_1 = __webpack_require__(8);
+	var operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
+	_a = [0, 1, 2], exports.LESS_EQUAL = _a[0], exports.EXCLUSIVE = _a[1], exports.GREATER_EQUAL = _a[2];
+	function FilterButtons(buttons, options, element, _selected) {
+	    var values = false;
+	    var ids = false;
+	    var listeners = [];
+	    var buttonDivs = [];
+	    var allButtons = [];
+	    var lastOperation = void 0;
+	    var lastOperationIndex = void 0;
+	    var lastOperationTimeout = void 0;
+	    var idMap = {};
+	    var valueMap = [];
+	    var colored = Boolean(options.enableColor);
+	    options = options || {};
+	    var clearLastOperation = function clearLastOperation() {
+	        lastOperation = undefined;
+	        lastOperationIndex = undefined;
+	        lastOperationTimeout = undefined;
+	    };
+	    var getIndex = function getIndex(id) {
+	        var index = void 0;
+	        if (typeof id === 'string') {
+	            if ((index = idMap[id]) !== undefined) {
+	                return index;
+	            }
+	        } else {
+	            if (values) {
+	                if ((index = valueMap[id]) !== undefined) {
+	                    return index;
+	                }
+	            } else {
+	                if (id == Math.round(id) && id >= 0 && id < buttons.length) {
+	                    return id;
+	                }
+	            }
+	        }
+	    };
+	    var getId = function getId(index) {
+	        return buttons[index].id || (buttons[index].value !== undefined ? buttons[index].value : index);
+	    };
+	    var getLabel = function getLabel(index) {
+	        return buttons[index].label || buttons[index].id || (buttons[index].value !== undefined ? buttons[index].value.toString() : index.toString());
+	    };
+	    var getValue = function getValue(index) {
+	        return buttons[index].value !== undefined ? buttons[index].value : index;
+	    };
+	    var trueOrIn = function trueOrIn(variable, operation) {
+	        return variable === true || variable instanceof Array && variable.indexOf(operation) !== -1;
+	    };
+	    var getIndexFromValue = function getIndexFromValue(value) {
+	        if (!options.numeric) {
+	            return;
+	        }
+	        if (typeof options.rounding === 'function') {
+	            return options.rounding(value);
+	        }
+	        if (!values) {
+	            switch (options.rounding) {
+	                case 'ceiling':
+	                    value = Math.ceil(value);
+	                    break;
+	                case 'floor':
+	                    value = Math.floor(value);
+	                    break;
+	                case 'round':
+	                default:
+	                    value = Math.round(value);
+	            }
+	            value = Math.max(0, Math.min(value, buttons.length - 1));
+	            console.log('rounded value is', value);
+	            return value;
+	        } else {
+	            if (options.rounding === 'ceiling') {
+	                var roundedId = void 0;
+	                for (var i = 0; i < buttons.length - 1; i++) {
+	                    var upperValue = getValue(i);
+	                    if (value < upperValue) {
+	                        roundedId = i;
+	                        break;
+	                    }
+	                }
+	                if (roundedId === undefined) {
+	                    value = buttons.length - 1;
+	                } else {
+	                    value = roundedId;
+	                }
+	            } else if (options.rounding === 'floor') {
+	                var _roundedId = void 0;
+	                for (var _i = buttons.length - 1; _i > 0; _i--) {
+	                    var _upperValue = getValue(_i);
+	                    if (value >= _upperValue) {
+	                        _roundedId = _i;
+	                        break;
+	                    }
+	                }
+	                if (_roundedId === undefined) {
+	                    value = 0;
+	                } else {
+	                    value = _roundedId;
+	                }
+	            } else {
+	                var _roundedId2 = void 0;
+	                for (var _i2 = 0; _i2 < buttons.length - 1; _i2++) {
+	                    var currentValue = getValue(_i2);
+	                    var _upperValue2 = currentValue + (getValue(_i2 + 1) - currentValue) / 2;
+	                    if (value < _upperValue2) {
+	                        _roundedId2 = _i2;
+	                        break;
+	                    }
+	                }
+	                if (_roundedId2 === undefined) {
+	                    value = buttons.length - 1;
+	                } else {
+	                    value = _roundedId2;
+	                }
+	            }
+	        }
+	        return value;
+	    };
+	    var updateButtonStyle = function updateButtonStyle(id, div, select) {
+	        if (select) {
+	            div.classList.add('selected');
+	            if (colored) {
+	                div.style.background = color_1.default(buttons[id].color) || '';
+	                div.style.color = color_1.default(buttons[id].textColor) || '';
+	            } else {
+	                div.style.background = '';
+	                div.style.color = '';
+	            }
+	        } else {
+	            div.classList.remove('selected');
+	            div.style.background = '';
+	            div.style.color = '';
+	        }
+	    };
+	    var updateStyleById = function updateStyleById(index, select, div) {
+	        if (select === undefined) {
+	            select = _selected.indexOf(index) !== -1;
+	        }
+	        if (div) {
+	            updateButtonStyle(index, div, select);
+	        } else {
+	            if (buttonDivs[index] instanceof Array && buttonDivs[index].length) {
+	                buttonDivs[index].forEach(function (div, id) {
+	                    updateButtonStyle(index, div, select);
+	                });
+	            }
+	        }
+	    };
+	    var updateStyle = function updateStyle(buttonId, select, div) {
+	        if (buttonId !== undefined) {
+	            var index = void 0;
+	            if ((index = getIndex(buttonId)) !== undefined) {
+	                updateStyleById(index, select, div);
+	            }
+	        } else {
+	            buttons.forEach(function (data, index) {
+	                updateStyleById(index, select);
+	            });
+	        }
+	    };
+	    var selectById = function selectById(index, operation, event) {
+	        var exclusive = void 0;
+	        if (event instanceof Event) {
+	            if (event.defaultPrevented) {
+	                return false;
+	            }
+	            event.preventDefault();
+	            if (lastOperationTimeout !== undefined) {
+	                clearTimeout(lastOperationTimeout);
+	                lastOperationTimeout = undefined;
+	            }
+	        }
+	        if (typeof operation === 'number') {
+	            exclusive = typeof event === 'boolean' ? event : lastOperation === operation && lastOperationIndex === index ? true : false;
+	            lastOperation = undefined;
+	            lastOperationIndex = undefined;
+	        }
+	        switch (operation) {
+	            case exports.EXCLUSIVE:
+	                _selected.length = 0;
+	                _selected.push(index);
+	                updateStyle();
+	                break;
+	            case exports.LESS_EQUAL:
+	            case exports.GREATER_EQUAL:
+	                if (exclusive) {
+	                    _selected.length = 0;
+	                    updateStyle();
+	                } else {
+	                    lastOperation = operation;
+	                    lastOperationIndex = index;
+	                }
+	                if (operation === exports.LESS_EQUAL) {
+	                    for (var i = index; i >= 0; i--) {
+	                        if (_selected.indexOf(i) === -1) {
+	                            _selected.push(i);
+	                            updateStyleById(i, true);
+	                        }
+	                    }
+	                } else {
+	                    for (var _i3 = index; _i3 < buttons.length; _i3++) {
+	                        if (_selected.indexOf(_i3) === -1) {
+	                            _selected.push(_i3);
+	                            updateStyleById(_i3, true);
+	                        }
+	                    }
+	                }
+	                if (lastOperation !== undefined && options.operationTimeout) {
+	                    lastOperationTimeout = setTimeout(clearLastOperation, options.operationTimeout);
+	                }
+	                break;
+	            default:
+	                var selectedIndex = void 0;
+	                if ((selectedIndex = _selected.indexOf(index)) === -1) {
+	                    _selected.push(index);
+	                    buttonDivs[index].forEach(function (div) {
+	                        updateButtonStyle(index, div, true);
+	                    });
+	                } else {
+	                    _selected.splice(selectedIndex, 1);
+	                    buttonDivs[index].forEach(function (div) {
+	                        updateButtonStyle(index, div, false);
+	                    });
+	                }
+	                break;
+	        }
+	        if (event instanceof Event) {
+	            allButtons.forEach(function (button) {
+	                if (_selected.length === buttons.length) {
+	                    button.classList.add('selected');
+	                } else {
+	                    button.classList.remove('selected');
+	                }
+	            });
+	            listeners.forEach(function (callback) {
+	                callback();
+	            });
+	        }
+	    };
+	    var select = function select(id, operation, event) {
+	        if (event instanceof Event) {
+	            if (event.defaultPrevented) {
+	                return false;
+	            }
+	            event.preventDefault();
+	        }
+	        if (lastOperationTimeout !== undefined) {
+	            clearTimeout(lastOperationTimeout);
+	            lastOperationTimeout = undefined;
+	        }
+	        console.log('select called', id, operation);
+	        if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
+	            if (id === undefined) {
+	                if (_selected.length === buttons.length) {
+	                    _selected.length = 0;
+	                } else {
+	                    _selected.length = 0;
+	                    buttons.forEach(function (d, i) {
+	                        return _selected.push(i);
+	                    });
+	                }
+	            } else {
+	                _selected.length = 0;
+	                if (id === true) {
+	                    buttons.forEach(function (d, i) {
+	                        return _selected.push(i);
+	                    });
+	                } else if (id instanceof Array) {
+	                    _selected.concat(id);
+	                }
+	            }
+	            updateStyle();
+	        } else {
+	            var index = void 0;
+	            if ((index = getIndex(id)) === undefined) {
+	                console.log('couldn\'t find index for', id);
+	                return false;
+	            }
+	            selectById(index, operation);
+	        }
+	        allButtons.forEach(function (button) {
+	            if (_selected.length === buttons.length) {
+	                button.classList.add('selected');
+	            } else {
+	                button.classList.remove('selected');
+	            }
+	        });
+	        listeners.forEach(function (callback) {
+	            callback();
+	        });
+	    };
+	    var createButtons = function createButtons(element) {
+	        var button = document.createElement('div');
+	        button.classList.add('button');
+	        button.setAttribute('role', 'button');
+	        var span = void 0;
+	        button.appendChild(span = document.createElement('span'));
+	        span.innerHTML = 'All';
+	        button.addEventListener('click', select.bind(null, undefined, undefined));
+	        if (_selected.length === buttons.length) {
+	            button.classList.add('selected');
+	        }
+	        allButtons.push(button);
+	        element.appendChild(button);
+	        buttons.forEach(function (buttonData, buttonIndex) {
+	            var id = getId(buttonIndex);
+	            var button = document.createElement('div');
+	            var span = void 0;
+	            if (buttonDivs[buttonIndex] === undefined) {
+	                buttonDivs[buttonIndex] = [];
+	            }
+	            buttonDivs[buttonIndex].push(button);
+	            var operationButton = void 0;
+	            element.appendChild(button);
+	            button.classList.add('button');
+	            button.setAttribute('role', 'button');
+	            if (typeof buttonData.id === 'string') {
+	                button.classList.add(buttonData.id);
+	            }
+	            button.appendChild(span = document.createElement('span'));
+	            span.innerHTML = getLabel(buttonIndex);
+	            operationSymbols.forEach(function (symbol, operation) {
+	                if (operation === 0 && buttonIndex === 0 || operation == 2 && buttonIndex === buttons.length - 1) {
+	                    return;
+	                }
+	                if (trueOrIn(options.operationButtons, operation)) {
+	                    button.appendChild(operationButton = document.createElement('div'));
+	                    operationButton.innerHTML = symbol;
+	                    operationButton.addEventListener('click', selectById.bind(null, buttonIndex, operation));
+	                }
+	            });
+	            button.addEventListener('click', selectById.bind(null, buttonIndex, undefined));
+	            updateButtonStyle(buttonIndex, button, _selected.indexOf(buttonIndex) !== -1);
+	        });
+	    };
+	    buttons.forEach(function (buttonData, buttonIndex) {
+	        if (!ids && buttonData.id !== undefined) {
+	            idMap[buttonData.id] = buttonIndex;
+	            ids = true;
+	        }
+	        if (buttonData.value !== undefined || buttonData.value === buttonIndex) {
+	            valueMap[buttonData.value] = buttonIndex;
+	            values = true;
+	        } else {
+	            valueMap[buttonIndex] = buttonIndex;
+	        }
+	    });
+	    if (_selected === true) {
+	        _selected = [];
+	        buttons.forEach(function (d, i) {
+	            return _selected.push(i);
+	        });
+	    } else if (!(_selected instanceof Array)) {
+	        _selected = [];
+	    } else {
+	        if (ids || values) {
+	            (function () {
+	                var mappedSelected = [];
+	                _selected.forEach(function (id) {
+	                    var index = void 0;
+	                    if ((index = getIndex(id)) !== undefined) {
+	                        mappedSelected.push(index);
+	                    }
+	                });
+	                _selected = mappedSelected;
+	            })();
+	        }
+	    }
+	    if (element) {
+	        createButtons(element);
+	    }
+	    return {
+	        createButtons: createButtons,
+	        select: select,
+	        addListener: function addListener(func) {
+	            var id = void 0;
+	            if ((id = listeners.indexOf(func)) !== -1) {
+	                return id;
+	            }
+	            return listeners.push(func) - 1;
+	        },
+	        removeListener: function removeListener(item) {
+	            var id = void 0;
+	            if (typeof item === 'number' && typeof listeners[item] !== 'undefined') {
+	                delete listeners[item];
+	            } else if (typeof item === 'function' && (id = listeners.indexOf(item)) !== -1) {
+	                delete listeners[id];
+	            }
+	        },
+	        selected: function selected(id) {
+	            var index = void 0;
+	            if (id === undefined) {
+	                return _selected;
+	            } else if (_selected.length == buttons.length || options.noneIsSelected && _selected.length === 0) {
+	                return true;
+	            } else if ((index = getIndex(id)) !== undefined) {
+	                return _selected.indexOf(index) !== -1;
+	            } else if (typeof id === 'number' && options.numeric) {
+	                id = getIndexFromValue(id);
+	                return _selected.indexOf(id) !== -1;
+	            }
+	        },
+	        getColor: function getColor(id) {
+	            console.log('getColor called', id);
+	            var index = void 0;
+	            if ((index = getIndex(id)) !== undefined) {
+	                return buttons[index].color;
+	            } else if (typeof id === 'number' && options.numeric) {
+	                id = getIndexFromValue(id);
+	                console.log('color of', id, buttons[id].color);
+	                return buttons[id].color;
+	            }
+	        },
+	        color: function color(enable) {
+	            var current = colored;
+	            if (enable === true) {
+	                colored = true;
+	            } else if (enable === false) {
+	                colored = false;
+	            } else {
+	                colored = !colored;
+	            }
+	            if (current !== colored) {
+	                updateStyle();
+	            }
+	            return colored;
+	        }
+	    };
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = FilterButtons;
+	var _a;
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	function hslColor(color) {
+	    if (typeof color === 'string') {
+	        return color;
+	    } else if (color instanceof Array) {
+	        if (color.length === 4) {
+	            return "hsla(" + color[0] + ", " + color[1] + "%, " + color[2] + "%, " + color[3] + ")";
+	        }
+	        return "hsl(" + color[0] + ", " + color[1] + "%, " + color[2] + "%)";
+	    }
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = hslColor;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	var Map = __webpack_require__(1);
-	var Quality = __webpack_require__(8);
-	var Time = __webpack_require__(14);
+	var Quality = __webpack_require__(10);
+	var Time = __webpack_require__(16);
 	var Ratings = __webpack_require__(5);
 	var Controls = __webpack_require__(3);
 	var config_1 = __webpack_require__(6);
-	var nanoajax = __webpack_require__(17);
+	var nanoajax = __webpack_require__(18);
 	;
 	exports.surveyData = {};
 	exports.surveys = {
@@ -13526,7 +13887,7 @@
 	    if (!length) {
 	        return;
 	    } else if (length === 1 && (!exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected || exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected().length)) {
-	        if (color = exports.surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey)) {
+	        if (color = exports.surveys[surveyType].parts[surveyParts[surveyType][0]].getColor(survey)) {
 	            var _color = color;
 
 	            var _color2 = _slicedToArray(_color, 3);
@@ -13547,7 +13908,7 @@
 	        }
 	    }
 	    if (Time.selectedTimeType === 'decaying') {
-	        var decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
+	        var decay = Math.pow(Time.getDecayAmount(currentTime - survey.timestamp._epoch), 0.5);
 	        if (config_1.default.decaySaturation) {
 	            s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
 	        }
@@ -13564,6 +13925,26 @@
 	        return [h, s, l, o];
 	    }
 	};
+	var setPartSectionClicked = function setPartSectionClicked(survey, part) {
+	    surveyControls[survey].partFilters[part].clicked = true;
+	};
+	var updateButtonColors = function updateButtonColors(survey) {
+	    if (surveyParts[survey].length === 1 && typeof exports.surveys[survey].parts[surveyParts[survey][0]].color === 'function' && exports.surveys[survey].parts[surveyParts[survey][0]].selected().length) {
+	        Ratings.color(false);
+	        exports.surveys[survey].parts[surveyParts[survey][0]].color(true);
+	        if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
+	            surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
+	        }
+	    } else {
+	        Ratings.color(true);
+	        surveyParts[survey].forEach(function (p) {
+	            exports.surveys[survey].parts[p].color(false);
+	            if (surveyControls[survey].partFilters[p] !== undefined && !surveyControls[survey].partFilters[p].clicked) {
+	                surveyControls[survey].partFilters[p].collapse(true);
+	            }
+	        });
+	    }
+	};
 	function createSurveyButtons(parentElement) {
 	    parentElement.classList.add('surveys');
 	    var buttons = void 0,
@@ -13575,26 +13956,31 @@
 	    parentElement.appendChild(parts = document.createElement('div'));
 	    allSurveysButton = document.createElement('button');
 	    buttons.appendChild(allSurveysButton);
-	    allSurveysButton.innerHTML = 'All';
+	    var span = void 0;
+	    allSurveysButton.appendChild(span = document.createElement('span'));
+	    span.innerHTML = 'All';
 	    allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
 	    Object.keys(exports.surveys).forEach(function (s) {
 	        var survey = exports.surveys[s];
 	        var button = document.createElement('button');
 	        var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s] !== undefined;
 	        buttons.appendChild(button);
-	        button.innerHTML = survey.label;
+	        var span = void 0;
+	        button.appendChild(span = document.createElement('span'));
+	        span.innerHTML = survey.label;
 	        button.addEventListener('click', toggleSurvey.bind(null, s));
 	        surveyParts[s] = [];
 	        if (defaults) {
 	            activeSurveys.push(s);
 	            button.classList.add('selected');
 	        }
-	        var pbuttons = Controls.addControlSection(survey.label, parentElement, true);
+	        var pbuttons = Controls.addControlSection(survey.label, parentElement);
 	        var pdiv = void 0;
 	        pbuttons.appendChild(pdiv = document.createElement('div'));
 	        var pAllButton = document.createElement('button');
 	        pdiv.appendChild(pAllButton);
-	        pAllButton.innerHTML = 'All';
+	        pAllButton.appendChild(span = document.createElement('span'));
+	        span.innerHTML = 'All';
 	        pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
 	        surveyControls[s] = {
 	            button: button,
@@ -13608,7 +13994,8 @@
 	            var pbutton = document.createElement('button');
 	            surveyControls[s].partButtons[p] = pbutton;
 	            pdiv.appendChild(pbutton);
-	            pbutton.innerHTML = part.label;
+	            pbutton.appendChild(span = document.createElement('span'));
+	            span.innerHTML = part.label;
 	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 	            if (defaults) {
 	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p] !== undefined) {
@@ -13618,18 +14005,28 @@
 	            } else {
 	                pbuttons.style.display = 'none';
 	            }
-	            if (part.filterValues) {
-	                var pfilters = Controls.addControlSection(part.label, pbuttons, true);
+	            if (part.createButtons) {
+	                var pfilters = Controls.addControlSection(part.label, pbuttons);
 	                var div = void 0;
 	                surveyControls[s].partFilters[p] = pfilters;
+	                pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
 	                pfilters.appendChild(div = document.createElement('div'));
-	                if (defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object' && typeof config_1.default.defaultSurveys[s][p] !== 'undefined') {
-	                    part.select(config_1.default.defaultSurveys[s][p]);
+	                console.log('bong', p);
+	                if (defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
+	                    if (config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
+	                        console.log('hiding pfilters for', p);
+	                        pfilters.style.display = 'none';
+	                    }
+	                    part.select(config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);
 	                }
 	                part.createButtons(div);
-	                part.addListener(redrawSurveyData.bind(null, s));
+	                part.addListener(function () {
+	                    updateButtonColors(s);
+	                    redrawSurveyData(s);
+	                });
 	            }
 	        });
+	        updateButtonColors(s);
 	    });
 	    reloadData();
 	}
@@ -13743,6 +14140,7 @@
 	                surveyControls[survey].allButton.classList.remove('selected');
 	            }
 	        }
+	        updateButtonColors(survey);
 	        if (activeSurveys.indexOf(survey) !== -1) {
 	            redrawSurveyData(survey);
 	        }
@@ -13876,16 +14274,16 @@
 	;
 
 /***/ },
-/* 8 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var Coliforms = __webpack_require__(9);
-	var O2 = __webpack_require__(10);
-	var Ph = __webpack_require__(11);
-	var Temperature = __webpack_require__(12);
-	var Turbidity = __webpack_require__(13);
+	var Coliforms = __webpack_require__(11);
+	var O2 = __webpack_require__(12);
+	var Ph = __webpack_require__(13);
+	var Temperature = __webpack_require__(14);
+	var Turbidity = __webpack_require__(15);
 	exports.label = 'Water Quality';
 	exports.layerId = 'thames21ThamesWaterQuality';
 	exports.url = 'https://widget.cartographer.io/api/v1/map';
@@ -13903,23 +14301,61 @@
 	//# sourceMappingURL=index.js.map
 
 /***/ },
-/* 9 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Coliforms';
 	exports.description = "Volunteers carry out one-off tests to indicate the\npresence of coliform bacteria which are found in the intestinal tract of\nanimals and humans. Although harmless themselves, they can indicate presence\nof pathogens and viruses. These enter the water when there is sewage or\nanimal waste discharged into the Thames.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Coliforms;
-	    if (value === true) {
-	        return ratings_1.colors['good'];
-	    } else if (value === false) {
-	        return ratings_1.colors['bad'];
+	var filterValues = [{
+	    label: 'Not Present',
+	    id: 'notpresent',
+	    value: false,
+	    color: ratings_1.colors['good']
+	}, {
+	    label: 'Present',
+	    id: 'present',
+	    value: true,
+	    color: ratings_1.colors['bad']
+	}];
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'round',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	var getValue = function getValue(survey) {
+	    return survey.attributes.thames21Coliforms;
+	};
+	function selected(survey) {
+	    if (survey === undefined) {
+	        return buttons.selected();
+	    }
+	    var value = getValue(survey);
+	    var selected = buttons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    } else {
+	        return buttons.selected(Math.round(value));
 	    }
 	}
-	exports.color = color;
+	exports.selected = selected;
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(survey) {
+	    var value = getValue(survey);
+	    if (value === null) {
+	        return;
+	    }
+	    return buttons.getColor(value);
+	}
+	exports.getColor = getColor;
 	function score(survey) {
 	    var value = survey.attributes.thames21Coliforms;
 	    if (value === true) {
@@ -13929,38 +14365,74 @@
 	    }
 	}
 	exports.score = score;
-	//# sourceMappingURL=coliforms.js.map
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Dissolved Oxygen';
 	exports.description = "Volunteers measure the amount of dissolved oxygen\n(DO) in the water which tells us how much oxygen there is available for river\nlife to use (e.g. fish and insects). Dissolved oxygen is measured in \u2018parts\nper million\u2019 (ppm); high levels (above 10ppm) indicate a healthy river. When\nuntreated sewage is discharged into the Thames, microorganisms use the\ndissolved oxygen to break down the sewage meaning that oxygen is no longer\navailable for other forms of life. This can lead to large scale fish kills\nsuch as those in 2004 and 2011, when thousands of fish died after sewage\nentered the river.";
-	function color(survey) {
-	    var value = survey.attributes.thames21DissolvedOxygen;
-	    if (typeof value === 'number') {
-	        if (value >= 10) {
-	            return [152, 91, 21];
-	        } else if (value >= 8) {
-	            return [128, 52, 47];
-	        } else if (value >= 6) {
-	            return [63, 75, 50];
-	        } else if (value >= 4) {
-	            return [36, 97, 62];
-	        } else if (value >= 2) {
-	            return [14, 88, 55];
-	        } else if (value >= 1) {
-	            return [3, 85, 57];
-	        } else if (value >= 0) {
-	            return [354, 73, 43];
+	var filterValues = [{
+	    value: 0,
+	    color: [354, 73, 43]
+	}, {
+	    value: 1,
+	    color: [3, 85, 57]
+	}, {
+	    value: 2,
+	    color: [14, 88, 55]
+	}, {
+	    value: 4,
+	    color: [36, 97, 62]
+	}, {
+	    value: 6,
+	    color: [63, 75, 50]
+	}, {
+	    value: 8,
+	    color: [128, 52, 47]
+	}, {
+	    value: 10,
+	    color: [152, 91, 21]
+	}];
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'round',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	var getValue = function getValue(survey) {
+	    return survey.attributes.thames21DissolvedOxygen;
+	};
+	function selected(survey) {
+	    if (survey === undefined) {
+	        return buttons.selected();
+	    }
+	    var value = getValue(survey);
+	    var selected = buttons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
+	        } else {
+	            return false;
 	        }
+	    } else {
+	        return buttons.selected(Math.round(value));
 	    }
 	}
-	exports.color = color;
+	exports.selected = selected;
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(survey) {
+	    var value = getValue(survey);
+	    if (value === null) {
+	        return;
+	    }
+	    return buttons.getColor(value);
+	}
+	exports.getColor = getColor;
 	function score(survey) {
 	    var value = survey.attributes.thames21DissolvedOxygen;
 	    if (typeof value === 'number') {
@@ -13978,27 +14450,19 @@
 	    }
 	}
 	exports.score = score;
-	//# sourceMappingURL=dissolved.js.map
 
 /***/ },
-/* 11 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var ratings_1 = __webpack_require__(5);
-	var filterButtons_1 = __webpack_require__(16);
+	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'pH';
 	exports.description = "For the Thames to support a variety of wildlife, the\nwater mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would\nhave been affected by pollution from industry, killing all wildlife. These\ndays, we would expect the water to be neutral (neither acid nor alkali) which\nis better for wildlife. Volunteers measure the pH of the water to find\nthis out.";
-	exports.filterOptions = {
-	    numeric: true,
-	    rounding: Math.round,
-	    operationButtons: true,
-	    noneIsSelected: true,
-	    enableColor: true
-	};
-	exports.filterValues = [{
-	    color: [358, 80, 51]
+	var filterValues = [{
+	    color: [358, 80, 35]
 	}, {
 	    color: [358, 80, 51]
 	}, {
@@ -14028,13 +14492,21 @@
 	}, {
 	    color: [264, 40, 43]
 	}];
-	var filterButtons = filterButtons_1.default(exports.filterValues, exports.filterOptions);
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'round',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	var getValue = function getValue(survey) {
+	    return survey.attributes.thames21Ph;
+	};
 	function selected(survey) {
 	    if (survey === undefined) {
-	        return filterButtons.selected();
+	        return buttons.selected();
 	    }
-	    var value = survey.attributes.thames21Ph;
-	    var selected = filterButtons.selected();
+	    var value = getValue(survey);
+	    var selected = buttons.selected();
 	    if (value === null) {
 	        if (selected.length === 0) {
 	            return true;
@@ -14042,50 +14514,21 @@
 	            return false;
 	        }
 	    } else {
-	        return filterButtons.selected(Math.round(value));
+	        return buttons.selected(Math.round(value));
 	    }
 	}
 	exports.selected = selected;
-	exports.createButtons = filterButtons.createButtons, exports.select = filterButtons.select, exports.addListener = filterButtons.addListener;
-	function color(survey) {
-	    var value = survey.attributes.thames21Ph;
-	    if (typeof value === 'number') {
-	        switch (Math.round(value)) {
-	            case 0:
-	            case 1:
-	                return [358, 80, 51];
-	            case 2:
-	                return [26, 85, 53];
-	            case 3:
-	                return [35, 90, 54];
-	            case 4:
-	                return [45, 91, 52];
-	            case 5:
-	                return [52, 94, 50];
-	            case 6:
-	                return [58, 90, 51];
-	            case 7:
-	                return [65, 68, 51];
-	            case 8:
-	                return [74, 51, 54];
-	            case 9:
-	                return [170, 22, 57];
-	            case 10:
-	                return [202, 54, 50];
-	            case 11:
-	                return [211, 52, 51];
-	            case 12:
-	                return [217, 48, 48];
-	            case 13:
-	                return [251, 34, 47];
-	            case 14:
-	                return [264, 40, 43];
-	        }
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(survey) {
+	    var value = getValue(survey);
+	    if (value === null) {
+	        return;
 	    }
+	    return buttons.getColor(value);
 	}
-	exports.color = color;
+	exports.getColor = getColor;
 	function score(survey) {
-	    var value = survey.attributes.thames21Ph;
+	    var value = getValue(survey);
 	    if (typeof value === 'number') {
 	        switch (Math.round(value)) {
 	            case 1:
@@ -14111,43 +14554,84 @@
 	exports.score = score;
 
 /***/ },
-/* 12 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Temperature';
 	exports.description = "High water temperatures can have a negative impact\non river life \u2013 both directly and by reducing the amount of dissolved oxygen\nthat the water can hold. Unnatural warming of the water is called 'thermal\npollution'. In the past, this would have been discharged directly from an\nindustrial source (such as power stations like Battersea).  These days, a\npossible source is rainwater run-off, which is heated up as it moves across\nthe warmer roads and ends up in the river.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Temperature;
-	    if (typeof value === 'number') {
-	        if (value < 3) {
-	            return [238, 52, 38];
-	        } else if (value < 6) {
-	            return [214, 86, 34];
-	        } else if (value < 9) {
-	            return [206, 100, 35];
-	        } else if (value < 12) {
-	            return [202, 100, 39];
-	        } else if (value < 15) {
-	            return [199, 100, 43];
-	        } else if (value < 18) {
-	            return [196, 100, 47];
-	        } else if (value < 21) {
-	            return [188, 95, 39];
-	        } else if (value < 24) {
-	            return [173, 24, 54];
-	        } else if (value < 29) {
-	            return [27, 83, 53];
+	var filterValues = [{
+	    label: '<3',
+	    value: 0,
+	    color: [238, 52, 38]
+	}, {
+	    value: 3,
+	    color: [214, 86, 34]
+	}, {
+	    value: 6,
+	    color: [206, 100, 35]
+	}, {
+	    value: 9,
+	    color: [202, 100, 39]
+	}, {
+	    value: 12,
+	    color: [199, 100, 43]
+	}, {
+	    value: 15,
+	    color: [196, 100, 47]
+	}, {
+	    value: 18,
+	    color: [188, 95, 39]
+	}, {
+	    value: 21,
+	    color: [173, 24, 54]
+	}, {
+	    value: 24,
+	    color: [27, 83, 53]
+	}, {
+	    value: 29,
+	    color: [354, 73, 43]
+	}];
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'floor',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	var getValue = function getValue(survey) {
+	    return survey.attributes.thames21Temperature;
+	};
+	function selected(survey) {
+	    if (survey === undefined) {
+	        return buttons.selected();
+	    }
+	    var value = getValue(survey);
+	    var selected = buttons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
 	        } else {
-	            return [354, 73, 43];
+	            return false;
 	        }
+	    } else {
+	        return buttons.selected(Math.round(value));
 	    }
 	}
-	exports.color = color;
+	exports.selected = selected;
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(survey) {
+	    var value = getValue(survey);
+	    if (value === null) {
+	        return;
+	    }
+	    return buttons.getColor(value);
+	}
+	exports.getColor = getColor;
 	function score(survey) {
-	    var value = survey.attributes.thames21Temperature;
+	    var value = getValue(survey);
 	    if (typeof value === 'number') {
 	        if (value < 21) {
 	            return ratings_1.scores['excellent'];
@@ -14161,60 +14645,106 @@
 	    }
 	}
 	exports.score = score;
-	//# sourceMappingURL=temperature.js.map
 
 /***/ },
-/* 13 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Turbidity';
 	exports.description = "Volunteers record how much algae, soil particles\nand other tiny substances are carried in the water. This is called turbidity\nand it is a measure of how far light can travel through the water. Turbidity\nreduces the light available to plants for photosynthesis and can increase\nwater temperature (as particles absorb more heat). The particles can also\naffect fish directly by clogging their gills. On the tidal Thames we would\nexpect it to be muddy and turbid but it is important to measure because of\nits possible impacts when conditions are particularly poor.";
-	function color(survey) {
-	    var value = survey.attributes.thames21Turbidity;
-	    if (typeof value === 'number') {
-	        if (value < 12) {
-	            return [196, 100, 47];
-	        } else if (value < 13) {
-	            return [191, 100, 41];
-	        } else if (value < 14) {
-	            return [187, 75, 42];
-	        } else if (value < 15) {
-	            return [177, 27, 52];
-	        } else if (value < 17) {
-	            return [125, 13, 59];
-	        } else if (value < 19) {
-	            return [51, 23, 56];
-	        } else if (value < 21) {
-	            return [38, 48, 57];
-	        } else if (value < 25) {
-	            return [34, 71, 56];
-	        } else if (value < 30) {
-	            return [33, 93, 54];
-	        } else if (value < 40) {
-	            return [32, 78, 51];
-	        } else if (value < 50) {
-	            return [31, 68, 48];
-	        } else if (value < 75) {
-	            return [30, 65, 45];
-	        } else if (value < 100) {
-	            return [30, 61, 43];
-	        } else if (value < 150) {
-	            return [29, 57, 40];
-	        } else if (value < 200) {
-	            return [29, 55, 36];
-	        } else if (value < 240) {
-	            return [28, 51, 34];
+	var filterValues = [{
+	    label: '<12',
+	    color: [196, 100, 47]
+	}, {
+	    value: 12,
+	    color: [191, 100, 41]
+	}, {
+	    value: 13,
+	    color: [187, 75, 42]
+	}, {
+	    value: 14,
+	    color: [177, 27, 52]
+	}, {
+	    value: 15,
+	    color: [125, 13, 59]
+	}, {
+	    value: 17,
+	    color: [51, 23, 56]
+	}, {
+	    value: 19,
+	    color: [38, 48, 57]
+	}, {
+	    value: 21,
+	    color: [34, 71, 56]
+	}, {
+	    value: 25,
+	    color: [33, 93, 54]
+	}, {
+	    value: 30,
+	    color: [32, 78, 51]
+	}, {
+	    value: 40,
+	    color: [31, 68, 48]
+	}, {
+	    value: 50,
+	    color: [30, 65, 45]
+	}, {
+	    value: 75,
+	    color: [30, 61, 43]
+	}, {
+	    value: 100,
+	    color: [29, 57, 40]
+	}, {
+	    value: 150,
+	    color: [29, 55, 36]
+	}, {
+	    value: 200,
+	    color: [28, 51, 34]
+	}, {
+	    value: 240,
+	    color: [28, 49, 31]
+	}];
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'floor',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	var getValue = function getValue(survey) {
+	    return survey.attributes.thames21Turbidity;
+	};
+	function selected(survey) {
+	    if (survey === undefined) {
+	        return buttons.selected();
+	    }
+	    var value = getValue(survey);
+	    var selected = buttons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
 	        } else {
-	            return [28, 49, 31];
+	            return false;
 	        }
+	    } else {
+	        return buttons.selected(Math.round(value));
 	    }
 	}
-	exports.color = color;
+	exports.selected = selected;
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(survey) {
+	    var value = getValue(survey);
+	    if (value === null) {
+	        return;
+	    }
+	    return buttons.getColor(value);
+	}
+	exports.getColor = getColor;
 	function score(survey) {
-	    var value = survey.attributes.thames21Turbidity;
+	    var value = getValue(survey);
 	    if (typeof value === 'number') {
 	        if (value < 20) {
 	            return ratings_1.scores['excellent'];
@@ -14226,19 +14756,21 @@
 	    }
 	}
 	exports.score = score;
-	//# sourceMappingURL=turbidity.js.map
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var config_1 = __webpack_require__(6);
-	var noUiSlider = __webpack_require__(15);
+	var noUiSlider = __webpack_require__(17);
 	var timeSlider = void 0;
 	var rangeDiv = void 0;
 	var timeListeners = [];
+	var minTime = void 0;
+	var maxTime = void 0;
+	var timeStep = void 0;
 	var lowerValue = void 0;
 	var upperValue = void 0;
 	var minLimit = void 0;
@@ -14333,7 +14865,9 @@
 	        var timeType = exports.timeTypes[time];
 	        timeType.button = button;
 	        element.appendChild(button);
-	        button.innerHTML = timeType.label;
+	        var span = void 0;
+	        button.appendChild(span = document.createElement('span'));
+	        span.innerHTML = timeType.label;
 	        if (timeType.description) {
 	            button.title = timeType.description;
 	        }
@@ -14383,10 +14917,9 @@
 	;
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = createTimeSection;
-	//# sourceMappingURL=time.js.map
 
 /***/ },
-/* 15 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! nouislider - 9.0.0 - 2016-09-29 21:44:02 */
@@ -16443,290 +16976,7 @@
 	}));
 
 /***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	var color_1 = __webpack_require__(18);
-	var operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
-	_a = [0, 1, 2], exports.LESS_EQUAL = _a[0], exports.EXCLUSIVE = _a[1], exports.GREATER_EQUAL = _a[2];
-	function FilterButtons(buttons, options, element, _selected) {
-	    if (_selected === true) {
-	        _selected = [];
-	        buttons.forEach(function (buttonData, buttonIndex) {
-	            _selected.push(String(buttonData.id !== undefined ? buttonData.id : buttonIndex));
-	        });
-	    } else if (!(_selected instanceof Array)) {
-	        _selected = [];
-	    }
-	    options = options || {};
-	    var listeners = [];
-	    var buttonDivs = [];
-	    var allButtons = [];
-	    var lastOperation = void 0;
-	    var lastOperationIndex = void 0;
-	    var lastOperationTimeout = void 0;
-	    var map = {};
-	    var colored = Boolean(options.enableColor);
-	    buttons.forEach(function (buttonData, buttonIndex) {
-	        map[buttonData.id !== undefined ? buttonData.id : buttonIndex] = buttonIndex;
-	    });
-	    var clearLastOperation = function clearLastOperation() {
-	        lastOperation = undefined;
-	        lastOperationIndex = undefined;
-	        lastOperationTimeout = undefined;
-	    };
-	    var trueOrIn = function trueOrIn(variable, operation) {
-	        return variable === true || variable instanceof Array && variable.indexOf(operation) !== -1;
-	    };
-	    var updateButtonStyle = function updateButtonStyle(id, div, select) {
-	        console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
-	        if (select) {
-	            div.classList.add('selected');
-	            if (colored && buttons[id].color instanceof Array) {
-	                div.style.borderColor = color_1.default(buttons[id].color);
-	            } else {
-	                div.style.borderColor = '';
-	            }
-	        } else {
-	            div.classList.remove('selected');
-	            div.style.borderColor = '';
-	        }
-	    };
-	    var updateStyle = function updateStyle(buttonId, select, div) {
-	        console.log('updateStyle called', buttonId, select, div);
-	        if (buttonId !== undefined) {
-	            if (map[buttonId] !== undefined) {
-	                if (select === undefined) {
-	                    select = _selected.indexOf(buttonId) !== -1;
-	                }
-	                if (div) {
-	                    updateButtonStyle(map[buttonId], div, select);
-	                } else {
-	                    if (buttonDivs[map[buttonId]] instanceof Array && buttonDivs[map[buttonId]].length) {
-	                        buttonDivs[map[buttonId]].forEach(function (div, id) {
-	                            updateButtonStyle(buttonId, div, select);
-	                        });
-	                    }
-	                }
-	            }
-	        } else {
-	            Object.keys(map).forEach(function (id) {
-	                updateStyle(id.toString(), select);
-	            });
-	        }
-	    };
-	    var select = function select(id, operation, event) {
-	        if (event instanceof Event) {
-	            if (event.defaultPrevented) {
-	                return false;
-	            }
-	            event.preventDefault();
-	        }
-	        if (lastOperationTimeout !== undefined) {
-	            clearTimeout(lastOperationTimeout);
-	            lastOperationTimeout = undefined;
-	        }
-	        if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
-	            if (id === undefined) {
-	                if (_selected.length === buttons.length) {
-	                    _selected.length = 0;
-	                } else {
-	                    _selected.length = 0;
-	                    _selected.push.apply(_selected, Object.keys(map));
-	                }
-	            } else {
-	                _selected.length = 0;
-	                if (id === true) {
-	                    _selected.push.apply(_selected, Object.keys(map));
-	                } else if (id instanceof Array) {
-	                    _selected.concat(id);
-	                }
-	            }
-	            console.log('xxxxxxxxxxxxxxxxxxxx');
-	            updateStyle();
-	        } else {
-	            var _ret = function () {
-	                var exclusive = void 0;
-	                var index = void 0;
-	                if (map[id] !== undefined) {
-	                    index = map[id];
-	                } else if (typeof id === 'number' && id >= 0 && id < buttons.length) {
-	                    index = id;
-	                } else {
-	                    return {
-	                        v: false
-	                    };
-	                }
-	                id = buttons[id].id !== undefined ? buttons[id] : index;
-	                if (typeof operation === 'number') {
-	                    exclusive = typeof event === 'boolean' ? event : lastOperation === operation && lastOperationIndex === index ? true : false;
-	                    lastOperation = undefined;
-	                    lastOperationIndex = undefined;
-	                }
-	                switch (operation) {
-	                    case exports.EXCLUSIVE:
-	                        _selected.length = 0;
-	                        _selected.push(id.toString());
-	                        updateStyle();
-	                        break;
-	                    case exports.LESS_EQUAL:
-	                    case exports.GREATER_EQUAL:
-	                        if (exclusive) {
-	                            _selected.length = 0;
-	                            updateStyle();
-	                        } else {
-	                            lastOperation = operation;
-	                            lastOperationIndex = index;
-	                        }
-	                        if (operation === exports.LESS_EQUAL) {
-	                            for (var i = index; i >= 0; i--) {
-	                                var value = String(buttons[i].id !== undefined ? buttons[i].id : i);
-	                                if (_selected.indexOf(value) === -1) {
-	                                    _selected.push(value);
-	                                    updateStyle(value, true);
-	                                }
-	                            }
-	                        } else {
-	                            for (var _i = index; _i < buttons.length; _i++) {
-	                                var _value = String(buttons[_i].id !== undefined ? buttons[_i].id : _i);
-	                                if (_selected.indexOf(_value) === -1) {
-	                                    _selected.push(_value);
-	                                    updateStyle(_value, true);
-	                                }
-	                            }
-	                        }
-	                        if (lastOperation !== undefined && options.operationTimeout) {
-	                            lastOperationTimeout = setTimeout(clearLastOperation, options.operationTimeout);
-	                        }
-	                        break;
-	                    default:
-	                        var selectedIndex = void 0;
-	                        if ((selectedIndex = _selected.indexOf(id)) === -1) {
-	                            _selected.push(id.toString());
-	                            buttonDivs[index].forEach(function (div) {
-	                                updateButtonStyle(index, div, true);
-	                            });
-	                        } else {
-	                            _selected.splice(selectedIndex, 1);
-	                            buttonDivs[index].forEach(function (div) {
-	                                updateButtonStyle(index, div, false);
-	                            });
-	                        }
-	                        break;
-	                }
-	            }();
-
-	            if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
-	        }
-	        allButtons.forEach(function (button) {
-	            if (_selected.length === buttons.length) {
-	                button.classList.add('selected');
-	            } else {
-	                button.classList.remove('selected');
-	            }
-	        });
-	        console.log('selected is now', _selected);
-	        listeners.forEach(function (callback) {
-	            callback();
-	        });
-	    };
-	    var createButtons = function createButtons(element) {
-	        console.log('createButtons', _selected);
-	        var button = document.createElement('button');
-	        button.innerHTML = 'All';
-	        button.addEventListener('click', select.bind(null, undefined, undefined));
-	        if (_selected.length === buttons.length) {
-	            button.classList.add('selected');
-	        }
-	        allButtons.push(button);
-	        element.appendChild(button);
-	        buttons.forEach(function (buttonData, buttonIndex) {
-	            var value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex);
-	            var button = document.createElement('div');
-	            if (buttonDivs[buttonIndex] === undefined) {
-	                buttonDivs[buttonIndex] = [];
-	            }
-	            buttonDivs[buttonIndex].push(button);
-	            var operationButton = void 0;
-	            element.appendChild(button);
-	            button.classList.add('button');
-	            if (typeof buttonData.id === 'string') {
-	                button.classList.add(buttonData.id);
-	            }
-	            button.innerHTML = buttonData.label || value;
-	            buttons[buttonData.id] = button;
-	            operationSymbols.forEach(function (symbol, operation) {
-	                if (trueOrIn(options.operationButtons, operation)) {
-	                    button.appendChild(operationButton = document.createElement('div'));
-	                    operationButton.innerHTML = symbol;
-	                    operationButton.addEventListener('click', select.bind(null, buttonIndex, operation));
-	                }
-	            });
-	            button.addEventListener('click', select.bind(null, buttonIndex, undefined));
-	            console.log(_selected, value);
-	            updateButtonStyle(buttonIndex, button, _selected.indexOf(value) !== -1);
-	        });
-	    };
-	    if (element) {
-	        createButtons(element);
-	    }
-	    return {
-	        createButtons: createButtons,
-	        select: select,
-	        addListener: function addListener(func) {
-	            var id = void 0;
-	            if ((id = listeners.indexOf(func)) !== -1) {
-	                return id;
-	            }
-	            return listeners.push(func) - 1;
-	        },
-	        removeListener: function removeListener(item) {
-	            var id = void 0;
-	            if (typeof item === 'number' && typeof listeners[item] !== 'undefined') {
-	                delete listeners[item];
-	            } else if (typeof item === 'function' && (id = listeners.indexOf(item)) !== -1) {
-	                delete listeners[id];
-	            }
-	        },
-	        selected: function selected(id) {
-	            if (id === undefined) {
-	                return _selected;
-	            } else if (_selected.length == buttons.length || options.noneIsSelected && _selected.length === 0) {
-	                return true;
-	            } else if (map[id.toString()] !== undefined) {
-	                return _selected.indexOf(id.toString()) !== -1;
-	            } else if (options.numeric) {
-	                if (typeof options.rounding === 'function') {
-	                    return _selected.indexOf(options.rounding(id)) !== -1;
-	                } else if (options.rounding === 'ceiling') {} else if (options.rounding === 'floor') {}
-	            }
-	        },
-	        color: function color(enable) {
-	            var current = colored;
-	            if (enable === true) {
-	                colored = true;
-	            } else if (enable === false) {
-	                colored = false;
-	            } else {
-	                colored = !colored;
-	            }
-	            if (current === colored) {
-	                updateStyle();
-	            }
-	            return colored;
-	        }
-	    };
-	}
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = FilterButtons;
-	var _a;
-
-/***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {// Best place to find information on XHR features is:
@@ -16840,21 +17090,6 @@
 	}
 
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 18 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	function hslColor(color) {
-	    if (color.length === 4) {
-	        return "hsla(" + color[0] + ", " + color[1] + "%, " + color[2] + "%, " + color[3] + ")";
-	    }
-	    return "hsl(" + color[0] + ", " + color[1] + "%, " + color[2] + "%)";
-	}
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = hslColor;
 
 /***/ }
 /******/ ]);

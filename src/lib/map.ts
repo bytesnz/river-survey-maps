@@ -17,7 +17,7 @@ export function resizeMap(height?: number) {
     if (typeof (height = window.innerHeight) === 'undefined') {
       height = document.body.clientHeight;
     }
-    height = height / 2;
+    height = height * .80;
   }
 
   mapElement.style.height = height + 'px';

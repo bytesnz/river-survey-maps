@@ -1,14 +1,16 @@
 interface Button {
   label?: string,
-  id?: string | number,
-  color: HSLColor
+  id?: string,
+  value?: number,
+  color?: HSLColor | string,
+  textColor?: HSLColor | string
 };
 
 interface FilterButtonOptions {
   operationButtons?: boolean | number[],
   operationTimeout?: number,
   numeric?: boolean,
-  rounding?: 'ceiling' | 'floor' | Function,
+  rounding?: 'ceiling' | 'floor' | 'round' | Function,
   noneIsSelected?: boolean,
   enableColor?: boolean
 };

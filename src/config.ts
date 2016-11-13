@@ -12,6 +12,7 @@ const config = {
     weight: 2
   },
   startRatingsEnabled: true,
+  startFiltersEnabled: true,
   expiredSaturation: 0,
   decaySaturation: false,
   expiredLightness: 60,

@@ -1,4 +1,5 @@
 import { scores } from "../ratings";
+import Buttons from '../../lib/filterButtons';
 
 export let label = 'Dissolved Oxygen';
 
@@ -12,25 +13,72 @@ available for other forms of life. This can lead to large scale fish kills
 such as those in 2004 and 2011, when thousands of fish died after sewage
 entered the river.`;
 
-export function color(survey) {
-  let value = survey.attributes.thames21DissolvedOxygen;
-  if (typeof value === 'number') {
-    if (value >= 10) {
-      return [152, 91, 21];
-    } else if (value >= 8) {
-      return [128, 52, 47];
-    } else if (value >= 6) {
-      return [63, 75, 50];
-    } else if (value >= 4) {
-      return [36, 97, 62];
-    } else if (value >= 2) {
-      return [14, 88, 55];
-    } else if (value >= 1) {
-      return [3, 85, 57];
-    } else if (value >= 0) {
-      return [354, 73, 43];
-    }
+const filterValues: Button[] = [
+  {
+    value: 0,
+    color: [354, 73, 43]
+  },
+  {
+    value: 1,
+    color: [3, 85, 57]
+  },
+  {
+    value: 2,
+    color: [14, 88, 55]
+  },
+  {
+    value: 4,
+    color: [36, 97, 62]
+  },
+  {
+    value: 6,
+    color: [63, 75, 50]
+  },
+  {
+    value: 8,
+    color: [128, 52, 47]
+  },
+  {
+    value: 10,
+    color: [152, 91, 21]
   }
+];
+
+const buttons = Buttons(filterValues, <FilterButtonOptions>{
+  numeric: true,
+  rounding: 'round',
+  operationButtons: true,
+  noneIsSelected: true,
+  //enableColor: true
+});
+
+let getValue = (survey: Survey) => survey.attributes.thames21DissolvedOxygen;
+
+export function selected(survey?: Survey) {
+  if (survey === undefined) {
+    return buttons.selected();
+  }
+  let value = getValue(survey);
+  let selected = <string[]>buttons.selected();
+  if (value === null) {
+    if (selected.length === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return buttons.selected(Math.round(value));
+  }
+}
+
+export const {createButtons, select, addListener, color } = buttons;
+
+export function getColor(survey) {
+  let value = getValue(survey);
+  if (value === null) {
+    return;
+  }
+  return buttons.getColor(value);
 }
 
 export function score(survey) {

@@ -9,6 +9,10 @@ let rangeDiv: HTMLElement;
 
 let timeListeners: Function[] = [];
 
+let minTime: Date;
+let maxTime: Date;
+let timeStep: number;
+
 let lowerValue: HTMLElement;
 let upperValue: HTMLElement;
 let minLimit: HTMLElement;
@@ -155,7 +159,9 @@ export function createTimeSection(parentElement: HTMLElement) {
     let timeType = timeTypes[time];
     timeType.button = button;
     element.appendChild(button);
-    button.innerHTML = timeType.label;
+    let span;
+    button.appendChild((span = document.createElement('span')));
+    span.innerHTML = timeType.label;
     if (timeType.description) {
       button.title = timeType.description;
     }

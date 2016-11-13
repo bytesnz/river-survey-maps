@@ -4,35 +4,58 @@ const operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
 export const [LESS_EQUAL, EXCLUSIVE, GREATER_EQUAL] = [0, 1, 2];
 
 export default function FilterButtons(buttons: Button[], options?: FilterButtonOptions, element?: HTMLElement, selected?/*TODO : string[] | true*/) {
-  if (selected === true) {
-    selected = [];
-    buttons.forEach((buttonData, buttonIndex) => {
-      selected.push(String(buttonData.id !== undefined ? buttonData.id : buttonIndex));
-    });
-  } else if (!(selected instanceof Array)) {
-    selected = [];
-  }
-
-  options = options || {};
-
+  let values = false;
+  let ids = false;
   let listeners = [];
   let buttonDivs: HTMLElement[][] = [];
   let allButtons: HTMLElement[] = [];
   let lastOperation: number;
   let lastOperationIndex: number;
   let lastOperationTimeout: number;
-  let map = {};
+  let idMap = {};
+  let valueMap = [];
   let colored = Boolean(options.enableColor);
 
-  buttons.forEach((buttonData, buttonIndex) => {
-    map[(buttonData.id !== undefined ? buttonData.id : buttonIndex)] = buttonIndex;
-  });
+  options = options || {};
 
+  /**@internal
+   * Clears the last operation timer (used for having a timeout on the
+   * two-stage operation buttons)
+   */
   let clearLastOperation = () => {
     lastOperation = undefined;
     lastOperationIndex = undefined;
     lastOperationTimeout = undefined;
   };
+
+  /**@internal
+   * Gets an buttons index from a given id using the id and value maps
+   *
+   * @param {string|number} id ID to check for the index of
+   *
+   * @returns {number|undefined}
+   */
+  let getIndex = (id: string | number): number => {
+    let index;
+    if (typeof id === 'string') {
+      if ((index = idMap[id]) !== undefined) {
+        return index;
+      }
+    } else {
+      if (values) {
+        if((index = valueMap[id]) !== undefined) {
+          return index;
+        }
+      } else {
+        if (id == Math.round(id) && id >= 0 && id < buttons.length) {
+          return id;
+        }
+      }
+    }
+  };
+  let getId = (index: number): string | number => (buttons[index].id || (buttons[index].value !== undefined ? buttons[index].value : index));
+  let getLabel = (index: number): string => (buttons[index].label || buttons[index].id || (buttons[index].value !== undefined ? buttons[index].value.toString() : index.toString()));
+  let getValue = (index: number): number => (buttons[index].value !== undefined ? buttons[index].value : index);
 
   let trueOrIn = (variable: boolean | (string | number)[], operation: number | string) => {
     return (variable === true
@@ -40,41 +63,234 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         && variable.indexOf(operation) !== -1));
   };
 
+  let getIndexFromValue = (value: number): number => {
+    if (!options.numeric) {
+      return;
+    }
+
+    if (typeof options.rounding === 'function') {
+      return options.rounding(value);
+    }
+    if (!values) {
+      switch(options.rounding) {
+        case 'ceiling':
+          value = Math.ceil(value);
+          break;
+        case 'floor':
+          value = Math.floor(value);
+          break;
+        case 'round':
+        default:
+          value = Math.round(value);
+      }
+      value = Math.max(0, Math.min(value, buttons.length - 1));
+      console.log('rounded value is', value);
+      return value;
+    } else {
+      if (options.rounding === 'ceiling') {
+        let roundedId;
+        for(let i = 0; i < buttons.length - 1; i++) {
+          // Calculate upper value
+          let upperValue = getValue(i);
+          if (value < upperValue) {
+            roundedId = i;
+            break;
+          }
+        }
+
+        //console.log('rounding got', value, roundedId);
+        if (roundedId === undefined) {
+          value = buttons.length - 1;
+        } else {
+          value = roundedId;
+        }
+      } else if (options.rounding === 'floor') {
+        let roundedId;
+        for(let i = buttons.length - 1; i > 0; i--) {
+          // Calculate upper value
+          let upperValue = getValue(i);
+          if (value >= upperValue) {
+            roundedId = i;
+            break;
+          }
+        }
+
+        //console.log('rounding got', value, roundedId);
+        if (roundedId === undefined) {
+          value = 0;
+        } else {
+          value = roundedId;
+        }
+      } else {
+        let roundedId;
+        for(let i = 0; i < buttons.length - 1; i++) {
+          // Calculate upper value
+          let currentValue = getValue(i);
+          let upperValue = currentValue + ((getValue(i + 1) - currentValue) / 2);
+          if (value < upperValue) {
+            roundedId = i;
+            break;
+          }
+        }
+
+        //console.log('rounding got', value, roundedId);
+        if (roundedId === undefined) {
+          value = buttons.length - 1;
+        } else {
+          value = roundedId;
+        }
+      }
+    }
+
+    return value;
+  }
+
+
   let updateButtonStyle = (id: number, div: HTMLElement, select: boolean) => {
-    console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
+    //console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
     if (select) {
       div.classList.add('selected');
-      if (colored && buttons[id].color instanceof Array) {
-        div.style.borderColor = Color(buttons[id].color);
+      if (colored) {
+        div.style.background = Color(buttons[id].color) || '';
+        div.style.color = Color(buttons[id].textColor) || '';
       } else {
-        div.style.borderColor = '';
+        div.style.background = '';
+        div.style.color = '';
       }
     } else {
       div.classList.remove('selected');
-      div.style.borderColor = '';
+      div.style.background = '';
+      div.style.color = '';
     }
   }
 
-  let updateStyle = (buttonId?: string, select?: boolean, div?: HTMLElement) => {
-    console.log('updateStyle called', buttonId, select, div);
+  let updateStyleById = (index: number, select?: boolean, div?: HTMLElement) => {
+    if (select === undefined) {
+      select = (selected.indexOf(index) !== -1);
+    }
+    if (div) {
+      updateButtonStyle(index, div, select);
+    } else {
+      if (buttonDivs[index] instanceof Array && buttonDivs[index].length) {
+        buttonDivs[index].forEach((div, id) => {
+          updateButtonStyle(index, div, select);
+        });
+      }
+    }
+  }
+
+  let updateStyle = (buttonId?: string | number, select?: boolean, div?: HTMLElement) => {
+    //console.log('updateStyle called', buttonId, select, div);
     if (buttonId !== undefined) {
-      if (map[buttonId] !== undefined) {
-        if (select === undefined) {
-          select = (selected.indexOf(buttonId) !== -1);
-        }
-        if (div) {
-          updateButtonStyle(map[buttonId], div, select);
-        } else {
-          if (buttonDivs[map[buttonId]] instanceof Array && buttonDivs[map[buttonId]].length) {
-            buttonDivs[map[buttonId]].forEach((div, id) => {
-              updateButtonStyle(buttonId, div, select);
-            });
-          }
-        }
+      let index;
+      if ((index = getIndex(buttonId)) !== undefined) {
+        updateStyleById(index, select, div);
       }
     } else {
-      Object.keys(map).forEach((id) => {
-        updateStyle(id.toString(), select);
+      buttons.forEach((data, index) => {
+        updateStyleById(index, select);
+      });
+    }
+  }
+
+  let selectById = (index: number, operation?: number, event?: Event) => {
+    let exclusive;
+
+    if (event instanceof Event) {
+      if (event.defaultPrevented) {
+        return false;
+      }
+      event.preventDefault();
+
+      if (lastOperationTimeout !== undefined) {
+        clearTimeout(lastOperationTimeout);
+        lastOperationTimeout = undefined;
+      }
+    }
+
+    if (typeof operation === 'number') {
+      exclusive = (typeof event === 'boolean' ? event
+          : (lastOperation === operation && lastOperationIndex === index) ? true : false);
+      lastOperation = undefined;
+      lastOperationIndex = undefined;
+    }
+
+    switch (operation) {
+      case EXCLUSIVE:
+        // Clear the currently selected
+        selected.length = 0;
+        selected.push(index);
+
+        updateStyle();
+        break;
+      case LESS_EQUAL:
+      case GREATER_EQUAL:
+        if (exclusive) {
+          // Clear the currently selected
+          selected.length = 0;
+          updateStyle();
+        } else {
+          lastOperation = operation;
+          lastOperationIndex = index;
+        }
+
+        if (operation === LESS_EQUAL) {
+          for (let i = index; i >= 0; i--) {
+            // Add to selected if not already in there
+            if (selected.indexOf(i) === -1) {
+              selected.push(i);
+              updateStyleById(i, true);
+            }
+          }
+        } else {
+          for (let i = index; i < buttons.length; i++) {
+            // Add to selected if not already in there
+            if (selected.indexOf(i) === -1) {
+              selected.push(i);
+              updateStyleById(i, true);
+            }
+          }
+        }
+
+        if (lastOperation !== undefined && options.operationTimeout) {
+          // create timeout to clear lastOperation
+          lastOperationTimeout = setTimeout(clearLastOperation,
+              options.operationTimeout);
+        }
+
+        break;
+      default:
+        // Toggle given id value
+        let selectedIndex;
+
+        if ((selectedIndex = selected.indexOf(index)) === -1) {
+          selected.push(index);
+          buttonDivs[index].forEach(div => {
+            updateButtonStyle(index, div, true);
+          });
+        } else {
+          selected.splice(selectedIndex, 1);
+          buttonDivs[index].forEach(div => {
+            updateButtonStyle(index, div, false);
+          });
+        }
+        break;
+    }
+
+    if (event instanceof Event) {
+      // Toggle all buttons
+      allButtons.forEach(button => {
+        if (selected.length === buttons.length) {
+          button.classList.add('selected');
+        } else {
+          button.classList.remove('selected');
+        }
+      });
+
+
+      // Run listeners
+      listeners.forEach(callback => {
+        callback();
       });
     }
   }
@@ -107,110 +323,36 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       lastOperationTimeout = undefined;
     }
 
+    console.log('select called', id, operation);
+
     if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
       if (id === undefined) {
         if (selected.length === buttons.length) {
           selected.length = 0;
         } else {
           selected.length = 0;
-          selected.push.apply(selected, Object.keys(map));
+          buttons.forEach((d, i) => selected.push(i));
         }
       } else {
         selected.length = 0;
         if (id === true) {
-          selected.push.apply(selected, Object.keys(map));
+          buttons.forEach((d, i) => selected.push(i));
         } else if (id instanceof Array) {
           selected.concat(id);
         }
       }
 
-      console.log('xxxxxxxxxxxxxxxxxxxx')
       updateStyle();
     } else {
-      let exclusive;
-
       let index: number;
 
       // Map id to index
-      if (map[id] !== undefined) {
-        index = map[id];
-      } else if (typeof id === 'number' && id >= 0 && id < buttons.length) {
-        index = id;
-      } else {
+      if ((index = getIndex(id)) === undefined) {
+        console.log('couldn\'t find index for', id);
         return false;
       }
 
-      id = (buttons[id].id !== undefined ? buttons[id] : index);
-
-      if (typeof operation === 'number') {
-        exclusive = (typeof event === 'boolean' ? event
-            : (lastOperation === operation && lastOperationIndex === index) ? true : false);
-        lastOperation = undefined;
-        lastOperationIndex = undefined;
-      }
-
-      switch (operation) {
-        case EXCLUSIVE:
-          // Clear the currently selected
-          selected.length = 0;
-          selected.push(id.toString());
-
-          updateStyle();
-          break;
-        case LESS_EQUAL:
-        case GREATER_EQUAL:
-          if (exclusive) {
-            // Clear the currently selected
-            selected.length = 0;
-            updateStyle();
-          } else {
-            lastOperation = operation;
-            lastOperationIndex = index;
-          }
-
-          if (operation === LESS_EQUAL) {
-            for (let i = index; i >= 0; i--) {
-              let value = String(buttons[i].id !== undefined ? buttons[i].id : i);
-              // Add to selected if not already in there
-              if (selected.indexOf(value) === -1) {
-                selected.push(value);
-                updateStyle(value, true);
-              }
-            }
-          } else {
-            for (let i = index; i < buttons.length; i++) {
-              let value = String(buttons[i].id !== undefined ? buttons[i].id : i);
-              // Add to selected if not already in there
-              if (selected.indexOf(value) === -1) {
-                selected.push(value);
-                updateStyle(value, true);
-              }
-            }
-          }
-
-          if (lastOperation !== undefined && options.operationTimeout) {
-            // create timeout to clear lastOperation
-            lastOperationTimeout = setTimeout(clearLastOperation,
-                options.operationTimeout);
-          }
-
-          break;
-        default:
-          // Toggle given id value
-          let selectedIndex;
-          if ((selectedIndex = selected.indexOf(id)) === -1) {
-            selected.push(id.toString());
-            buttonDivs[index].forEach(div => {
-              updateButtonStyle(index, div, true);
-            });
-          } else {
-            selected.splice(selectedIndex, 1);
-            buttonDivs[index].forEach(div => {
-              updateButtonStyle(index, div, false);
-            });
-          }
-          break;
-      }
+      selectById(index, operation);
     }
 
     // Toggle all buttons
@@ -222,7 +364,6 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       }
     });
 
-    console.log('selected is now', selected);
 
     // Run listeners
     listeners.forEach(callback => {
@@ -231,9 +372,12 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
   }
 
   let createButtons = (element: HTMLElement) => {
-    console.log('createButtons', selected);
-    let button = document.createElement('button');
-    button.innerHTML = 'All';
+    let button = document.createElement('div');
+    button.classList.add('button');
+    button.setAttribute('role', 'button');
+    let span;
+    button.appendChild((span = document.createElement('span')));
+    span.innerHTML = 'All';
     button.addEventListener('click', select.bind(null, undefined, undefined));
     if (selected.length === buttons.length) {
       button.classList.add('selected');
@@ -242,8 +386,9 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
     element.appendChild(button);
 
     buttons.forEach((buttonData, buttonIndex) => {
-      let value = String(buttonData.id !== undefined ? buttonData.id : buttonIndex)
+      let id = getId(buttonIndex)
       let button = document.createElement('div');
+      let span;
       if (buttonDivs[buttonIndex] === undefined) {
         buttonDivs[buttonIndex] = [];
       }
@@ -252,27 +397,65 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       let operationButton;
       element.appendChild(button);
       button.classList.add('button');
+      button.setAttribute('role', 'button');
       if (typeof buttonData.id === 'string') {
         button.classList.add(buttonData.id);
       }
-      button.innerHTML = buttonData.label || value;
-      buttons[buttonData.id] = button;
+      button.appendChild((span = document.createElement('span')));
+      span.innerHTML = getLabel(buttonIndex);
 
       // Add the operation buttons
       operationSymbols.forEach((symbol, operation) => {
+        if ((operation === 0 && buttonIndex === 0)
+          || (operation == 2 && buttonIndex === buttons.length-1)) {
+          return;
+        }
         if (trueOrIn(options.operationButtons, operation)) {
           button.appendChild((operationButton = document.createElement('div')));
           operationButton.innerHTML = symbol;
-          operationButton.addEventListener('click', select.bind(null, buttonIndex, operation));
+          operationButton.addEventListener('click', selectById.bind(null, buttonIndex, operation));
         }
       });
 
-      button.addEventListener('click', select.bind(null, buttonIndex, undefined));
+      button.addEventListener('click', selectById.bind(null, buttonIndex, undefined));
 
-      console.log(selected, value);
-      updateButtonStyle(buttonIndex, button, (selected.indexOf(value) !== -1));
+      updateButtonStyle(buttonIndex, button, (selected.indexOf(buttonIndex) !== -1));
     });
   };
+
+
+
+  // Create a map of string ids to button array index
+  buttons.forEach((buttonData, buttonIndex) => {
+    if (!ids && buttonData.id !== undefined) {
+      idMap[buttonData.id] = buttonIndex;
+      ids = true;
+    }
+    if (buttonData.value !== undefined || buttonData.value === buttonIndex) {
+      valueMap[buttonData.value] = buttonIndex;
+      values = true;
+    } else {
+      valueMap[buttonIndex] = buttonIndex;
+    }
+  });
+
+  if (selected === true) {
+    selected = [];
+    buttons.forEach((d, i) => selected.push(i));
+  } else if (!(selected instanceof Array)) {
+    selected = [];
+  } else {
+    if (ids || values) {
+      let mappedSelected = [];
+      selected.forEach(id => {
+        let index;
+        if ((index = getIndex(id)) !== undefined) {
+          mappedSelected.push(index);
+        }
+      });
+      selected = mappedSelected;
+    }
+  }
 
   // Create the buttons if given an element to put them in
   if (element) {
@@ -300,20 +483,29 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       }
     },
     selected: (id?: string | number): string[] | boolean => {
+      let index;
       if (id === undefined) {
         return selected;
       } else if (selected.length == buttons.length || options.noneIsSelected && selected.length === 0) {
         return true;
-      } else if (map[id.toString()] !== undefined) {
-        return (selected.indexOf(id.toString()) !== -1);
-      } else if (options.numeric) {
-        if (typeof options.rounding === 'function') {
-          return (selected.indexOf(options.rounding(id)) !== -1);
-        } else if (options.rounding === 'ceiling') {
-          // TODO
-        } else if (options.rounding === 'floor') {
-          // TODO
-        }
+      } else if ((index = getIndex(id)) !== undefined) {
+        return (selected.indexOf(index) !== -1);
+      } else if (typeof id === 'number' && options.numeric) {
+        id = getIndexFromValue(id);
+        //console.log('is Selected', id, selected);
+        return (selected.indexOf(id) !== -1);
+      }
+    },
+    getColor: (id: string | number): HSLColor | string => {
+      console.log('getColor called', id);
+      let index;
+      if ((index = getIndex(id)) !== undefined) {
+        return buttons[index].color;
+      } else if (typeof id === 'number' && options.numeric) {
+        //console.log('numeric');
+        id = getIndexFromValue(id);
+        console.log('color of', id, buttons[id].color);
+        return buttons[id].color;
       }
     },
     color: (enable?: boolean) => {
@@ -326,7 +518,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
         colored = !colored;
       }
 
-      if (current === colored) {
+      if (current !== colored) {
         updateStyle();
       }
 

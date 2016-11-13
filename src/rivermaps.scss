@@ -68,39 +68,42 @@ body {
   button, .button {
     white-space: nowrap;
     cursor: pointer;
-    border-radius: 5px;
-    border: solid 3px rgba(140, 140, 140, 0.4);
     box-shadow: none;
-    padding: 5px 10px;
     display: inline-block;
+    padding: 0px 5px;
     margin: 2px;
     font-size: 0.8em;
+    border-radius: 3px;
+    border: none;
 
-    background: rgba(255,255,255,0.2);
+    background: rgba(200, 200, 200, 0.2);
+
 
     &:hover {
-      background: rgba(255,255,255,0.6);
-      border-color: rgba(140, 140, 140, 0.8);
+      background: rgba(200, 200, 200, 0.6);
     }
 
     &.selected {
       background: rgba(255,255,255,0.6);
-      border-color: rgba(255, 255, 255, 0.7);
 
       &:hover {
         background: rgba(255,255,255,0.8);
-        border-color: rgba(255, 255, 255, 0.8);
       }
     }
 
-    > div {
-      padding: 1px 3px;
+    > span {
       display: inline-block;
-      margin: -3px 0px;
-      background: rgba(255,255,255,0.2);
+      padding: 5px 5px;
+      font-weight: bold;
+    }
+
+    > div {
+      padding: 5px 3px;
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
 
       &:hover {
-        background: rgba(255,255,255,1);
+        background: rgba(255,255,255,0.5);
       }
     }
   }
@@ -112,6 +115,7 @@ body {
 
   .key {
     font-size: 0.8em;
+    color: #999;
   }
 
   .range {
@@ -127,26 +131,6 @@ body {
     }*/
     .max {
       float: right;
-    }
-  }
-
-  .ratings  {
-    .selected {
-      &.excellent {
-        border-color: hsl(114, 63%, 54%);
-      }
-      &.good {
-        border-color: hsl(74, 51%, 54%);
-      }
-      &.moderate {
-        border-color: hsl(52, 94%, 50%);
-      }
-      &.poor {
-        border-color: hsl(33, 88%, 55%);
-      }
-      &.bad {
-        border-color: hsl(358, 80%, 51%);
-      }
     }
   }
 }

@@ -88,7 +88,7 @@ let pointColor = (surveyType: string, survey: Survey): HSLColor | false => {
   if (!length) {
     return;
   } else if (length === 1 && (!surveys[surveyType].parts[surveyParts[surveyType][0]].selected || (surveys[surveyType].parts[surveyParts[surveyType][0]].selected()).length)) {
-    if ((color = surveys[surveyType].parts[surveyParts[surveyType][0]].color(survey))) {
+    if ((color = surveys[surveyType].parts[surveyParts[surveyType][0]].getColor(survey))) {
       [h, s, l] = color;
     }
   } else {
@@ -100,8 +100,7 @@ let pointColor = (surveyType: string, survey: Survey): HSLColor | false => {
   // grey it based on the halflife
   if (Time.selectedTimeType === 'decaying') {
     // Get the halflife value
-    let decay = Time.getDecayAmount(currentTime - survey.timestamp._epoch);
-
+    let decay = Math.pow(Time.getDecayAmount(currentTime - survey.timestamp._epoch), 0.5);
     // Adjust saturation and lightness based of the diff;
     if (config.decaySaturation) {
       s  = Math.round(s - ((s - config.expiredSaturation) * decay));
@@ -118,6 +117,51 @@ let pointColor = (surveyType: string, survey: Survey): HSLColor | false => {
     return false;
   } else {
     return [h, s, l, o];
+  }
+};
+
+/**
+ * Sets a filter section as clicked. Once clicked, it will not automatically
+ * collapsed/opened on selecting different survey parts
+ *
+ * @param {string} survey String string id
+ * @param {string} part Survey part string id
+ */
+let setPartSectionClicked = (survey: string, part: string) => {
+  surveyControls[survey].partFilters[part].clicked = true;
+  //TODO surveyControls[survey].partFilters[part].removeEventListener('click', arguments.callee);
+};
+
+/**
+ * Updates the color on the part filter buttons and the overall ratings buttons
+ * so that colors are shown on the buttons representing the colors that are
+ * currently used for the markers on the map
+ *
+ * @param {string} survey Survey string id to update the buttons for
+ */
+let updateButtonColors = (survey: string) => {
+  //console.log('updateButtonColors called', survey, surveyParts);
+  if (surveyParts[survey].length === 1
+      && typeof surveys[survey].parts[surveyParts[survey][0]].color === 'function'
+      && surveys[survey].parts[surveyParts[survey][0]].selected().length) {
+    Ratings.color(false);
+    surveys[survey].parts[surveyParts[survey][0]].color(true);
+    // Minimise if haven't been clicked
+    if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined
+        && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
+      surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
+    }
+  } else {
+    //console.log('coloring ratings buttons');
+    Ratings.color(true);
+    surveyParts[survey].forEach(p => {
+      surveys[survey].parts[p].color(false);
+      // Minimise if haven't been clicked
+      if (surveyControls[survey].partFilters[p] !== undefined
+          && !surveyControls[survey].partFilters[p].clicked) {
+        surveyControls[survey].partFilters[p].collapse(true);
+      }
+    })
   }
 };
 
@@ -146,7 +190,9 @@ export function createSurveyButtons(parentElement: HTMLElement) {
   // Add all survey button
   allSurveysButton = document.createElement('button');
   buttons.appendChild(allSurveysButton);
-  allSurveysButton.innerHTML = 'All';
+  let span;
+  allSurveysButton.appendChild((span = document.createElement('span')));
+  span.innerHTML = 'All';
   allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
 
   // Add survey buttons to the section div
@@ -156,7 +202,9 @@ export function createSurveyButtons(parentElement: HTMLElement) {
     let defaults = (typeof config.defaultSurveys === 'object' && config.defaultSurveys[s] !== undefined);
 
     buttons.appendChild(button);
-    button.innerHTML = survey.label;
+    let span;
+    button.appendChild((span = document.createElement('span')));
+    span.innerHTML = survey.label;
     button.addEventListener('click', toggleSurvey.bind(null, s));
 
     surveyParts[s] = [];
@@ -167,12 +215,13 @@ export function createSurveyButtons(parentElement: HTMLElement) {
     }
 
     // Move to another function
-    let pbuttons = Controls.addControlSection(survey.label, parentElement, true);
+    let pbuttons = Controls.addControlSection(survey.label, parentElement);
     let pdiv;
     pbuttons.appendChild((pdiv = document.createElement('div')));
     let pAllButton = document.createElement('button');
     pdiv.appendChild(pAllButton);
-    pAllButton.innerHTML = 'All';
+    pAllButton.appendChild((span = document.createElement('span')));
+    span.innerHTML = 'All';
     pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
 
     surveyControls[s] = {
@@ -189,7 +238,8 @@ export function createSurveyButtons(parentElement: HTMLElement) {
       let pbutton = document.createElement('button');
       surveyControls[s].partButtons[p] = pbutton;
       pdiv.appendChild(pbutton);
-      pbutton.innerHTML = part.label;
+      pbutton.appendChild((span = document.createElement('span')));
+      span.innerHTML = part.label;
       pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 
       if (defaults) {
@@ -203,19 +253,31 @@ export function createSurveyButtons(parentElement: HTMLElement) {
       }
 
       // Create parts value filter buttons
-      if (part.filterValues) {
-        let pfilters = Controls.addControlSection(part.label, pbuttons, true);
+      if (part.createButtons) {
+        let pfilters = Controls.addControlSection(part.label, pbuttons);
         let div;
         surveyControls[s].partFilters[p] = pfilters;
+        pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
         pfilters.appendChild((div = document.createElement('div')));
-        if (defaults && typeof config.defaultSurveys[s] === 'object'
-            && typeof config.defaultSurveys[s][p] !== 'undefined') {
-          part.select(config.defaultSurveys[s][p]);
+        console.log('bong', p);
+        if (defaults && typeof config.defaultSurveys[s] === 'object') {
+          if (config.defaultSurveys[s][p] !== true
+              && typeof config.defaultSurveys[s][p] !== 'object') {
+                console.log('hiding pfilters for', p);
+                pfilters.style.display = 'none';
+              }
+          part.select((config.defaultSurveys[s][p] === undefined ? config.startFiltersEnabled : config.defaultSurveys[s][p]));
         }
         part.createButtons(div);
-        part.addListener(redrawSurveyData.bind(null, s));
+        part.addListener(() => {
+          updateButtonColors(s);
+          redrawSurveyData(s);
+        });
       }
     });
+
+    // TODO Move outside of this loop
+    updateButtonColors(s);
   });
 
   reloadData();
@@ -368,6 +430,9 @@ export function toggleSurveyPart(survey: string, part?: string) {
         surveyControls[survey].allButton.classList.remove('selected');
       }
     }
+
+    // Update coloring
+    updateButtonColors(survey);
 
     if (activeSurveys.indexOf(survey) !== -1) {
       redrawSurveyData(survey);

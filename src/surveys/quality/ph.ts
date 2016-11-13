@@ -1,5 +1,5 @@
 import { scores } from '../ratings';
-import FilterButtons from '../../lib/filterButtons';
+import Buttons from '../../lib/filterButtons';
 
 export let label = 'pH';
 
@@ -10,17 +10,9 @@ days, we would expect the water to be neutral (neither acid nor alkali) which
 is better for wildlife. Volunteers measure the pH of the water to find
 this out.`;
 
-export const filterOptions = {
-    numeric: true,
-    rounding: Math.round,
-    operationButtons: true,
-    noneIsSelected: true,
-    enableColor: true
-};
-
-export const filterValues: Button[] = [
+const filterValues: Button[] = [
   {
-    color: [358, 80, 51]
+    color: [358, 80, 35]
   },
   {
     color: [358, 80, 51]
@@ -66,14 +58,22 @@ export const filterValues: Button[] = [
   }
 ];
 
-const filterButtons = FilterButtons(filterValues, filterOptions);
+const buttons = Buttons(filterValues, <FilterButtonOptions>{
+  numeric: true,
+  rounding: 'round',
+  operationButtons: true,
+  noneIsSelected: true,
+  //enableColor: true
+});
+
+let getValue = (survey: Survey) => survey.attributes.thames21Ph;
 
 export function selected(survey?: Survey) {
   if (survey === undefined) {
-    return filterButtons.selected();
+    return buttons.selected();
   }
-  let value = survey.attributes.thames21Ph;
-  let selected = <string[]>filterButtons.selected();
+  let value = getValue(survey);
+  let selected = <string[]>buttons.selected();
   if (value === null) {
     if (selected.length === 0) {
       return true;
@@ -81,51 +81,22 @@ export function selected(survey?: Survey) {
       return false;
     }
   } else {
-    return filterButtons.selected(Math.round(value));
+    return buttons.selected(Math.round(value));
   }
 }
 
-export const {createButtons, select, addListener } = filterButtons;
+export const {createButtons, select, addListener, color } = buttons;
 
-export function color(survey) {
-  let value = survey.attributes.thames21Ph;
-  if (typeof value === 'number') {
-    switch (Math.round(value)) {
-      case 0:
-      case 1:
-        return [358, 80, 51];
-      case 2:
-        return [26, 85, 53];
-      case 3:
-        return [35, 90, 54];
-      case 4:
-        return [45, 91, 52];
-      case 5:
-        return [52, 94, 50];
-      case 6:
-        return [58, 90, 51];
-      case 7:
-        return [65, 68, 51];
-      case 8:
-        return [74, 51, 54];
-      case 9:
-        return [170, 22, 57];
-      case 10:
-        return [202, 54, 50];
-      case 11:
-        return [211, 52, 51];
-      case 12:
-        return [217, 48, 48];
-      case 13:
-        return [251, 34, 47];
-      case 14:
-        return [264, 40, 43];
-    }
+export function getColor(survey) {
+  let value = getValue(survey);
+  if (value === null) {
+    return;
   }
+  return buttons.getColor(value);
 }
 
 export function score(survey) {
-  let value = survey.attributes.thames21Ph;
+  let value = getValue(survey);
   if (typeof value === 'number') {
     switch (Math.round(value)) {
       case 1:

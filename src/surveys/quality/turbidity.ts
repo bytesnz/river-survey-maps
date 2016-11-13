@@ -1,4 +1,5 @@
 import { scores } from "../ratings";
+import Buttons from '../../lib/filterButtons';
 
 export let label = 'Turbidity';
 
@@ -11,49 +12,116 @@ affect fish directly by clogging their gills. On the tidal Thames we would
 expect it to be muddy and turbid but it is important to measure because of
 its possible impacts when conditions are particularly poor.`
 
-export function color(survey) {
-  let value = survey.attributes.thames21Turbidity;
-  if (typeof value === 'number') {
-    if (value < 12) {
-      return [196, 100, 47];
-    } else if (value < 13) {
-      return [191, 100, 41];
-    } else if (value < 14) {
-      return [187, 75, 42];
-    } else if (value < 15) {
-      return [177, 27, 52];
-    } else if (value < 17) {
-      return [125, 13, 59];
-    } else if (value < 19) {
-      return [51, 23, 56];
-    } else if (value < 21) {
-      return [38, 48, 57];
-    } else if (value < 25) {
-      return [34, 71, 56];
-    } else if (value < 30) {
-      return [33, 93, 54];
-    } else if (value < 40) {
-      return [32, 78, 51];
-    } else if (value < 50) {
-      return [31, 68, 48];
-    } else if (value < 75) {
-      return [30, 65, 45];
-    } else if (value < 100) {
-      return [30, 61, 43];
-    } else if (value < 150) {
-      return [29, 57, 40];
-    } else if (value < 200) {
-      return [29, 55, 36];
-    } else if (value < 240) {
-      return [28, 51, 34];
+const filterValues: Button[] = [
+  {
+    label: '<12',
+    color: [196, 100, 47]
+  },
+  {
+    value: 12,
+    color: [191, 100, 41]
+  },
+  {
+    value: 13,
+    color: [187, 75, 42]
+  },
+  {
+    value: 14,
+    color: [177, 27, 52]
+  },
+  {
+    value: 15,
+    color: [125, 13, 59]
+  },
+  {
+    value: 17,
+    color: [51, 23, 56]
+  },
+  {
+    value: 19,
+    color: [38, 48, 57]
+  },
+  {
+    value: 21,
+    color: [34, 71, 56]
+  },
+  {
+    value: 25,
+    color: [33, 93, 54]
+  },
+  {
+    value: 30,
+    color: [32, 78, 51]
+  },
+  {
+    value: 40,
+    color: [31, 68, 48]
+  },
+  {
+    value: 50,
+    color: [30, 65, 45]
+  },
+  {
+    value: 75,
+    color: [30, 61, 43]
+  },
+  {
+    value: 100,
+    color: [29, 57, 40]
+  },
+  {
+    value: 150,
+    color: [29, 55, 36]
+  },
+  {
+    value: 200,
+    color: [28, 51, 34]
+  },
+  {
+    value: 240,
+    color: [28, 49, 31]
+  }
+];
+
+const buttons = Buttons(filterValues, <FilterButtonOptions>{
+  numeric: true,
+  rounding: 'floor',
+  operationButtons: true,
+  noneIsSelected: true,
+  //enableColor: true
+});
+
+let getValue = (survey: Survey) => survey.attributes.thames21Turbidity;
+
+export function selected(survey?: Survey) {
+  if (survey === undefined) {
+    return buttons.selected();
+  }
+  let value = getValue(survey);
+  let selected = <string[]>buttons.selected();
+  if (value === null) {
+    if (selected.length === 0) {
+      return true;
     } else {
-      return [28, 49, 31];
+      return false;
     }
+  } else {
+    return buttons.selected(Math.round(value));
   }
 }
 
+export const {createButtons, select, addListener, color } = buttons;
+
+export function getColor(survey) {
+  let value = getValue(survey);
+  if (value === null) {
+    return;
+  }
+  return buttons.getColor(value);
+}
+
 export function score(survey) {
-  let value = survey.attributes.thames21Turbidity;
+  let value = getValue(survey);
   if (typeof value === 'number') {
     if (value < 20) {
       return scores['excellent'];
