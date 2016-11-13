@@ -138,33 +138,38 @@ let setPartSectionClicked = (survey: string, part: string) => {
  * Updates the color on the part filter buttons and the overall ratings buttons
  * so that colors are shown on the buttons representing the colors that are
  * currently used for the markers on the map
- *
- * @param {string} survey Survey string id to update the buttons for
  */
-let updateButtonColors = (survey: string) => {
+let updateButtonColors = () => {
+  let ratingColors = false;
   //console.log('updateButtonColors called', survey, surveyParts);
-  if (surveyParts[survey].length === 1
-      && typeof surveys[survey].parts[surveyParts[survey][0]].color === 'function'
-      && surveys[survey].parts[surveyParts[survey][0]].selected().length) {
-    Ratings.color(false);
-    surveys[survey].parts[surveyParts[survey][0]].color(true);
-    // Minimise if haven't been clicked
-    if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined
-        && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
-      surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
-    }
-  } else {
-    //console.log('coloring ratings buttons');
-    Ratings.color(true);
-    surveyParts[survey].forEach(p => {
-      surveys[survey].parts[p].color(false);
+  activeSurveys.forEach(survey => {
+    if (surveyParts[survey].length === 0) {
+      return;
+    } else if (surveyParts[survey].length === 1
+        && typeof surveys[survey].parts[surveyParts[survey][0]].color === 'function'
+        && surveys[survey].parts[surveyParts[survey][0]].selected().length) {
+      Ratings.color(false);
+      surveys[survey].parts[surveyParts[survey][0]].color(true);
       // Minimise if haven't been clicked
-      if (surveyControls[survey].partFilters[p] !== undefined
-          && !surveyControls[survey].partFilters[p].clicked) {
-        surveyControls[survey].partFilters[p].collapse(true);
+      if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined
+          && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
+        surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
       }
-    })
-  }
+    } else {
+      //console.log('coloring ratings buttons');
+      ratingColors = true;
+      surveyParts[survey].forEach(p => {
+        surveys[survey].parts[p].color(false);
+        // Minimise if haven't been clicked
+        if (surveyControls[survey].partFilters[p] !== undefined
+            && !surveyControls[survey].partFilters[p].clicked) {
+          surveyControls[survey].partFilters[p].collapse(true);
+        }
+      })
+    }
+  });
+
+  Ratings.color(ratingColors);
 };
 
 /**
@@ -272,15 +277,15 @@ export function createSurveyButtons(parentElement: HTMLElement) {
         }
         part.createButtons(div);
         part.addListener(() => {
-          updateButtonColors(s);
+          updateButtonColors();
           redrawSurveyData(s);
         });
       }
     });
 
-    // TODO Move outside of this loop
-    updateButtonColors(s);
   });
+
+  updateButtonColors();
 
   reloadData();
 };
@@ -369,6 +374,8 @@ export function toggleSurvey(survey?: string) {
       allSurveysButton.classList.remove('selected');
     }
   }
+
+  updateButtonColors();
 };
 
 /**
@@ -434,7 +441,7 @@ export function toggleSurveyPart(survey: string, part?: string) {
     }
 
     // Update coloring
-    updateButtonColors(survey);
+    updateButtonColors();
 
     if (activeSurveys.indexOf(survey) !== -1) {
       redrawSurveyData(survey);

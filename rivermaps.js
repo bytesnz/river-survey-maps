@@ -13926,22 +13926,28 @@
 	var setPartSectionClicked = function setPartSectionClicked(survey, part) {
 	    surveyControls[survey].partFilters[part].clicked = true;
 	};
-	var updateButtonColors = function updateButtonColors(survey) {
-	    if (surveyParts[survey].length === 1 && typeof exports.surveys[survey].parts[surveyParts[survey][0]].color === 'function' && exports.surveys[survey].parts[surveyParts[survey][0]].selected().length) {
-	        Ratings.color(false);
-	        exports.surveys[survey].parts[surveyParts[survey][0]].color(true);
-	        if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
-	            surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
-	        }
-	    } else {
-	        Ratings.color(true);
-	        surveyParts[survey].forEach(function (p) {
-	            exports.surveys[survey].parts[p].color(false);
-	            if (surveyControls[survey].partFilters[p] !== undefined && !surveyControls[survey].partFilters[p].clicked) {
-	                surveyControls[survey].partFilters[p].collapse(true);
+	var updateButtonColors = function updateButtonColors() {
+	    var ratingColors = false;
+	    activeSurveys.forEach(function (survey) {
+	        if (surveyParts[survey].length === 0) {
+	            return;
+	        } else if (surveyParts[survey].length === 1 && typeof exports.surveys[survey].parts[surveyParts[survey][0]].color === 'function' && exports.surveys[survey].parts[surveyParts[survey][0]].selected().length) {
+	            Ratings.color(false);
+	            exports.surveys[survey].parts[surveyParts[survey][0]].color(true);
+	            if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
+	                surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
 	            }
-	        });
-	    }
+	        } else {
+	            ratingColors = true;
+	            surveyParts[survey].forEach(function (p) {
+	                exports.surveys[survey].parts[p].color(false);
+	                if (surveyControls[survey].partFilters[p] !== undefined && !surveyControls[survey].partFilters[p].clicked) {
+	                    surveyControls[survey].partFilters[p].collapse(true);
+	                }
+	            });
+	        }
+	    });
+	    Ratings.color(ratingColors);
 	};
 	function createSurveyButtons(parentElement) {
 	    parentElement.classList.add('surveys');
@@ -14019,13 +14025,13 @@
 	                }
 	                part.createButtons(div);
 	                part.addListener(function () {
-	                    updateButtonColors(s);
+	                    updateButtonColors();
 	                    redrawSurveyData(s);
 	                });
 	            }
 	        });
-	        updateButtonColors(s);
 	    });
+	    updateButtonColors();
 	    reloadData();
 	}
 	exports.createSurveyButtons = createSurveyButtons;
@@ -14089,6 +14095,7 @@
 	            allSurveysButton.classList.remove('selected');
 	        }
 	    }
+	    updateButtonColors();
 	}
 	exports.toggleSurvey = toggleSurvey;
 	;
@@ -14138,7 +14145,7 @@
 	                surveyControls[survey].allButton.classList.remove('selected');
 	            }
 	        }
-	        updateButtonColors(survey);
+	        updateButtonColors();
 	        if (activeSurveys.indexOf(survey) !== -1) {
 	            redrawSurveyData(survey);
 	        }
