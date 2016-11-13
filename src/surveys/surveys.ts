@@ -1,5 +1,6 @@
 import * as Map from '../lib/map';
-import * as Quality from './quality';
+import * as quality from './quality';
+import * as litter from './litter';
 import * as Time from '../lib/time';
 import * as Ratings from './ratings';
 import * as Controls from '../lib/controls';
@@ -16,7 +17,8 @@ interface TimedMarker {
 export let surveyData = {};
 
 export let surveys = {
-  quality: Quality
+  quality,
+  litter
 };
 
 let activeSurveys: string[] = [];
@@ -205,6 +207,7 @@ export function createSurveyButtons(parentElement: HTMLElement) {
     let span;
     button.appendChild((span = document.createElement('span')));
     span.innerHTML = survey.label;
+    button.title = survey.description || '';
     button.addEventListener('click', toggleSurvey.bind(null, s));
 
     surveyParts[s] = [];
@@ -240,6 +243,7 @@ export function createSurveyButtons(parentElement: HTMLElement) {
       pdiv.appendChild(pbutton);
       pbutton.appendChild((span = document.createElement('span')));
       span.innerHTML = part.label;
+      pbutton.title = part.description || '';
       pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 
       if (defaults) {
@@ -259,12 +263,12 @@ export function createSurveyButtons(parentElement: HTMLElement) {
         surveyControls[s].partFilters[p] = pfilters;
         pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
         pfilters.appendChild((div = document.createElement('div')));
-        if (defaults && typeof config.defaultSurveys[s] === 'object') {
-          if (config.defaultSurveys[s][p] !== true
-              && typeof config.defaultSurveys[s][p] !== 'object') {
+        if (!defaults || (defaults && typeof config.defaultSurveys[s] === 'object')) {
+          if (!defaults || (config.defaultSurveys[s][p] !== true
+              && typeof config.defaultSurveys[s][p] !== 'object')) {
                 pfilters.style.display = 'none';
               }
-          part.select((config.defaultSurveys[s][p] === undefined ? config.startFiltersEnabled : config.defaultSurveys[s][p]));
+          part.select(((!defaults || config.defaultSurveys[s][p] === undefined) ? config.startFiltersEnabled : config.defaultSurveys[s][p]));
         }
         part.createButtons(div);
         part.addListener(() => {

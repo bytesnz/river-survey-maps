@@ -3,12 +3,7 @@ import Buttons from '../../lib/filterButtons';
 
 export let label = 'pH';
 
-export let description = `For the Thames to support a variety of wildlife, the
-water mustn’t be too acid or alkali. In the past, the pH of the Thames would
-have been affected by pollution from industry, killing all wildlife. These
-days, we would expect the water to be neutral (neither acid nor alkali) which
-is better for wildlife. Volunteers measure the pH of the water to find
-this out.`;
+export let description = `For the Thames to support a variety of wildlife, the water mustn’t be too acid or alkali. In the past, the pH of the Thames would have been affected by pollution from industry, killing all wildlife. These days, we would expect the water to be neutral (neither acid nor alkali) which is better for wildlife. Volunteers measure the pH of the water to find this out.`;
 
 const filterValues: Button[] = [
   {

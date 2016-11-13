@@ -3,14 +3,7 @@ import Buttons from '../../lib/filterButtons';
 
 export let label = 'Turbidity';
 
-export let description = `Volunteers record how much algae, soil particles
-and other tiny substances are carried in the water. This is called turbidity
-and it is a measure of how far light can travel through the water. Turbidity
-reduces the light available to plants for photosynthesis and can increase
-water temperature (as particles absorb more heat). The particles can also
-affect fish directly by clogging their gills. On the tidal Thames we would
-expect it to be muddy and turbid but it is important to measure because of
-its possible impacts when conditions are particularly poor.`
+export let description = `Volunteers record how much algae, soil particles and other tiny substances are carried in the water. This is called turbidity and it is a measure of how far light can travel through the water. Turbidity reduces the light available to plants for photosynthesis and can increase water temperature (as particles absorb more heat). The particles can also affect fish directly by clogging their gills. On the tidal Thames we would expect it to be muddy and turbid but it is important to measure because of its possible impacts when conditions are particularly poor.`
 
 const filterValues: Button[] = [
   {

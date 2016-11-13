@@ -3,15 +3,7 @@ import Buttons from '../../lib/filterButtons';
 
 export let label = 'Dissolved Oxygen';
 
-export let description = `Volunteers measure the amount of dissolved oxygen
-(DO) in the water which tells us how much oxygen there is available for river
-life to use (e.g. fish and insects). Dissolved oxygen is measured in ‘parts
-per million’ (ppm); high levels (above 10ppm) indicate a healthy river. When
-untreated sewage is discharged into the Thames, microorganisms use the
-dissolved oxygen to break down the sewage meaning that oxygen is no longer
-available for other forms of life. This can lead to large scale fish kills
-such as those in 2004 and 2011, when thousands of fish died after sewage
-entered the river.`;
+export let description = `Volunteers measure the amount of dissolved oxygen (DO) in the water which tells us how much oxygen there is available for river life to use (e.g. fish and insects). Dissolved oxygen is measured in ‘parts per million’ (ppm); high levels (above 10ppm) indicate a healthy river. When untreated sewage is discharged into the Thames, microorganisms use the dissolved oxygen to break down the sewage meaning that oxygen is no longer available for other forms of life. This can lead to large scale fish kills such as those in 2004 and 2011, when thousands of fish died after sewage entered the river.`;
 
 const filterValues: Button[] = [
   {

@@ -3,13 +3,7 @@ import Buttons from '../../lib/filterButtons';
 
 export let label = 'Temperature';
 
-export let description = `High water temperatures can have a negative impact
-on river life – both directly and by reducing the amount of dissolved oxygen
-that the water can hold. Unnatural warming of the water is called 'thermal
-pollution'. In the past, this would have been discharged directly from an
-industrial source (such as power stations like Battersea).  These days, a
-possible source is rainwater run-off, which is heated up as it moves across
-the warmer roads and ends up in the river.`;
+export let description = `High water temperatures can have a negative impact on river life – both directly and by reducing the amount of dissolved oxygen that the water can hold. Unnatural warming of the water is called 'thermal pollution'. In the past, this would have been discharged directly from an industrial source (such as power stations like Battersea).  These days, a possible source is rainwater run-off, which is heated up as it moves across the warmer roads and ends up in the river.`;
 
 const filterValues: Button[] = [
   {

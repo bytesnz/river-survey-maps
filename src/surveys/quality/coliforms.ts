@@ -3,11 +3,7 @@ import Buttons from '../../lib/filterButtons';
 
 export let label = 'Coliforms';
 
-export let description = `Volunteers carry out one-off tests to indicate the
-presence of coliform bacteria which are found in the intestinal tract of
-animals and humans. Although harmless themselves, they can indicate presence
-of pathogens and viruses. These enter the water when there is sewage or
-animal waste discharged into the Thames.`;
+export let description = `Volunteers carry out one-off tests to indicate the presence of coliform bacteria which are found in the intestinal tract of animals and humans. Although harmless themselves, they can indicate presence of pathogens and viruses. These enter the water when there is sewage or animal waste discharged into the Thames.`;
 
 const filterValues: Button[] = [
   {

@@ -13832,7 +13832,8 @@
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	var Map = __webpack_require__(1);
-	var Quality = __webpack_require__(10);
+	var quality = __webpack_require__(10);
+	var litter = __webpack_require__(19);
 	var Time = __webpack_require__(16);
 	var Ratings = __webpack_require__(5);
 	var Controls = __webpack_require__(3);
@@ -13841,7 +13842,8 @@
 	;
 	exports.surveyData = {};
 	exports.surveys = {
-	    quality: Quality
+	    quality: quality,
+	    litter: litter
 	};
 	var activeSurveys = [];
 	var surveyParts = {};
@@ -13964,6 +13966,7 @@
 	        var span = void 0;
 	        button.appendChild(span = document.createElement('span'));
 	        span.innerHTML = survey.label;
+	        button.title = survey.description || '';
 	        button.addEventListener('click', toggleSurvey.bind(null, s));
 	        surveyParts[s] = [];
 	        if (defaults) {
@@ -13992,6 +13995,7 @@
 	            pdiv.appendChild(pbutton);
 	            pbutton.appendChild(span = document.createElement('span'));
 	            span.innerHTML = part.label;
+	            pbutton.title = part.description || '';
 	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
 	            if (defaults) {
 	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p] !== undefined) {
@@ -14007,11 +14011,11 @@
 	                surveyControls[s].partFilters[p] = pfilters;
 	                pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
 	                pfilters.appendChild(div = document.createElement('div'));
-	                if (defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
-	                    if (config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
+	                if (!defaults || defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
+	                    if (!defaults || config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
 	                        pfilters.style.display = 'none';
 	                    }
-	                    part.select(config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);
+	                    part.select(!defaults || config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);
 	                }
 	                part.createButtons(div);
 	                part.addListener(function () {
@@ -14303,7 +14307,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Coliforms';
-	exports.description = "Volunteers carry out one-off tests to indicate the\npresence of coliform bacteria which are found in the intestinal tract of\nanimals and humans. Although harmless themselves, they can indicate presence\nof pathogens and viruses. These enter the water when there is sewage or\nanimal waste discharged into the Thames.";
+	exports.description = "Volunteers carry out one-off tests to indicate the presence of coliform bacteria which are found in the intestinal tract of animals and humans. Although harmless themselves, they can indicate presence of pathogens and viruses. These enter the water when there is sewage or animal waste discharged into the Thames.";
 	var filterValues = [{
 	    label: 'Not Present',
 	    id: 'notpresent',
@@ -14369,7 +14373,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Dissolved Oxygen';
-	exports.description = "Volunteers measure the amount of dissolved oxygen\n(DO) in the water which tells us how much oxygen there is available for river\nlife to use (e.g. fish and insects). Dissolved oxygen is measured in \u2018parts\nper million\u2019 (ppm); high levels (above 10ppm) indicate a healthy river. When\nuntreated sewage is discharged into the Thames, microorganisms use the\ndissolved oxygen to break down the sewage meaning that oxygen is no longer\navailable for other forms of life. This can lead to large scale fish kills\nsuch as those in 2004 and 2011, when thousands of fish died after sewage\nentered the river.";
+	exports.description = "Volunteers measure the amount of dissolved oxygen (DO) in the water which tells us how much oxygen there is available for river life to use (e.g. fish and insects). Dissolved oxygen is measured in \u2018parts per million\u2019 (ppm); high levels (above 10ppm) indicate a healthy river. When untreated sewage is discharged into the Thames, microorganisms use the dissolved oxygen to break down the sewage meaning that oxygen is no longer available for other forms of life. This can lead to large scale fish kills such as those in 2004 and 2011, when thousands of fish died after sewage entered the river.";
 	var filterValues = [{
 	    value: 0,
 	    color: [354, 73, 43]
@@ -14454,7 +14458,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'pH';
-	exports.description = "For the Thames to support a variety of wildlife, the\nwater mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would\nhave been affected by pollution from industry, killing all wildlife. These\ndays, we would expect the water to be neutral (neither acid nor alkali) which\nis better for wildlife. Volunteers measure the pH of the water to find\nthis out.";
+	exports.description = "For the Thames to support a variety of wildlife, the water mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would have been affected by pollution from industry, killing all wildlife. These days, we would expect the water to be neutral (neither acid nor alkali) which is better for wildlife. Volunteers measure the pH of the water to find this out.";
 	var filterValues = [{
 	    color: [358, 80, 35]
 	}, {
@@ -14556,7 +14560,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Temperature';
-	exports.description = "High water temperatures can have a negative impact\non river life \u2013 both directly and by reducing the amount of dissolved oxygen\nthat the water can hold. Unnatural warming of the water is called 'thermal\npollution'. In the past, this would have been discharged directly from an\nindustrial source (such as power stations like Battersea).  These days, a\npossible source is rainwater run-off, which is heated up as it moves across\nthe warmer roads and ends up in the river.";
+	exports.description = "High water temperatures can have a negative impact on river life \u2013 both directly and by reducing the amount of dissolved oxygen that the water can hold. Unnatural warming of the water is called 'thermal pollution'. In the past, this would have been discharged directly from an industrial source (such as power stations like Battersea).  These days, a possible source is rainwater run-off, which is heated up as it moves across the warmer roads and ends up in the river.";
 	var filterValues = [{
 	    label: '<3',
 	    value: 0,
@@ -14649,7 +14653,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'Turbidity';
-	exports.description = "Volunteers record how much algae, soil particles\nand other tiny substances are carried in the water. This is called turbidity\nand it is a measure of how far light can travel through the water. Turbidity\nreduces the light available to plants for photosynthesis and can increase\nwater temperature (as particles absorb more heat). The particles can also\naffect fish directly by clogging their gills. On the tidal Thames we would\nexpect it to be muddy and turbid but it is important to measure because of\nits possible impacts when conditions are particularly poor.";
+	exports.description = "Volunteers record how much algae, soil particles and other tiny substances are carried in the water. This is called turbidity and it is a measure of how far light can travel through the water. Turbidity reduces the light available to plants for photosynthesis and can increase water temperature (as particles absorb more heat). The particles can also affect fish directly by clogging their gills. On the tidal Thames we would expect it to be muddy and turbid but it is important to measure because of its possible impacts when conditions are particularly poor.";
 	var filterValues = [{
 	    label: '<12',
 	    color: [196, 100, 47]
@@ -17084,6 +17088,194 @@
 	}
 
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Food = __webpack_require__(20);
+	var Packaging = __webpack_require__(22);
+	var Sewage = __webpack_require__(23);
+	var Plastic = __webpack_require__(24);
+	exports.label = 'Litter Monitoring';
+	exports.layerId = 'thames21Litter';
+	exports.url = 'https://widget.cartographer.io/api/v1/map';
+	exports.getParams = {
+	    subdomain: 'thames21',
+	    layer: exports.layerId
+	};
+	exports.parts = {
+	    food: Food,
+	    packaging: Packaging,
+	    sewage: Sewage,
+	    plastic: Plastic
+	};
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Litter = __webpack_require__(21);
+	exports.label = 'Food Related';
+	exports.description = "This category refers to any litter that originates from the food industry. It is further categorised by material, including: plastic (e.g. drink bottle, food wrapper); metal (e.g. drink cans, bottle top); polystyrene (e.g. takeaway container, cups); or other (e.g. glass, paper, wood, cork).";
+	var getValue = function getValue(survey) {
+	  return survey ? survey.attributes.thames21LitterFoodRelated : undefined;
+	};
+	exports.selected = function (survey) {
+	  return Litter.selected(getValue(survey));
+	};
+	exports.getColor = function (survey) {
+	  return Litter.getColor(getValue(survey));
+	};
+	exports.score = function (survey) {
+	  return Litter.score(getValue(survey));
+	};
+	exports.createButtons = Litter.createButtons, exports.select = Litter.select, exports.addListener = Litter.addListener, exports.color = Litter.color;
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var ratings_1 = __webpack_require__(5);
+	var filterButtons_1 = __webpack_require__(7);
+	var filterValues = [{
+	    label: '0-9',
+	    color: [36, 97, 62]
+	}, {
+	    label: '10-29',
+	    value: 10,
+	    color: [33, 93, 54]
+	}, {
+	    label: '30-49',
+	    value: 30,
+	    color: [14, 88, 55]
+	}, {
+	    label: '50-100',
+	    value: 50,
+	    color: [3, 85, 57]
+	}, {
+	    label: '100+',
+	    color: [354, 73, 43]
+	}];
+	var buttons = filterButtons_1.default(filterValues, {
+	    numeric: true,
+	    rounding: 'ceiling',
+	    operationButtons: true,
+	    noneIsSelected: true
+	});
+	function selected(value) {
+	    if (value === undefined) {
+	        return buttons.selected();
+	    }
+	    var selected = buttons.selected();
+	    if (value === null) {
+	        if (selected.length === 0) {
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    } else {
+	        return buttons.selected(Math.round(value));
+	    }
+	}
+	exports.selected = selected;
+	exports.createButtons = buttons.createButtons, exports.select = buttons.select, exports.addListener = buttons.addListener, exports.color = buttons.color;
+	function getColor(value) {
+	    if (value === null) {
+	        return;
+	    }
+	    return buttons.getColor(value);
+	}
+	exports.getColor = getColor;
+	function score(value) {
+	    if (typeof value === 'number') {
+	        if (value === 0) {
+	            return ratings_1.scores['excellent'];
+	        } else if (value < 30) {
+	            return ratings_1.scores['moderate'];
+	        } else if (value < 100) {
+	            return ratings_1.scores['poor'];
+	        } else {
+	            return ratings_1.scores['bad'];
+	        }
+	    }
+	}
+	exports.score = score;
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Litter = __webpack_require__(21);
+	exports.label = 'Packaging';
+	exports.description = "Non-food related packaging is a separate category that includes plastic shopping bags, refuse sacks, and bottles/containers not used for food (e.g. cosmetics, pharmaceutical).";
+	var getValue = function getValue(survey) {
+	  return survey ? survey.attributes.thames21LitterPackaging : undefined;
+	};
+	exports.selected = function (survey) {
+	  return Litter.selected(getValue(survey));
+	};
+	exports.getColor = function (survey) {
+	  return Litter.getColor(getValue(survey));
+	};
+	exports.score = function (survey) {
+	  return Litter.score(getValue(survey));
+	};
+	exports.createButtons = Litter.createButtons, exports.select = Litter.select, exports.addListener = Litter.addListener, exports.color = Litter.color;
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Litter = __webpack_require__(21);
+	exports.label = 'Sewage Related';
+	exports.description = "This category refers to any litter that is expected to have been discarded down a toilet. This includes baby wipes, sanitary towels, cotton-bud sticks, nappies and syringes.";
+	var getValue = function getValue(survey) {
+	  return survey ? survey.attributes.thames21LitterSewageRelated : undefined;
+	};
+	exports.selected = function (survey) {
+	  return Litter.selected(getValue(survey));
+	};
+	exports.getColor = function (survey) {
+	  return Litter.getColor(getValue(survey));
+	};
+	exports.score = function (survey) {
+	  return Litter.score(getValue(survey));
+	};
+	exports.createButtons = Litter.createButtons, exports.select = Litter.select, exports.addListener = Litter.addListener, exports.color = Litter.color;
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var Litter = __webpack_require__(21);
+	exports.label = 'Unidentified Plastic';
+	exports.description = "During our foreshore clean-ups on the Thames, we consistently find fragments of plastic that has already begun to degrade and so cannot be identified. Such plastic fragments are frequently ingested by wildlife and present a significant threat to their health.";
+	var getValue = function getValue(survey) {
+	  return survey ? survey.attributes.thames21LitterUnidentifiedPlastic : undefined;
+	};
+	exports.selected = function (survey) {
+	  return Litter.selected(getValue(survey));
+	};
+	exports.getColor = function (survey) {
+	  return Litter.getColor(getValue(survey));
+	};
+	exports.score = function (survey) {
+	  return Litter.score(getValue(survey));
+	};
+	exports.createButtons = Litter.createButtons, exports.select = Litter.select, exports.addListener = Litter.addListener, exports.color = Litter.color;
 
 /***/ }
 /******/ ]);
