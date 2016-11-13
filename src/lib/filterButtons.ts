@@ -84,7 +84,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
           value = Math.round(value);
       }
       value = Math.max(0, Math.min(value, buttons.length - 1));
-      console.log('rounded value is', value);
+      //console.log('rounded value is', value);
       return value;
     } else {
       if (options.rounding === 'ceiling') {
@@ -323,7 +323,7 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       lastOperationTimeout = undefined;
     }
 
-    console.log('select called', id, operation);
+    //console.log('select called', id, operation);
 
     if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
       if (id === undefined) {
@@ -497,14 +497,14 @@ export default function FilterButtons(buttons: Button[], options?: FilterButtonO
       }
     },
     getColor: (id: string | number): HSLColor | string => {
-      console.log('getColor called', id);
+      //console.log('getColor called', id);
       let index;
       if ((index = getIndex(id)) !== undefined) {
         return buttons[index].color;
       } else if (typeof id === 'number' && options.numeric) {
         //console.log('numeric');
         id = getIndexFromValue(id);
-        console.log('color of', id, buttons[id].color);
+        //console.log('color of', id, buttons[id].color);
         return buttons[id].color;
       }
     },

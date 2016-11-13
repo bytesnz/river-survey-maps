@@ -13441,7 +13441,6 @@
 	                    value = Math.round(value);
 	            }
 	            value = Math.max(0, Math.min(value, buttons.length - 1));
-	            console.log('rounded value is', value);
 	            return value;
 	        } else {
 	            if (options.rounding === 'ceiling') {
@@ -13623,7 +13622,6 @@
 	            clearTimeout(lastOperationTimeout);
 	            lastOperationTimeout = undefined;
 	        }
-	        console.log('select called', id, operation);
 	        if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
 	            if (id === undefined) {
 	                if (_selected.length === buttons.length) {
@@ -13776,13 +13774,11 @@
 	            }
 	        },
 	        getColor: function getColor(id) {
-	            console.log('getColor called', id);
 	            var index = void 0;
 	            if ((index = getIndex(id)) !== undefined) {
 	                return buttons[index].color;
 	            } else if (typeof id === 'number' && options.numeric) {
 	                id = getIndexFromValue(id);
-	                console.log('color of', id, buttons[id].color);
 	                return buttons[id].color;
 	            }
 	        },
@@ -14011,10 +14007,8 @@
 	                surveyControls[s].partFilters[p] = pfilters;
 	                pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
 	                pfilters.appendChild(div = document.createElement('div'));
-	                console.log('bong', p);
 	                if (defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
 	                    if (config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
-	                        console.log('hiding pfilters for', p);
 	                        pfilters.style.display = 'none';
 	                    }
 	                    part.select(config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);

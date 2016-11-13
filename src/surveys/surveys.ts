@@ -259,11 +259,9 @@ export function createSurveyButtons(parentElement: HTMLElement) {
         surveyControls[s].partFilters[p] = pfilters;
         pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
         pfilters.appendChild((div = document.createElement('div')));
-        console.log('bong', p);
         if (defaults && typeof config.defaultSurveys[s] === 'object') {
           if (config.defaultSurveys[s][p] !== true
               && typeof config.defaultSurveys[s][p] !== 'object') {
-                console.log('hiding pfilters for', p);
                 pfilters.style.display = 'none';
               }
           part.select((config.defaultSurveys[s][p] === undefined ? config.startFiltersEnabled : config.defaultSurveys[s][p]));
