@@ -1,1 +1,170 @@
-body{font-family:sans-serif}#mapContainer{position:relative}#mapContainer #controls{background:rgba(250,250,250,0.9);position:absolute;right:0px;top:0px;bottom:16px;min-width:350px;max-width:500px;width:25%;z-index:1000;overflow-y:scroll}#mapContainer #controls section h1,#mapContainer #controls section h2{margin:0px;padding:2px 8px}#mapContainer #controls section h1{background:rgba(255,255,255,0.9);font-size:1.2em;cursor:pointer}#mapContainer #controls section h1:before{content:'-';margin-right:5px}#mapContainer #controls section h2{background:rgba(255,255,255,0.5);font-size:1.1em}#mapContainer #controls section>div{padding:5px 10px}#mapContainer #controls section section>h1{background:rgba(255,255,255,0.5);font-size:1.1em}#mapContainer #controls section.collapsed>*{display:none}#mapContainer #controls section.collapsed h1{display:block}#mapContainer #controls section.collapsed h1:before{content:'+'}#mapContainer button,#mapContainer .button{white-space:nowrap;cursor:pointer;box-shadow:none;display:inline-block;padding:0px 5px;margin:2px;font-size:0.8em;border-radius:3px;border:none;background:rgba(200,200,200,0.2)}#mapContainer button:hover,#mapContainer .button:hover{background:rgba(200,200,200,0.6)}#mapContainer button.selected,#mapContainer .button.selected{background:rgba(255,255,255,0.6)}#mapContainer button.selected:hover,#mapContainer .button.selected:hover{background:rgba(255,255,255,0.8)}#mapContainer button>span,#mapContainer .button>span{display:inline-block;padding:5px 5px;font-weight:bold}#mapContainer button>div,#mapContainer .button>div{padding:5px 3px;display:inline-block;background:rgba(255,255,255,0.1)}#mapContainer button>div:hover,#mapContainer .button>div:hover{background:rgba(255,255,255,0.5)}#mapContainer .noUi-target{padding:0 !important;margin:10px}#mapContainer .key{font-size:0.8em;color:#999}#mapContainer .range{clear:both}#mapContainer .range .min,#mapContainer .range .max{display:inline-block}#mapContainer .range .max{float:right}
+body {
+  font-family: sans-serif;
+}
+#mapContainer {
+  position: relative;
+}
+#mapContainer #controls {
+  background: rgba(250, 250, 250, 0.9);
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 16px;
+  min-width: 350px;
+  max-width: 500px;
+  width: 25%;
+  z-index: 1000;
+  overflow-y: scroll;
+}
+#mapContainer #controls section h1,
+#mapContainer #controls section h2 {
+  margin: 0px;
+  padding: 2px 8px;
+}
+#mapContainer #controls section h1 {
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1.2em;
+  cursor: pointer;
+}
+#mapContainer #controls section h1:before {
+  content: '-';
+  margin-right: 5px;
+}
+#mapContainer #controls section h2 {
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 1.1em;
+}
+#mapContainer #controls section > div {
+  padding: 5px 10px;
+}
+#mapContainer #controls section section > h1 {
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 1.1em;
+}
+#mapContainer #controls section.collapsed > * {
+  display: none;
+}
+#mapContainer #controls section.collapsed h1 {
+  display: block;
+}
+#mapContainer #controls section.collapsed h1:before {
+  content: '+';
+}
+#mapContainer button,
+#mapContainer .button {
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  display: inline-block;
+  padding: 0px 5px;
+  margin: 2px;
+  font-size: 0.8em;
+  border-radius: 3px;
+  border: none;
+  background: rgba(200, 200, 200, 0.2);
+}
+#mapContainer button:hover,
+#mapContainer .button:hover {
+  background: rgba(200, 200, 200, 0.6);
+}
+#mapContainer button.selected,
+#mapContainer .button.selected {
+  background: rgba(255, 255, 255, 0.6);
+}
+#mapContainer button.selected:hover,
+#mapContainer .button.selected:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+#mapContainer button > span,
+#mapContainer .button > span {
+  display: inline-block;
+  padding: 5px 5px;
+  font-weight: bold;
+}
+#mapContainer button > div,
+#mapContainer .button > div {
+  padding: 5px 3px;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+}
+#mapContainer button > div:hover,
+#mapContainer .button > div:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+#mapContainer .noUi-target {
+  padding: 0 !important;
+  margin: 10px;
+}
+#mapContainer .key {
+  font-size: 0.8em;
+  color: #999;
+}
+#mapContainer .range {
+  clear: both;
+  /*.min {
+      float: left;
+    }*/
+}
+#mapContainer .range .min,
+#mapContainer .range .max {
+  display: inline-block;
+}
+#mapContainer .range .max {
+  float: right;
+}
+.timescale {
+  min-height: 50px;
+  position: relative;
+}
+.timescale .slider,
+.timescale .marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  width: 2px;
+  font-size: 14px;
+}
+.timescale .slider {
+  width: 20px;
+  background: rgba(204, 204, 204, 0.4);
+}
+.timescale .slider.max {
+  right: 10px;
+}
+.timescale .slider.min {
+  left: 10px;
+  vertical-align: middle;
+}
+.timescale .slider.min .arrow,
+.timescale .slider.min .bar {
+  display: inline-block;
+  vertical-align: middle;
+}
+.timescale .slider.min .bar {
+  vertical-align: middle;
+  width: 2px;
+  height: 100%;
+  background: #000;
+}
+.timescale .slider.min .arrow:after {
+  content: '\25C0';
+}
+.timescale .slider.max:before {
+  content: '\25B6';
+  vertical-align: middle;
+}
+.timescale .markers {
+  position: relative;
+}
+.timescale .markers .marker,
+.timescale .markers .multiMarker {
+  position: absolute;
+  width: 10px;
+  height: 20px;
+  background: #ccc;
+}
+.timescale .markers .marker {
+  height: 10px;
+}

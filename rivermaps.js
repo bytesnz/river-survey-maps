@@ -50,20 +50,26 @@
 	var Controls = __webpack_require__(3);
 	var surveys_1 = __webpack_require__(4);
 	var time_1 = __webpack_require__(16);
+	var timescale_1 = __webpack_require__(25);
 	var mapElement = document.getElementById('map');
 	var controlsLayer = document.getElementById('controls');
 	var disableBubbling = function disableBubbling(event) {
 	    event.stopPropagation();
 	};
+	// Disable bubbling on any events so clicks etc don't get passed to the map
 	['click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'scroll'].forEach(function (event) {
 	    controlsLayer.addEventListener(event, disableBubbling);
 	});
+	// Create map
 	map_1.default(mapElement);
+	var timescale = timescale_1.default(document.getElementById('timescale'));
+	// Create time selection controls
 	var timeSection = Controls.addControlSection('Time', controlsLayer);
 	time_1.default(timeSection);
-	surveys_1.default(controlsLayer);
+	// Add survey
+	surveys_1.default(controlsLayer, timescale);
+	// Time type select buttons
 	var timeButtons = document.querySelectorAll('.time button');
-	//# sourceMappingURL=index.js.map
 
 /***/ },
 /* 1 */
@@ -74,6 +80,12 @@
 	var L = __webpack_require__(2);
 	var mapElement = void 0;
 	var mapListeners = [];
+	/**
+	 * Set the height of the map. By default, the height will be 50% of the
+	 * window height
+	 *
+	 * @param {number} [height] Height (in px) to set the map to
+	 */
 	function resizeMap(height) {
 	    if (typeof height !== 'number') {
 	        if (typeof (height = window.innerHeight) === 'undefined') {
@@ -85,6 +97,14 @@
 	}
 	exports.resizeMap = resizeMap;
 	;
+	/**
+	 * Add a callback function to be called when the map view changes. Function
+	 * will be passed the event
+	 *
+	 * @param {Function} func Callback function
+	 *
+	 * @returns {number} ID of callback, which can be used to remove the callback
+	 */
 	function addListener(func) {
 	    var id = void 0;
 	    if ((id = mapListeners.indexOf(func)) !== -1) {
@@ -94,6 +114,14 @@
 	}
 	exports.addListener = addListener;
 	;
+	/**
+	 * Removes a callback function from being called when the map view is changed.
+	 *
+	 * @param {function|number} item Callback function or callback function id to
+	 *   remove
+	 *
+	 * @returns {undefined}
+	 */
 	function removeListener(item) {
 	    var id = void 0;
 	    if (typeof item === 'number' && typeof mapListeners[item] !== 'undefined') {
@@ -104,6 +132,7 @@
 	}
 	exports.removeListener = removeListener;
 	;
+	// Mop event handling
 	var mapMoveTimeout = void 0;
 	var mapChanged = function mapChanged(event) {
 	    if (mapListeners.length) {
@@ -119,18 +148,33 @@
 	        }, 1000);
 	    }
 	};
+	/**
+	 * Focus on the given survey. Called with a survey event
+	 * is clicked on.
+	 *
+	 * @param {Position} point Point to center on map
+	 */
 	function focusOnPoint(point) {
 	    console.log('Focussing on', point);
 	}
 	exports.focusOnPoint = focusOnPoint;
 	;
+	/**
+	 * Creates a map and attaches event handlers to it
+	 *
+	 * @param {HTMLElement} element Element to to use for the creation of the
+	 *   map
+	 */
 	function create(element) {
 	    mapElement = element;
 	    resizeMap();
 	    exports.map = L.map(element, {}).setView([51.505, -0.09], 12);
+	    // Add maps layer to map
 	    L.tileLayer('https://api.mapbox.com/styles/v1/{user}/{mapId}/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
 	        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
 	        maxZoom: 18,
+	        //user: 'mapbox',
+	        //mapId: 'streets-v10',
 	        user: 'bytesnz',
 	        mapId: 'ciulsfir300cm2jl8ky8x0l7d',
 	        accessToken: 'pk.eyJ1IjoiYnl0ZXNueiIsImEiOiJjaXU3ZGJyOG8wMDAwMnlsZWFyNnNpYXNpIn0.6sHotnFHXFsS8ZZHAoOVgA'
@@ -13195,6 +13239,14 @@
 /***/ function(module, exports) {
 
 	"use strict";
+	/**
+	 * Adds a new section to the control layer
+	 *
+	 * @param {string} title Title for new section
+	 * @param {HTMLElement} [parentSection] Section to add the new section to
+	 *
+	 * @returns {HTMLElement} New section
+	 */
 
 	function addControlSection(title, parentSection, startCollapsed) {
 	    var header = document.createElement('h1');
@@ -13232,38 +13284,618 @@
 
 	"use strict";
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var Map = __webpack_require__(1);
 	var Ratings = __webpack_require__(5);
-	var Surveys = __webpack_require__(9);
+	var Time = __webpack_require__(16);
 	var Controls = __webpack_require__(3);
+	var L = __webpack_require__(2);
+	var nanoajax = __webpack_require__(18);
+	// config
 	var config_1 = __webpack_require__(6);
-	var timeTypes = {
-	    none: {
-	        label: 'No limit'
-	    },
-	    decaying: {
-	        label: 'Decaying',
-	        description: 'The older the survey, the more opaque it is'
-	    },
-	    ranged: {
-	        label: 'Ranged'
-	    }
-	};
-	function create(element) {
+	// Surveys
+	var quality = __webpack_require__(10);
+	var litter = __webpack_require__(19);
+	;
+	function Surveys(element, timescale) {
+	    // Add sections
 	    var surveySection = Controls.addControlSection('Thames21 Surveys', element);
 	    var surveyButtonsSection = Controls.addControlSection('Surveys', surveySection);
 	    var ratingsSection = Controls.addControlSection('Overall Rating', surveySection);
-	    Surveys.createSurveyButtons(surveyButtonsSection);
+	    var surveyData = {};
+	    var surveys = {
+	        quality: quality,
+	        litter: litter
+	    };
+	    var activeSurveys = [];
+	    // Store the selected parts to the survey
+	    var surveyParts = {};
+	    // Stores the currently active layers and parts
+	    var surveyLayers = {};
+	    var surveyControls = {};
+	    var surveyMarkerDivs = {};
+	    // Store the requested areas
+	    var requestedAreas = {};
+	    var allSurveysButton = void 0;
+	    Object.keys(surveys).forEach(function (survey) {
+	        console.log('creating marker div for', survey);
+	        surveyMarkerDivs[survey] = timescale.addMarkerDiv();
+	    });
+	    /**
+	     * Returns the Leaflet LatLng object for a given survey
+	     *
+	     * @param {Object} survey Survey to create the latlng for
+	     *
+	     * @returns {LatLng} LatLng for given survey
+	     */
+	    var pointLatlng = function pointLatlng(survey) {
+	        return L.latLng([survey.location._wgs84[1], survey.location._wgs84[0]]);
+	    };
+	    var surveyScore = function surveyScore(surveyType, survey) {
+	        var total = 0;
+	        var items = void 0;
+	        var score = void 0;
+	        if (surveyParts[surveyType] instanceof Array && (items = surveyParts[surveyType].length) !== 0) {
+	            surveyParts[surveyType].forEach(function (part) {
+	                if (typeof (score = surveys[surveyType].parts[part].score(survey)) === 'number') {
+	                    total += score;
+	                } else {
+	                    items--;
+	                }
+	            });
+	            if (items) {
+	                return Math.round(total / items);
+	            }
+	        }
+	    };
+	    /**
+	     * Generates the color for the given survey based off the survey type,
+	     * survey time and survey result.
+	     *
+	     * @param {string} surveyType Type of survey
+	     * @param {Survey} survey Survey to create the color for
+	     *
+	     * @returns {HSLColor} CSS color string, in HSL format
+	     */
+	    var pointColor = function pointColor(surveyType, survey) {
+	        var score = 0;
+	        var items = 0;
+	        var currentTime = new Date().getTime();
+	        var h,
+	            s,
+	            l,
+	            o = 1;
+	        var value;
+	        var color = void 0;
+	        var length = surveyParts[surveyType].length;
+	        // Determine color based on the selected survey parts
+	        if (!length) {
+	            return;
+	        } else if (length === 1 && (!surveys[surveyType].parts[surveyParts[surveyType][0]].selected || surveys[surveyType].parts[surveyParts[surveyType][0]].selected().length)) {
+	            if (color = surveys[surveyType].parts[surveyParts[surveyType][0]].getColor(survey)) {
+	                var _color = color;
+
+	                var _color2 = _slicedToArray(_color, 3);
+
+	                h = _color2[0];
+	                s = _color2[1];
+	                l = _color2[2];
+	            }
+	        } else {
+	            if (color = Ratings.getColor(surveyScore(surveyType, survey))) {
+	                var _color3 = color;
+
+	                var _color4 = _slicedToArray(_color3, 3);
+
+	                h = _color4[0];
+	                s = _color4[1];
+	                l = _color4[2];
+	            }
+	        }
+	        // grey it based on the halflife
+	        if (Time.selectedTimeType === 'decaying') {
+	            // Get the halflife value
+	            var decay = Math.pow(Time.getDecayAmount(currentTime - survey.timestamp._epoch), 0.5);
+	            // Adjust saturation and lightness based of the diff;
+	            if (config_1.default.decaySaturation) {
+	                s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
+	            }
+	            if (config_1.default.decayLightness) {
+	                l = Math.round(l - (l - config_1.default.expiredLightness) * decay);
+	            }
+	            if (config_1.default.decayOpacity) {
+	                o = 1 - decay;
+	            }
+	        }
+	        if (typeof h === 'undefined') {
+	            return false;
+	        } else {
+	            return [h, s, l, o];
+	        }
+	    };
+	    /**
+	     * Sets a filter section as clicked. Once clicked, it will not automatically
+	     * collapsed/opened on selecting different survey parts
+	     *
+	     * @param {string} survey String string id
+	     * @param {string} part Survey part string id
+	     */
+	    var setPartSectionClicked = function setPartSectionClicked(survey, part) {
+	        surveyControls[survey].partFilters[part].clicked = true;
+	        //TODO surveyControls[survey].partFilters[part].removeEventListener('click', arguments.callee);
+	    };
+	    /**
+	     * Updates the color on the part filter buttons and the overall ratings buttons
+	     * so that colors are shown on the buttons representing the colors that are
+	     * currently used for the markers on the map
+	     */
+	    var updateButtonColors = function updateButtonColors() {
+	        var ratingColors = false;
+	        //console.log('updateButtonColors called', survey, surveyParts);
+	        activeSurveys.forEach(function (survey) {
+	            if (surveyParts[survey].length === 0) {
+	                return;
+	            } else if (surveyParts[survey].length === 1 && typeof surveys[survey].parts[surveyParts[survey][0]].color === 'function' && surveys[survey].parts[surveyParts[survey][0]].selected().length) {
+	                Ratings.color(false);
+	                surveys[survey].parts[surveyParts[survey][0]].color(true);
+	                // Minimise if haven't been clicked
+	                if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
+	                    surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
+	                }
+	            } else {
+	                //console.log('coloring ratings buttons');
+	                ratingColors = true;
+	                surveyParts[survey].forEach(function (p) {
+	                    surveys[survey].parts[p].color(false);
+	                    // Minimise if haven't been clicked
+	                    if (surveyControls[survey].partFilters[p] !== undefined && !surveyControls[survey].partFilters[p].clicked) {
+	                        surveyControls[survey].partFilters[p].collapse(true);
+	                    }
+	                });
+	            }
+	        });
+	        Ratings.color(ratingColors);
+	    };
+	    /**
+	     * Creates a set of buttons for selecting the surveys to show on the map
+	     * and appends them into the given HTML Element.
+	     *
+	     * @aparam {HTMLElement} element Element to append buttons into
+	     */
+	    var createSurveyButtons = function createSurveyButtons(parentElement) {
+	        parentElement.classList.add('surveys');
+	        var buttons = void 0,
+	            parts = void 0;
+	        // Add listenser to map
+	        Map.addListener(reloadData);
+	        // Add listener to time
+	        Time.addListener(redrawAllActive);
+	        // Add listener to ratings
+	        Ratings.addListener(redrawAllActive);
+	        parentElement.appendChild(buttons = document.createElement('div'));
+	        parentElement.appendChild(parts = document.createElement('div'));
+	        // Add all survey button
+	        allSurveysButton = document.createElement('button');
+	        buttons.appendChild(allSurveysButton);
+	        var span = void 0;
+	        allSurveysButton.appendChild(span = document.createElement('span'));
+	        span.innerHTML = 'All';
+	        allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
+	        // Add survey buttons to the section div
+	        Object.keys(surveys).forEach(function (s) {
+	            var survey = surveys[s];
+	            var button = document.createElement('button');
+	            var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s] !== undefined;
+	            buttons.appendChild(button);
+	            var span = void 0;
+	            button.appendChild(span = document.createElement('span'));
+	            span.innerHTML = survey.label;
+	            button.title = survey.description || '';
+	            button.addEventListener('click', toggleSurvey.bind(null, s));
+	            surveyParts[s] = [];
+	            if (defaults) {
+	                activeSurveys.push(s);
+	                button.classList.add('selected');
+	            }
+	            // Move to another function
+	            var pbuttons = Controls.addControlSection(survey.label, parentElement);
+	            var pdiv = void 0;
+	            pbuttons.appendChild(pdiv = document.createElement('div'));
+	            var pAllButton = document.createElement('button');
+	            pdiv.appendChild(pAllButton);
+	            pAllButton.appendChild(span = document.createElement('span'));
+	            span.innerHTML = 'All';
+	            pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
+	            surveyControls[s] = {
+	                button: button,
+	                allButton: pAllButton,
+	                partSection: pbuttons,
+	                partButtons: {},
+	                partFilters: {}
+	            };
+	            // Create parts filter buttons
+	            Object.keys(survey.parts).forEach(function (p) {
+	                var part = survey.parts[p];
+	                var pbutton = document.createElement('button');
+	                surveyControls[s].partButtons[p] = pbutton;
+	                pdiv.appendChild(pbutton);
+	                pbutton.appendChild(span = document.createElement('span'));
+	                span.innerHTML = part.label;
+	                pbutton.title = part.description || '';
+	                pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
+	                if (defaults) {
+	                    if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p] !== undefined) {
+	                        surveyParts[s].push(p);
+	                        pbutton.classList.add('selected');
+	                    }
+	                } else {
+	                    pbuttons.style.display = 'none';
+	                }
+	                // Create parts value filter buttons
+	                if (part.createButtons) {
+	                    var pfilters = Controls.addControlSection(part.label, pbuttons);
+	                    var div = void 0;
+	                    surveyControls[s].partFilters[p] = pfilters;
+	                    pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
+	                    pfilters.appendChild(div = document.createElement('div'));
+	                    if (!defaults || defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
+	                        if (!defaults || config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
+	                            pfilters.style.display = 'none';
+	                        }
+	                        part.select(!defaults || config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);
+	                    }
+	                    part.createButtons(div);
+	                    part.addListener(function () {
+	                        updateButtonColors();
+	                        redrawSurveyData(s);
+	                    });
+	                }
+	            });
+	        });
+	        updateButtonColors();
+	        reloadData();
+	    };
+	    /**
+	     * Adds new survey data to the survey store
+	     *
+	     * @param {string} type String identifier of survey type
+	     * @param {Array} data Array of data to add to object
+	     */
+	    var addSurveyData = function addSurveyData(type, data) {
+	        if (_typeof(surveyData[type]) !== 'object') {
+	            surveyData[type] = {};
+	        }
+	        data.forEach(function (survey) {
+	            surveyData[type][survey._id['$oid']] = survey;
+	        });
+	    };
+	    /**
+	     * Toggles one or all of the surveys.
+	     *
+	     * @param {string} survey identifier of the survey to toggle
+	     *
+	     * @returns {undefined}
+	     */
+	    var toggleSurvey = function toggleSurvey(survey) {
+	        var index = void 0;
+	        var surveyKeys = Object.keys(surveys);
+	        if (survey) {
+	            if (typeof surveys[survey] !== 'undefined') {
+	                if ((index = activeSurveys.indexOf(survey)) !== -1) {
+	                    // Disable
+	                    activeSurveys.splice(index, 1);
+	                    allSurveysButton.classList.remove('selected');
+	                    if (surveyControls[survey].button) {
+	                        surveyControls[survey].button.classList.remove('selected');
+	                    }
+	                    // Hide survey layer if created
+	                    if (typeof surveyLayers[survey] !== 'undefined') {
+	                        if (Map.map.hasLayer(surveyLayers[survey])) {
+	                            Map.map.removeLayer(surveyLayers[survey]);
+	                        }
+	                    }
+	                    // Hide parts layer
+	                    surveyControls[survey].partSection.style.display = 'none';
+	                } else {
+	                    // Enable
+	                    activeSurveys.push(survey);
+	                    if (surveyKeys.length === activeSurveys.length) {
+	                        allSurveysButton.classList.add('selected');
+	                    }
+	                    if (surveyControls[survey].button) {
+	                        surveyControls[survey].button.classList.add('selected');
+	                    }
+	                    // Show survey layer if created
+	                    if (typeof surveyLayers[survey] !== 'undefined') {
+	                        if (!Map.map.hasLayer(surveyLayers[survey])) {
+	                            Map.map.addLayer(surveyLayers[survey]);
+	                        }
+	                    }
+	                    // Show parts layer
+	                    surveyControls[survey].partSection.style.display = '';
+	                    reloadData(survey);
+	                }
+	            }
+	        } else {
+	            if (activeSurveys.length === 0 || surveyKeys.length !== activeSurveys.length) {
+	                // Toggle all non-active surveys
+	                surveyKeys.forEach(function (survey) {
+	                    if (activeSurveys.indexOf(survey) === -1) {
+	                        toggleSurvey(survey);
+	                    }
+	                });
+	                allSurveysButton.classList.add('selected');
+	            } else {
+	                // Toggle all surveys
+	                surveyKeys.forEach(function (survey) {
+	                    toggleSurvey(survey);
+	                });
+	                allSurveysButton.classList.remove('selected');
+	            }
+	        }
+	        updateButtonColors();
+	    };
+	    /**
+	     * Toggles one or all of the survey parts.
+	     *
+	     * @param {string} survey identifier of the survey
+	     * @param {string} part identifier of the survey part to toggle
+	     *
+	     * @returns {undefined}
+	     */
+	    var toggleSurveyPart = function toggleSurveyPart(survey, part) {
+	        var index = void 0;
+	        if (typeof surveys[survey] !== 'undefined') {
+	            var partKeys = Object.keys(surveys[survey].parts);
+	            if (part) {
+	                if (typeof surveys[survey].parts[part] !== 'undefined') {
+	                    if (typeof surveyParts[survey] === 'undefined') {
+	                        surveyParts[survey] = [];
+	                    }
+	                    if ((index = surveyParts[survey].indexOf(part)) !== -1) {
+	                        // Disable
+	                        surveyParts[survey].splice(index, 1);
+	                        surveyControls[survey].allButton.classList.remove('selected');
+	                        if (surveyControls[survey].partButtons[part]) {
+	                            surveyControls[survey].partButtons[part].classList.remove('selected');
+	                        }
+	                        if (surveyControls[survey].partFilters[part]) {
+	                            surveyControls[survey].partFilters[part].style.display = 'none';
+	                        }
+	                    } else {
+	                        // Enable
+	                        surveyParts[survey].push(part);
+	                        if (partKeys.length === surveyParts[survey].length) {
+	                            surveyControls[survey].allButton.classList.add('selected');
+	                        }
+	                        if (surveyControls[survey].partButtons[part]) {
+	                            surveyControls[survey].partButtons[part].classList.add('selected');
+	                        }
+	                        if (surveyControls[survey].partFilters[part]) {
+	                            surveyControls[survey].partFilters[part].style.display = '';
+	                        }
+	                    }
+	                }
+	            } else {
+	                if (surveyParts[survey].length === 0 || partKeys.length !== surveyParts[survey].length) {
+	                    // Toggle all non-active surveys
+	                    partKeys.forEach(function (p) {
+	                        surveyControls[survey].partButtons[p].classList.add('selected');
+	                    });
+	                    surveyParts[survey] = partKeys;
+	                    surveyControls[survey].allButton.classList.add('selected');
+	                } else {
+	                    // Toggle all surveys
+	                    partKeys.forEach(function (p) {
+	                        surveyControls[survey].partButtons[p].classList.remove('selected');
+	                    });
+	                    surveyParts[survey] = [];
+	                    surveyControls[survey].allButton.classList.remove('selected');
+	                }
+	            }
+	            // Update coloring
+	            updateButtonColors();
+	            if (activeSurveys.indexOf(survey) !== -1) {
+	                redrawSurveyData(survey);
+	            }
+	        }
+	    };
+	    /**
+	     * Checks that the survey data currently covers the
+	     * map and updates if required
+	     *
+	     * @param {string} survey Check only a specific survey
+	     *
+	     * @returns {udefined}
+	     */
+	    var reloadData = function reloadData(survey) {
+	        var toFetch = [];
+	        if (typeof survey === 'string' && typeof surveys[survey] === 'undefined') {
+	            throw new Error('Unknown survey ' + survey);
+	        }
+	        // Get the bounds of the map
+	        var bounds = Map.map.getBounds();
+	        var getParams = {
+	            ne: bounds.getNorth() + ',' + bounds.getEast(),
+	            sw: bounds.getSouth() + ',' + bounds.getWest()
+	        };
+	        var checkPreviousLoads = function checkPreviousLoads(survey) {
+	            if (typeof requestedAreas[survey] !== 'undefined') {
+	                if (typeof requestedAreas[survey].find(function (area) {
+	                    if (area.contains(bounds)) {
+	                        return true;
+	                    }
+	                }) === 'undefined') {
+	                    toFetch.push(survey);
+	                }
+	            } else {
+	                toFetch.push(survey);
+	            }
+	        };
+	        // Check if previous requests for the given data contain the current bounds
+	        if (typeof survey === 'string') {
+	            checkPreviousLoads(survey);
+	        } else {
+	            activeSurveys.forEach(checkPreviousLoads);
+	        }
+	        // Request the data
+	        toFetch.forEach(function (survey) {
+	            /*es6 var params = {
+	              ...getParams,
+	              ...surveys[survey].getParams
+	            };*/
+	            var params = Object.assign({}, getParams, surveys[survey].getParams);
+	            // Build the get parameters
+	            var get = [];
+	            Object.keys(params).forEach(function (param) {
+	                get.push(param + '=' + encodeURIComponent(params[param]));
+	            });
+	            if (get.length) {
+	                get = '?' + get.join('&');
+	            } else {
+	                get = '';
+	            }
+	            nanoajax.ajax({
+	                url: surveys[survey].url + get,
+	                headers: {
+	                    Accept: 'javascript/json'
+	                }
+	            }, function (code, responseText) {
+	                var data;
+	                if (code === 200) {
+	                    try {
+	                        data = JSON.parse(responseText);
+	                        console.log('get response for', surveys[survey].url, get, data);
+	                    } catch (err) {
+	                        console.error('Error parsing response', surveys[survey].url, get, responseText);
+	                        return;
+	                    }
+	                    if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && data.results && data.results instanceof Array) {
+	                        addSurveyData(survey, data.results);
+	                        // Add the bounds to the requestedAreas
+	                        if (typeof requestedAreas[survey] === 'undefined') {
+	                            requestedAreas[survey] = [];
+	                        }
+	                        requestedAreas[survey].push(bounds);
+	                        redrawSurveyData(survey);
+	                    } else {
+	                        console.error('Unknown data received');
+	                    }
+	                }
+	            });
+	        });
+	        //TODO can this be removed?
+	        if (typeof survey === 'string' && !toFetch.length) {
+	            redrawSurveyData(survey);
+	        }
+	    };
+	    /**
+	     * Redraws the given survey layer
+	     *
+	     * @param {String} String identifier of the layer to redraw
+	     *
+	     * @returns {undefined}
+	     */
+	    var redrawSurveyData = function redrawSurveyData(survey) {
+	        console.log('Redrawing', survey);
+	        if (typeof surveyData[survey] !== 'undefined') {
+	            var markers;
+
+	            (function () {
+	                // Create layer group if we don't already have one
+	                if (typeof surveyLayers[survey] === 'undefined') {
+	                    surveyLayers[survey] = L.layerGroup([]); // TODO Interface is wrong - parameter is optional
+	                } else {
+	                    surveyLayers[survey].clearLayers();
+	                }
+	                // Build array of survey data to include, selected and order by date
+	                markers = [];
+
+	                var minTime = void 0;
+	                var maxTime = void 0;
+	                Object.keys(surveyData[survey]).forEach(function (point) {
+	                    var surveyPoint = surveyData[survey][point];
+	                    var score = surveyScore(survey, surveyPoint);
+	                    // Filter based on rating
+	                    if (!Ratings.selected(score)) {
+	                        return;
+	                    }
+	                    var bounds = Map.map.getBounds();
+	                    // TODO time filtering
+	                    if (!minTime || surveyPoint.timestamp._epoch < minTime) {
+	                        minTime = surveyPoint.timestamp._epoch;
+	                    }
+	                    if (!maxTime || surveyPoint.timestamp._epoch > maxTime) {
+	                        maxTime = surveyPoint.timestamp._epoch;
+	                    }
+	                    // Create latlong from data
+	                    var latlng = pointLatlng(surveyPoint);
+	                    // Check if the point is within the map
+	                    if (!bounds.contains(latlng)) {
+	                        return;
+	                    }
+	                    // Part filtering
+	                    var length = surveyParts[survey].length;
+	                    for (var i = 0; i < length; i++) {
+	                        var part = surveyParts[survey][i];
+	                        if (surveys[survey].parts[part].selected && !surveys[survey].parts[part].selected(surveyPoint)) {
+	                            return;
+	                        }
+	                    }
+	                    // Get color for point
+	                    var color = pointColor(survey, surveyPoint);
+	                    if (color) {
+	                        // Create point
+	                        var marker = L.circleMarker(latlng, Object.assign({}, config_1.default.defaultMarkerOptions, {
+	                            color: surveyPoint.status === 'approved' ? '#ffffff' : '#666666',
+	                            fillColor: 'hsl(' + color[0] + ', ' + color[1] + '%, ' + color[2] + '%)',
+	                            opacity: 1 - Math.pow(1 - color[3], 2),
+	                            fillOpacity: color[3]
+	                        }));
+	                        markers.push({
+	                            color: color,
+	                            marker: marker,
+	                            time: surveyPoint.timestamp._epoch
+	                        });
+	                    }
+	                });
+	                timescale.extendRange(minTime, maxTime);
+	                console.log('calling redraw with', markers);
+	                // TODO order markers by date?
+	                markers.forEach(function (marker) {
+	                    // Add the point to the layer
+	                    surveyLayers[survey].addLayer(marker.marker);
+	                });
+	                // Add layer to map if not already on it
+	                if (!Map.map.hasLayer(surveyLayers[survey])) {
+	                    Map.map.addLayer(surveyLayers[survey]);
+	                }
+	                setTimeout(surveyMarkerDivs[survey].redraw.bind(null, markers), 0);
+	            })();
+	        }
+	    };
+	    /**
+	     * Redraws all the active surveys
+	     *
+	     * @returns {undefined}
+	     */
+	    var redrawAllActive = function redrawAllActive() {
+	        activeSurveys.forEach(redrawSurveyData);
+	    };
+	    // Create survey selection buttons
+	    createSurveyButtons(surveyButtonsSection);
 	    Ratings.createRatings(ratingsSection);
 	    if (config_1.default.startSurveysEnabled) {
-	        Surveys.toggleSurvey();
-	        Surveys.reloadData();
+	        toggleSurvey();
+	        reloadData();
 	    }
 	}
-	exports.create = create;
-	;
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = create;
-	//# sourceMappingURL=index.js.map
+	exports.default = Surveys;
+	;
 
 /***/ },
 /* 5 */
@@ -13325,6 +13957,7 @@
 	    var element = void 0;
 	    parentElement.appendChild(element = document.createElement('div'));
 	    parentElement.classList.add('ratings');
+	    // Add ratings buttons to ratings section div
 	    buttons.createButtons(element);
 	}
 	exports.createRatings = createRatings;
@@ -13373,7 +14006,7 @@
 	var color_1 = __webpack_require__(8);
 	var operationSymbols = ['&#8804;', '&oplus;', '&#8805;'];
 	_a = [0, 1, 2], exports.LESS_EQUAL = _a[0], exports.EXCLUSIVE = _a[1], exports.GREATER_EQUAL = _a[2];
-	function FilterButtons(buttons, options, element, _selected) {
+	function FilterButtons(buttons, options, element, _selected /*TODO : string[] | true*/) {
 	    var values = false;
 	    var ids = false;
 	    var listeners = [];
@@ -13386,11 +14019,22 @@
 	    var valueMap = [];
 	    var colored = Boolean(options.enableColor);
 	    options = options || {};
+	    /**@internal
+	     * Clears the last operation timer (used for having a timeout on the
+	     * two-stage operation buttons)
+	     */
 	    var clearLastOperation = function clearLastOperation() {
 	        lastOperation = undefined;
 	        lastOperationIndex = undefined;
 	        lastOperationTimeout = undefined;
 	    };
+	    /**@internal
+	     * Gets an buttons index from a given id using the id and value maps
+	     *
+	     * @param {string|number} id ID to check for the index of
+	     *
+	     * @returns {number|undefined}
+	     */
 	    var getIndex = function getIndex(id) {
 	        var index = void 0;
 	        if (typeof id === 'string') {
@@ -13441,17 +14085,20 @@
 	                    value = Math.round(value);
 	            }
 	            value = Math.max(0, Math.min(value, buttons.length - 1));
+	            //console.log('rounded value is', value);
 	            return value;
 	        } else {
 	            if (options.rounding === 'ceiling') {
 	                var roundedId = void 0;
 	                for (var i = 0; i < buttons.length - 1; i++) {
+	                    // Calculate upper value
 	                    var upperValue = getValue(i);
 	                    if (value < upperValue) {
 	                        roundedId = i;
 	                        break;
 	                    }
 	                }
+	                //console.log('rounding got', value, roundedId);
 	                if (roundedId === undefined) {
 	                    value = buttons.length - 1;
 	                } else {
@@ -13460,12 +14107,14 @@
 	            } else if (options.rounding === 'floor') {
 	                var _roundedId = void 0;
 	                for (var _i = buttons.length - 1; _i > 0; _i--) {
+	                    // Calculate upper value
 	                    var _upperValue = getValue(_i);
 	                    if (value >= _upperValue) {
 	                        _roundedId = _i;
 	                        break;
 	                    }
 	                }
+	                //console.log('rounding got', value, roundedId);
 	                if (_roundedId === undefined) {
 	                    value = 0;
 	                } else {
@@ -13474,6 +14123,7 @@
 	            } else {
 	                var _roundedId2 = void 0;
 	                for (var _i2 = 0; _i2 < buttons.length - 1; _i2++) {
+	                    // Calculate upper value
 	                    var currentValue = getValue(_i2);
 	                    var _upperValue2 = currentValue + (getValue(_i2 + 1) - currentValue) / 2;
 	                    if (value < _upperValue2) {
@@ -13481,6 +14131,7 @@
 	                        break;
 	                    }
 	                }
+	                //console.log('rounding got', value, roundedId);
 	                if (_roundedId2 === undefined) {
 	                    value = buttons.length - 1;
 	                } else {
@@ -13491,6 +14142,7 @@
 	        return value;
 	    };
 	    var updateButtonStyle = function updateButtonStyle(id, div, select) {
+	        //console.log('updateButtonStyle called', id, select, colored, buttons[id].color);
 	        if (select) {
 	            div.classList.add('selected');
 	            if (colored) {
@@ -13521,6 +14173,7 @@
 	        }
 	    };
 	    var updateStyle = function updateStyle(buttonId, select, div) {
+	        //console.log('updateStyle called', buttonId, select, div);
 	        if (buttonId !== undefined) {
 	            var index = void 0;
 	            if ((index = getIndex(buttonId)) !== undefined) {
@@ -13551,6 +14204,7 @@
 	        }
 	        switch (operation) {
 	            case exports.EXCLUSIVE:
+	                // Clear the currently selected
 	                _selected.length = 0;
 	                _selected.push(index);
 	                updateStyle();
@@ -13558,6 +14212,7 @@
 	            case exports.LESS_EQUAL:
 	            case exports.GREATER_EQUAL:
 	                if (exclusive) {
+	                    // Clear the currently selected
 	                    _selected.length = 0;
 	                    updateStyle();
 	                } else {
@@ -13566,6 +14221,7 @@
 	                }
 	                if (operation === exports.LESS_EQUAL) {
 	                    for (var i = index; i >= 0; i--) {
+	                        // Add to selected if not already in there
 	                        if (_selected.indexOf(i) === -1) {
 	                            _selected.push(i);
 	                            updateStyleById(i, true);
@@ -13573,6 +14229,7 @@
 	                    }
 	                } else {
 	                    for (var _i3 = index; _i3 < buttons.length; _i3++) {
+	                        // Add to selected if not already in there
 	                        if (_selected.indexOf(_i3) === -1) {
 	                            _selected.push(_i3);
 	                            updateStyleById(_i3, true);
@@ -13580,10 +14237,12 @@
 	                    }
 	                }
 	                if (lastOperation !== undefined && options.operationTimeout) {
+	                    // create timeout to clear lastOperation
 	                    lastOperationTimeout = setTimeout(clearLastOperation, options.operationTimeout);
 	                }
 	                break;
 	            default:
+	                // Toggle given id value
 	                var selectedIndex = void 0;
 	                if ((selectedIndex = _selected.indexOf(index)) === -1) {
 	                    _selected.push(index);
@@ -13599,6 +14258,7 @@
 	                break;
 	        }
 	        if (event instanceof Event) {
+	            // Toggle all buttons
 	            allButtons.forEach(function (button) {
 	                if (_selected.length === buttons.length) {
 	                    button.classList.add('selected');
@@ -13606,11 +14266,27 @@
 	                    button.classList.remove('selected');
 	                }
 	            });
+	            // Run listeners
 	            listeners.forEach(function (callback) {
 	                callback();
 	            });
 	        }
 	    };
+	    /**
+	     * Changes the selected values based on a given value and an operation
+	     *
+	     * @param {string|number} id ID of the value to use for the change in
+	     *   selection, either the index of the item in the button array, or the
+	     *   id value of an item in the button array (will be checked in that order)
+	     * @param {number} [operation] Operation to carry out in selection
+	     * @param {Event|boolean} [event] If an event, the event will be checked
+	     *   to see if the default has been prevented, if so, the selection will not
+	     *   run. Default will also be prevented if it does run. If true, the current
+	     *   selection will be cleared before the operation. If false (default), the
+	     *   current selection will not be cleared.
+	     *
+	     * @returns {boolean} Whether or not the selection operation was carried out
+	     */
 	    var select = function select(id, operation, event) {
 	        if (event instanceof Event) {
 	            if (event.defaultPrevented) {
@@ -13622,6 +14298,7 @@
 	            clearTimeout(lastOperationTimeout);
 	            lastOperationTimeout = undefined;
 	        }
+	        //console.log('select called', id, operation);
 	        if (id === undefined || typeof id === 'boolean' || id instanceof Array) {
 	            if (id === undefined) {
 	                if (_selected.length === buttons.length) {
@@ -13645,12 +14322,14 @@
 	            updateStyle();
 	        } else {
 	            var index = void 0;
+	            // Map id to index
 	            if ((index = getIndex(id)) === undefined) {
 	                console.log('couldn\'t find index for', id);
 	                return false;
 	            }
 	            selectById(index, operation);
 	        }
+	        // Toggle all buttons
 	        allButtons.forEach(function (button) {
 	            if (_selected.length === buttons.length) {
 	                button.classList.add('selected');
@@ -13658,6 +14337,7 @@
 	                button.classList.remove('selected');
 	            }
 	        });
+	        // Run listeners
 	        listeners.forEach(function (callback) {
 	            callback();
 	        });
@@ -13692,6 +14372,7 @@
 	            }
 	            button.appendChild(span = document.createElement('span'));
 	            span.innerHTML = getLabel(buttonIndex);
+	            // Add the operation buttons
 	            operationSymbols.forEach(function (symbol, operation) {
 	                if (operation === 0 && buttonIndex === 0 || operation == 2 && buttonIndex === buttons.length - 1) {
 	                    return;
@@ -13706,6 +14387,7 @@
 	            updateButtonStyle(buttonIndex, button, _selected.indexOf(buttonIndex) !== -1);
 	        });
 	    };
+	    // Create a map of string ids to button array index
 	    buttons.forEach(function (buttonData, buttonIndex) {
 	        if (!ids && buttonData.id !== undefined) {
 	            idMap[buttonData.id] = buttonIndex;
@@ -13739,6 +14421,7 @@
 	            })();
 	        }
 	    }
+	    // Create the buttons if given an element to put them in
 	    if (element) {
 	        createButtons(element);
 	    }
@@ -13770,15 +14453,19 @@
 	                return _selected.indexOf(index) !== -1;
 	            } else if (typeof id === 'number' && options.numeric) {
 	                id = getIndexFromValue(id);
+	                //console.log('is Selected', id, selected);
 	                return _selected.indexOf(id) !== -1;
 	            }
 	        },
 	        getColor: function getColor(id) {
+	            //console.log('getColor called', id);
 	            var index = void 0;
 	            if ((index = getIndex(id)) !== undefined) {
 	                return buttons[index].color;
 	            } else if (typeof id === 'number' && options.numeric) {
+	                //console.log('numeric');
 	                id = getIndexFromValue(id);
+	                //console.log('color of', id, buttons[id].color);
 	                return buttons[id].color;
 	            }
 	        },
@@ -13808,11 +14495,11 @@
 
 	"use strict";
 
-	function hslColor(color) {
+	function hslColor(color, noOpacity) {
 	    if (typeof color === 'string') {
 	        return color;
 	    } else if (color instanceof Array) {
-	        if (color.length === 4) {
+	        if (!noOpacity && color.length === 4) {
 	            return "hsla(" + color[0] + ", " + color[1] + "%, " + color[2] + "%, " + color[3] + ")";
 	        }
 	        return "hsl(" + color[0] + ", " + color[1] + "%, " + color[2] + "%)";
@@ -13822,463 +14509,7 @@
 	exports.default = hslColor;
 
 /***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	var Map = __webpack_require__(1);
-	var quality = __webpack_require__(10);
-	var litter = __webpack_require__(19);
-	var Time = __webpack_require__(16);
-	var Ratings = __webpack_require__(5);
-	var Controls = __webpack_require__(3);
-	var config_1 = __webpack_require__(6);
-	var nanoajax = __webpack_require__(18);
-	;
-	exports.surveyData = {};
-	exports.surveys = {
-	    quality: quality,
-	    litter: litter
-	};
-	var activeSurveys = [];
-	var surveyParts = {};
-	var surveyLayers = {};
-	var surveyControls = {};
-	var requestedAreas = {};
-	var allSurveysButton = void 0;
-	var pointLatlng = function pointLatlng(survey) {
-	    return L.latLng([survey.location._wgs84[1], survey.location._wgs84[0]]);
-	};
-	var surveyScore = function surveyScore(surveyType, survey) {
-	    var total = 0;
-	    var items = void 0;
-	    var score = void 0;
-	    if (surveyParts[surveyType] instanceof Array && (items = surveyParts[surveyType].length) !== 0) {
-	        surveyParts[surveyType].forEach(function (part) {
-	            if (typeof (score = exports.surveys[surveyType].parts[part].score(survey)) === 'number') {
-	                total += score;
-	            } else {
-	                items--;
-	            }
-	        });
-	        if (items) {
-	            return Math.round(total / items);
-	        }
-	    }
-	};
-	var pointColor = function pointColor(surveyType, survey) {
-	    var score = 0;
-	    var items = 0;
-	    var currentTime = new Date().getTime();
-	    var h,
-	        s,
-	        l,
-	        o = 1;
-	    var value;
-	    var color = void 0;
-	    var length = surveyParts[surveyType].length;
-	    if (!length) {
-	        return;
-	    } else if (length === 1 && (!exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected || exports.surveys[surveyType].parts[surveyParts[surveyType][0]].selected().length)) {
-	        if (color = exports.surveys[surveyType].parts[surveyParts[surveyType][0]].getColor(survey)) {
-	            var _color = color;
-
-	            var _color2 = _slicedToArray(_color, 3);
-
-	            h = _color2[0];
-	            s = _color2[1];
-	            l = _color2[2];
-	        }
-	    } else {
-	        if (color = Ratings.getColor(surveyScore(surveyType, survey))) {
-	            var _color3 = color;
-
-	            var _color4 = _slicedToArray(_color3, 3);
-
-	            h = _color4[0];
-	            s = _color4[1];
-	            l = _color4[2];
-	        }
-	    }
-	    if (Time.selectedTimeType === 'decaying') {
-	        var decay = Math.pow(Time.getDecayAmount(currentTime - survey.timestamp._epoch), 0.5);
-	        if (config_1.default.decaySaturation) {
-	            s = Math.round(s - (s - config_1.default.expiredSaturation) * decay);
-	        }
-	        if (config_1.default.decayLightness) {
-	            l = Math.round(l - (l - config_1.default.expiredLightness) * decay);
-	        }
-	        if (config_1.default.decayOpacity) {
-	            o = 1 - decay;
-	        }
-	    }
-	    if (typeof h === 'undefined') {
-	        return false;
-	    } else {
-	        return [h, s, l, o];
-	    }
-	};
-	var setPartSectionClicked = function setPartSectionClicked(survey, part) {
-	    surveyControls[survey].partFilters[part].clicked = true;
-	};
-	var updateButtonColors = function updateButtonColors() {
-	    var ratingColors = false;
-	    activeSurveys.forEach(function (survey) {
-	        if (surveyParts[survey].length === 0) {
-	            return;
-	        } else if (surveyParts[survey].length === 1 && typeof exports.surveys[survey].parts[surveyParts[survey][0]].color === 'function' && exports.surveys[survey].parts[surveyParts[survey][0]].selected().length) {
-	            Ratings.color(false);
-	            exports.surveys[survey].parts[surveyParts[survey][0]].color(true);
-	            if (surveyControls[survey].partFilters[surveyParts[survey][0]] !== undefined && !surveyControls[survey].partFilters[surveyParts[survey][0]].clicked) {
-	                surveyControls[survey].partFilters[surveyParts[survey][0]].collapse(false);
-	            }
-	        } else {
-	            ratingColors = true;
-	            surveyParts[survey].forEach(function (p) {
-	                exports.surveys[survey].parts[p].color(false);
-	                if (surveyControls[survey].partFilters[p] !== undefined && !surveyControls[survey].partFilters[p].clicked) {
-	                    surveyControls[survey].partFilters[p].collapse(true);
-	                }
-	            });
-	        }
-	    });
-	    Ratings.color(ratingColors);
-	};
-	function createSurveyButtons(parentElement) {
-	    parentElement.classList.add('surveys');
-	    var buttons = void 0,
-	        parts = void 0;
-	    Map.addListener(reloadData);
-	    Time.addListener(redrawAllActive);
-	    Ratings.addListener(redrawAllActive);
-	    parentElement.appendChild(buttons = document.createElement('div'));
-	    parentElement.appendChild(parts = document.createElement('div'));
-	    allSurveysButton = document.createElement('button');
-	    buttons.appendChild(allSurveysButton);
-	    var span = void 0;
-	    allSurveysButton.appendChild(span = document.createElement('span'));
-	    span.innerHTML = 'All';
-	    allSurveysButton.addEventListener('click', toggleSurvey.bind(null, false));
-	    Object.keys(exports.surveys).forEach(function (s) {
-	        var survey = exports.surveys[s];
-	        var button = document.createElement('button');
-	        var defaults = _typeof(config_1.default.defaultSurveys) === 'object' && config_1.default.defaultSurveys[s] !== undefined;
-	        buttons.appendChild(button);
-	        var span = void 0;
-	        button.appendChild(span = document.createElement('span'));
-	        span.innerHTML = survey.label;
-	        button.title = survey.description || '';
-	        button.addEventListener('click', toggleSurvey.bind(null, s));
-	        surveyParts[s] = [];
-	        if (defaults) {
-	            activeSurveys.push(s);
-	            button.classList.add('selected');
-	        }
-	        var pbuttons = Controls.addControlSection(survey.label, parentElement);
-	        var pdiv = void 0;
-	        pbuttons.appendChild(pdiv = document.createElement('div'));
-	        var pAllButton = document.createElement('button');
-	        pdiv.appendChild(pAllButton);
-	        pAllButton.appendChild(span = document.createElement('span'));
-	        span.innerHTML = 'All';
-	        pAllButton.addEventListener('click', toggleSurveyPart.bind(null, s, undefined));
-	        surveyControls[s] = {
-	            button: button,
-	            allButton: pAllButton,
-	            partSection: pbuttons,
-	            partButtons: {},
-	            partFilters: {}
-	        };
-	        Object.keys(survey.parts).forEach(function (p) {
-	            var part = survey.parts[p];
-	            var pbutton = document.createElement('button');
-	            surveyControls[s].partButtons[p] = pbutton;
-	            pdiv.appendChild(pbutton);
-	            pbutton.appendChild(span = document.createElement('span'));
-	            span.innerHTML = part.label;
-	            pbutton.title = part.description || '';
-	            pbutton.addEventListener('click', toggleSurveyPart.bind(null, s, p));
-	            if (defaults) {
-	                if (config_1.default.defaultSurveys[s] === true || _typeof(config_1.default.defaultSurveys[s]) === 'object' && config_1.default.defaultSurveys[s][p] !== undefined) {
-	                    surveyParts[s].push(p);
-	                    pbutton.classList.add('selected');
-	                }
-	            } else {
-	                pbuttons.style.display = 'none';
-	            }
-	            if (part.createButtons) {
-	                var pfilters = Controls.addControlSection(part.label, pbuttons);
-	                var div = void 0;
-	                surveyControls[s].partFilters[p] = pfilters;
-	                pfilters.addEventListener('click', setPartSectionClicked.bind(null, s, p));
-	                pfilters.appendChild(div = document.createElement('div'));
-	                if (!defaults || defaults && _typeof(config_1.default.defaultSurveys[s]) === 'object') {
-	                    if (!defaults || config_1.default.defaultSurveys[s][p] !== true && _typeof(config_1.default.defaultSurveys[s][p]) !== 'object') {
-	                        pfilters.style.display = 'none';
-	                    }
-	                    part.select(!defaults || config_1.default.defaultSurveys[s][p] === undefined ? config_1.default.startFiltersEnabled : config_1.default.defaultSurveys[s][p]);
-	                }
-	                part.createButtons(div);
-	                part.addListener(function () {
-	                    updateButtonColors();
-	                    redrawSurveyData(s);
-	                });
-	            }
-	        });
-	    });
-	    updateButtonColors();
-	    reloadData();
-	}
-	exports.createSurveyButtons = createSurveyButtons;
-	;
-	function addSurveyData(type, data) {
-	    if (_typeof(exports.surveyData[type]) !== 'object') {
-	        exports.surveyData[type] = {};
-	    }
-	    data.forEach(function (survey) {
-	        exports.surveyData[type][survey._id['$oid']] = survey;
-	    });
-	}
-	exports.addSurveyData = addSurveyData;
-	;
-	function toggleSurvey(survey) {
-	    var index = void 0;
-	    var surveyKeys = Object.keys(exports.surveys);
-	    if (survey) {
-	        if (typeof exports.surveys[survey] !== 'undefined') {
-	            if ((index = activeSurveys.indexOf(survey)) !== -1) {
-	                activeSurveys.splice(index, 1);
-	                allSurveysButton.classList.remove('selected');
-	                if (surveyControls[survey].button) {
-	                    surveyControls[survey].button.classList.remove('selected');
-	                }
-	                if (typeof surveyLayers[survey] !== 'undefined') {
-	                    if (Map.map.hasLayer(surveyLayers[survey])) {
-	                        Map.map.removeLayer(surveyLayers[survey]);
-	                    }
-	                }
-	                surveyControls[survey].partSection.style.display = 'none';
-	            } else {
-	                activeSurveys.push(survey);
-	                if (surveyKeys.length === activeSurveys.length) {
-	                    allSurveysButton.classList.add('selected');
-	                }
-	                if (surveyControls[survey].button) {
-	                    surveyControls[survey].button.classList.add('selected');
-	                }
-	                if (typeof surveyLayers[survey] !== 'undefined') {
-	                    if (!Map.map.hasLayer(surveyLayers[survey])) {
-	                        Map.map.addLayer(surveyLayers[survey]);
-	                    }
-	                }
-	                surveyControls[survey].partSection.style.display = '';
-	                reloadData(survey);
-	            }
-	        }
-	    } else {
-	        if (activeSurveys.length === 0 || surveyKeys.length !== activeSurveys.length) {
-	            surveyKeys.forEach(function (survey) {
-	                if (activeSurveys.indexOf(survey) === -1) {
-	                    toggleSurvey(survey);
-	                }
-	            });
-	            allSurveysButton.classList.add('selected');
-	        } else {
-	            surveyKeys.forEach(function (survey) {
-	                toggleSurvey(survey);
-	            });
-	            allSurveysButton.classList.remove('selected');
-	        }
-	    }
-	    updateButtonColors();
-	}
-	exports.toggleSurvey = toggleSurvey;
-	;
-	function toggleSurveyPart(survey, part) {
-	    var index = void 0;
-	    if (typeof exports.surveys[survey] !== 'undefined') {
-	        var partKeys = Object.keys(exports.surveys[survey].parts);
-	        if (part) {
-	            if (typeof exports.surveys[survey].parts[part] !== 'undefined') {
-	                if (typeof surveyParts[survey] === 'undefined') {
-	                    surveyParts[survey] = [];
-	                }
-	                if ((index = surveyParts[survey].indexOf(part)) !== -1) {
-	                    surveyParts[survey].splice(index, 1);
-	                    surveyControls[survey].allButton.classList.remove('selected');
-	                    if (surveyControls[survey].partButtons[part]) {
-	                        surveyControls[survey].partButtons[part].classList.remove('selected');
-	                    }
-	                    if (surveyControls[survey].partFilters[part]) {
-	                        surveyControls[survey].partFilters[part].style.display = 'none';
-	                    }
-	                } else {
-	                    surveyParts[survey].push(part);
-	                    if (partKeys.length === surveyParts[survey].length) {
-	                        surveyControls[survey].allButton.classList.add('selected');
-	                    }
-	                    if (surveyControls[survey].partButtons[part]) {
-	                        surveyControls[survey].partButtons[part].classList.add('selected');
-	                    }
-	                    if (surveyControls[survey].partFilters[part]) {
-	                        surveyControls[survey].partFilters[part].style.display = '';
-	                    }
-	                }
-	            }
-	        } else {
-	            if (surveyParts[survey].length === 0 || partKeys.length !== surveyParts[survey].length) {
-	                partKeys.forEach(function (p) {
-	                    surveyControls[survey].partButtons[p].classList.add('selected');
-	                });
-	                surveyParts[survey] = partKeys;
-	                surveyControls[survey].allButton.classList.add('selected');
-	            } else {
-	                partKeys.forEach(function (p) {
-	                    surveyControls[survey].partButtons[p].classList.remove('selected');
-	                });
-	                surveyParts[survey] = [];
-	                surveyControls[survey].allButton.classList.remove('selected');
-	            }
-	        }
-	        updateButtonColors();
-	        if (activeSurveys.indexOf(survey) !== -1) {
-	            redrawSurveyData(survey);
-	        }
-	    }
-	}
-	exports.toggleSurveyPart = toggleSurveyPart;
-	;
-	function reloadData(survey) {
-	    var toFetch = [];
-	    if (typeof survey === 'string' && typeof exports.surveys[survey] === 'undefined') {
-	        throw new Error("Unknown survey " + survey);
-	    }
-	    var bounds = Map.map.getBounds();
-	    var getParams = {
-	        ne: bounds.getNorth() + ',' + bounds.getEast(),
-	        sw: bounds.getSouth() + ',' + bounds.getWest()
-	    };
-	    var checkPreviousLoads = function checkPreviousLoads(survey) {
-	        if (typeof requestedAreas[survey] !== 'undefined') {
-	            if (typeof requestedAreas[survey].find(function (area) {
-	                if (area.contains(bounds)) {
-	                    return true;
-	                }
-	            }) === 'undefined') {
-	                toFetch.push(survey);
-	            }
-	        } else {
-	            toFetch.push(survey);
-	        }
-	    };
-	    if (typeof survey === 'string') {
-	        checkPreviousLoads(survey);
-	    } else {
-	        activeSurveys.forEach(checkPreviousLoads);
-	    }
-	    toFetch.forEach(function (survey) {
-	        var params = Object.assign({}, getParams, exports.surveys[survey].getParams);
-	        var get = [];
-	        Object.keys(params).forEach(function (param) {
-	            get.push(param + '=' + encodeURIComponent(params[param]));
-	        });
-	        if (get.length) {
-	            get = '?' + get.join('&');
-	        } else {
-	            get = '';
-	        }
-	        nanoajax.ajax({
-	            url: exports.surveys[survey].url + get,
-	            headers: {
-	                Accept: 'javascript/json'
-	            }
-	        }, function (code, responseText) {
-	            var data;
-	            if (code === 200) {
-	                try {
-	                    data = JSON.parse(responseText);
-	                    console.log('get response for', exports.surveys[survey].url, get, data);
-	                } catch (err) {
-	                    console.error('Error parsing response', exports.surveys[survey].url, get, responseText);
-	                    return;
-	                }
-	                if ((typeof data === "undefined" ? "undefined" : _typeof(data)) === 'object' && data.results && data.results instanceof Array) {
-	                    addSurveyData(survey, data.results);
-	                    if (typeof requestedAreas[survey] === 'undefined') {
-	                        requestedAreas[survey] = [];
-	                    }
-	                    requestedAreas[survey].push(bounds);
-	                    redrawSurveyData(survey);
-	                } else {
-	                    console.error('Unknown data received');
-	                }
-	            }
-	        });
-	    });
-	    if (typeof survey === 'string' && !toFetch.length) {
-	        redrawSurveyData(survey);
-	    }
-	}
-	exports.reloadData = reloadData;
-	function redrawSurveyData(survey) {
-	    console.log('Redrawing', survey);
-	    if (typeof exports.surveyData[survey] !== 'undefined') {
-	        if (typeof surveyLayers[survey] === 'undefined') {
-	            surveyLayers[survey] = L.layerGroup([]);
-	        } else {
-	            surveyLayers[survey].clearLayers();
-	        }
-	        var markers = [];
-	        Object.keys(exports.surveyData[survey]).forEach(function (point) {
-	            var surveyPoint = exports.surveyData[survey][point];
-	            var score = surveyScore(survey, surveyPoint);
-	            if (!Ratings.selected(score)) {
-	                return;
-	            }
-	            var length = surveyParts[survey].length;
-	            for (var i = 0; i < length; i++) {
-	                var part = surveyParts[survey][i];
-	                if (exports.surveys[survey].parts[part].selected && !exports.surveys[survey].parts[part].selected(surveyPoint)) {
-	                    return;
-	                }
-	            }
-	            var latlng = pointLatlng(surveyPoint);
-	            var color = pointColor(survey, surveyPoint);
-	            if (color) {
-	                var marker = L.circleMarker(latlng, Object.assign({}, config_1.default.defaultMarkerOptions, {
-	                    color: surveyPoint.status === 'approved' ? '#ffffff' : '#666666',
-	                    fillColor: 'hsl(' + color[0] + ', ' + color[1] + '%, ' + color[2] + '%)',
-	                    opacity: 1 - Math.pow(1 - color[3], 2),
-	                    fillOpacity: color[3]
-	                }));
-	                markers.push({
-	                    marker: marker,
-	                    time: surveyPoint.timestamp._epoch
-	                });
-	            }
-	        });
-	        markers.forEach(function (marker) {
-	            surveyLayers[survey].addLayer(marker.marker);
-	        });
-	        if (!Map.map.hasLayer(surveyLayers[survey])) {
-	            Map.map.addLayer(surveyLayers[survey]);
-	        }
-	    }
-	}
-	exports.redrawSurveyData = redrawSurveyData;
-	;
-	function redrawAllActive() {
-	    activeSurveys.forEach(redrawSurveyData);
-	}
-	exports.redrawAllActive = redrawAllActive;
-	;
-
-/***/ },
+/* 9 */,
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -14303,7 +14534,6 @@
 	    temperature: Temperature,
 	    turbidity: Turbidity
 	};
-	//# sourceMappingURL=index.js.map
 
 /***/ },
 /* 11 */
@@ -14465,7 +14695,7 @@
 	var ratings_1 = __webpack_require__(5);
 	var filterButtons_1 = __webpack_require__(7);
 	exports.label = 'pH';
-	exports.description = "For the Thames to support a variety of wildlife, the water mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would have been affected by pollution from industry, killing all wildlife. These days, we would expect the water to be neutral (neither acid nor alkali) which is better for wildlife. Volunteers measure the pH of the water to find this out.";
+	exports.description = 'For the Thames to support a variety of wildlife, the water mustn\u2019t be too acid or alkali. In the past, the pH of the Thames would have been affected by pollution from industry, killing all wildlife. These days, we would expect the water to be neutral (neither acid nor alkali) which is better for wildlife. Volunteers measure the pH of the water to find this out.';
 	var filterValues = [{
 	    color: [358, 80, 35]
 	}, {
@@ -14794,9 +15024,20 @@
 	        label: 'Ranged'
 	    }
 	};
+	/**
+	 * Calculates the decay against the current halflife amount given either
+	 * a time amount, a date (the decay will be calculated against the current
+	 * time), or two current.
+	 *
+	 * @param {number | Date} amount Time amount or date to use in calculation of
+	 *   decay amount
+	 * @param {Date} date Date to calculate the decay for
+	 */
 	function getDecayAmount(amount, date) {
 	    if (exports.selectedTimeType === 'decaying') {
 	        var halflife = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].time;
+	        //var halflife = halflifeLengths[4][1];
+	        // Calculate how many "decayed" the survey is
 	        if (amount instanceof Date) {
 	            if (date instanceof Date) {} else if (typeof date === 'amount') {
 	                date = new Date(date);
@@ -14817,11 +15058,24 @@
 	        callback();
 	    });
 	};
+	/**
+	 * Add a listener to be called with the time type or time values are updated
+	 *
+	 * @param {Function} callback Function to call when the time type or values are
+	 *  are updated
+	 */
 	function addListener(callback) {
 	    timeListeners.push(callback);
 	}
 	exports.addListener = addListener;
 	;
+	/**
+	 * Sets the time type to the time type of the given id
+	 *
+	 * @param {string} type ID of the given time type
+	 *
+	 * @returns {undefined}
+	 */
 	function selectTimeType(type) {
 	    if (typeof exports.timeTypes[type] !== 'undefined') {
 	        Object.keys(exports.timeTypes).forEach(function (time) {
@@ -14832,10 +15086,13 @@
 	                timeType.button.classList.remove('selected');
 	            }
 	        });
+	        // Update
 	        if (exports.selectedTimeType !== type) {
 	            exports.selectedTimeType = type;
+	            // Update slider options
 	            switch (type) {
 	                case 'decaying':
+	                    // Hide ranger
 	                    rangeDiv.style.display = '';
 	                    timeSlider.noUiSlider.updateOptions({
 	                        range: {
@@ -14844,11 +15101,13 @@
 	                        }
 	                    });
 	                    timeSlider.noUiSlider.set([3]);
+	                    // Update range labels
 	                    rangeTitle.innerHTML = 'Survey Halflife:';
 	                    minLimit.innerHTML = config_1.default.halflifeLengths[0].label;
 	                    maxLimit.innerHTML = config_1.default.halflifeLengths[config_1.default.halflifeLengths.length - 1].label;
 	                    break;
 	                case 'none':
+	                    // Hide ranger
 	                    rangeDiv.style.display = 'none';
 	                    break;
 	            }
@@ -14860,6 +15119,21 @@
 	}
 	exports.selectTimeType = selectTimeType;
 	;
+	/*
+	  <div id="range">
+	    <div id="rangeTitle">Range:</div>
+	    <div class="range key">&nbsp;
+	      <div class="min" id="lowerValue">dsfd</div>
+	      <div class="max" id="upperValue">dsfds</div>
+	    </div>
+	    <div id="timeSlider"></div>
+	    <div class="separatedRange">
+	      <div class="min" id="lowerValue"></div>
+	      <div class="separator" id="valueSeparator"></div>
+	      <div class="max" id="upperValue"></div>
+	    </div>
+	  </div>
+	*/
 	function createTimeSection(parentElement) {
 	    var element = void 0,
 	        div = void 0;
@@ -14882,6 +15156,7 @@
 	        button.addEventListener('click', selectTimeType.bind(null, time));
 	    });
 	    parentElement.appendChild(rangeDiv = document.createElement('div'));
+	    // Range
 	    rangeDiv.appendChild(rangeTitle = document.createElement('div'));
 	    rangeTitle.innerHTML = 'Range:';
 	    rangeDiv.appendChild(div = document.createElement('div'));
@@ -14890,7 +15165,9 @@
 	    minLimit.classList.add('min');
 	    div.appendChild(maxLimit = document.createElement('div'));
 	    maxLimit.classList.add('max');
+	    // Create the time slider
 	    rangeDiv.appendChild(timeSlider = document.createElement('div'));
+	    // Limit values
 	    rangeDiv.appendChild(div = document.createElement('div'));
 	    div.classList.add('separatedRange');
 	    div.appendChild(lowerValue = document.createElement('div'));
@@ -14907,7 +15184,13 @@
 	            max: config_1.default.halflifeLengths.length - 1
 	        }
 	    });
+	    /**
+	     * Handles an update to the slider value(s) by change the value text(s)
+	     *
+	     * @returns {undefined}
+	     */
 	    var sliderUpdate = function sliderUpdate() {
+	        // Update value
 	        switch (exports.selectedTimeType) {
 	            case 'decaying':
 	                lowerValue.innerText = config_1.default.halflifeLengths[Math.round(timeSlider.noUiSlider.get())].label;
@@ -14916,6 +15199,7 @@
 	    };
 	    timeSlider.noUiSlider.on('update', sliderUpdate);
 	    timeSlider.noUiSlider.on('change', callListeners);
+	    // Default to decaying
 	    selectTimeType(config_1.default.defaultTime);
 	}
 	exports.createTimeSection = createTimeSection;
@@ -17106,6 +17390,7 @@
 	var Packaging = __webpack_require__(22);
 	var Sewage = __webpack_require__(23);
 	var Plastic = __webpack_require__(24);
+	//import * as Other from './other';
 	exports.label = 'Litter Monitoring';
 	exports.layerId = 'thames21Litter';
 	exports.url = 'https://widget.cartographer.io/api/v1/map';
@@ -17128,7 +17413,7 @@
 
 	var Litter = __webpack_require__(21);
 	exports.label = 'Food Related';
-	exports.description = "This category refers to any litter that originates from the food industry. It is further categorised by material, including: plastic (e.g. drink bottle, food wrapper); metal (e.g. drink cans, bottle top); polystyrene (e.g. takeaway container, cups); or other (e.g. glass, paper, wood, cork).";
+	exports.description = 'This category refers to any litter that originates from the food industry. It is further categorised by material, including: plastic (e.g. drink bottle, food wrapper); metal (e.g. drink cans, bottle top); polystyrene (e.g. takeaway container, cups); or other (e.g. glass, paper, wood, cork).';
 	var getValue = function getValue(survey) {
 	  return survey ? survey.attributes.thames21LitterFoodRelated : undefined;
 	};
@@ -17223,7 +17508,7 @@
 
 	var Litter = __webpack_require__(21);
 	exports.label = 'Packaging';
-	exports.description = "Non-food related packaging is a separate category that includes plastic shopping bags, refuse sacks, and bottles/containers not used for food (e.g. cosmetics, pharmaceutical).";
+	exports.description = 'Non-food related packaging is a separate category that includes plastic shopping bags, refuse sacks, and bottles/containers not used for food (e.g. cosmetics, pharmaceutical).';
 	var getValue = function getValue(survey) {
 	  return survey ? survey.attributes.thames21LitterPackaging : undefined;
 	};
@@ -17246,7 +17531,7 @@
 
 	var Litter = __webpack_require__(21);
 	exports.label = 'Sewage Related';
-	exports.description = "This category refers to any litter that is expected to have been discarded down a toilet. This includes baby wipes, sanitary towels, cotton-bud sticks, nappies and syringes.";
+	exports.description = 'This category refers to any litter that is expected to have been discarded down a toilet. This includes baby wipes, sanitary towels, cotton-bud sticks, nappies and syringes.';
 	var getValue = function getValue(survey) {
 	  return survey ? survey.attributes.thames21LitterSewageRelated : undefined;
 	};
@@ -17269,7 +17554,7 @@
 
 	var Litter = __webpack_require__(21);
 	exports.label = 'Unidentified Plastic';
-	exports.description = "During our foreshore clean-ups on the Thames, we consistently find fragments of plastic that has already begun to degrade and so cannot be identified. Such plastic fragments are frequently ingested by wildlife and present a significant threat to their health.";
+	exports.description = 'During our foreshore clean-ups on the Thames, we consistently find fragments of plastic that has already begun to degrade and so cannot be identified. Such plastic fragments are frequently ingested by wildlife and present a significant threat to their health.';
 	var getValue = function getValue(survey) {
 	  return survey ? survey.attributes.thames21LitterUnidentifiedPlastic : undefined;
 	};
@@ -17283,6 +17568,299 @@
 	  return Litter.score(getValue(survey));
 	};
 	exports.createButtons = Litter.createButtons, exports.select = Litter.select, exports.addListener = Litter.addListener, exports.color = Litter.color;
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var color_1 = __webpack_require__(8);
+	var makeTime = function makeTime(time) {
+	    if (typeof time === 'number') {
+	        time = new Date(time);
+	    }
+	    return time;
+	};
+	/**
+	 * Can have any number of marker sections, but only a single range down the
+	 * bottom.
+	 */
+	function Timescale(element, options) {
+	    var timeRanges = [],
+	        markerDivs = [];
+	    var timeRange = TimeRange();
+	    options = Object.assign({
+	        markerWidth: 10,
+	        minMarkerSpacing: 2
+	    }, options);
+	    var position = function position(time) {
+	        var currentRange = timeRange.getRange();
+	        time = makeTime(time);
+	        if (!currentRange === undefined) {
+	            return undefined;
+	        }
+	        // Get range difference
+	        var rangeDifference = currentRange[1].getTime() - currentRange[0].getTime();
+	        // Get time difference
+	        var timeDifference = time.getTime() - currentRange[0].getTime();
+	        if (timeDifference < 0 || timeDifference > rangeDifference) {
+	            return undefined;
+	        }
+	        // Calculate the relative position
+	        return (element.clientWidth - options.markerWidth) * (timeDifference / rangeDifference);
+	    };
+	    var TimeSlider = function TimeSlider(initialMinTime, initialMaxTime) {
+	        var timeRange = TimeRange(initialMinTime, initialMaxTime);
+	        // Create range sliders
+	        var minSlider = void 0,
+	            maxSlider = void 0,
+	            div = void 0;
+	        element.appendChild(minSlider = document.createElement('div'));
+	        minSlider.classList.add('slider', 'min');
+	        minSlider.appendChild(div = document.createElement('div'));
+	        div.classList.add('bar');
+	        minSlider.appendChild(div = document.createElement('div'));
+	        div.classList.add('arrow');
+	        element.appendChild(maxSlider = document.createElement('div'));
+	        maxSlider.classList.add('slider', 'max');
+	        maxSlider.appendChild(div = document.createElement('div'));
+	        div.classList.add('arrow');
+	        maxSlider.appendChild(div = document.createElement('div'));
+	        div.classList.add('bar');
+	        var updateSliders = function updateSliders() {};
+	        return {
+	            getRange: timeRange.getRange,
+	            setRange: function setRange(newMinTime, newMaxTime) {
+	                timeRange.setRange(newMinTime, newMaxTime);
+	                updateSliders();
+	            }
+	        };
+	    };
+	    var TimeMarkerDiv = function TimeMarkerDiv(initialMarkers) {
+	        var markerDiv = document.createElement('div');
+	        markerDiv.classList.add('markers');
+	        element.insertBefore(markerDiv, element.firstChild);
+	        /**
+	         * Redraws all of the markers
+	         */
+	        var redraw = function redraw(markers) {
+	            console.log('redraw called with markers', markers);
+	            if (markers === undefined) {
+	                return;
+	            }
+	            // Clear the current elements
+	            markerDiv.innerHTML = '';
+	            // Calculate the seconds per pixel
+	            var currentRange = timeRange.getRange();
+	            var currentGroup = [];
+	            var minPosition = void 0;
+	            var markerBuffer = options.markerWidth + options.minMarkerSpacing;
+	            var createMarker = function createMarker() {
+	                var div = void 0;
+	                markerDiv.appendChild(div = document.createElement('div'));
+	                if (currentGroup.length === 1) {
+	                    div.classList.add('marker');
+	                    div.style.background = color_1.default(currentGroup[0].marker.color, true);
+	                    div.style.left = currentGroup[0].position + 'px';
+	                    minPosition = currentGroup[0].position + markerBuffer;
+	                } else {
+	                    if (options.averageColor) {
+	                        var averageColor = currentGroup.reduce(function (reducedColor, marker) {
+	                            return [reducedColor[0] + marker.marker.color[0], reducedColor[1] + marker.marker.color[1], reducedColor[2] + marker.marker.color[2]];
+	                        }, [0, 0, 0]);
+	                        averageColor = [averageColor[0] / currentGroup.length, averageColor[1] / currentGroup.length, averageColor[2] / currentGroup.length];
+	                        div.style.background = color_1.default(averageColor);
+	                    } else {
+	                        (function () {
+	                            var colorMap = {};
+	                            currentGroup.forEach(function (marker) {
+	                                var markerColor = marker.marker.color.slice(0, 3);
+	                                console.log('markerColor', markerColor);
+	                                if (colorMap[markerColor.toString()] === undefined) {
+	                                    colorMap[markerColor.toString()] = {
+	                                        color: markerColor,
+	                                        count: 1
+	                                    };
+	                                } else {
+	                                    colorMap[markerColor.toString()].count++;
+	                                }
+	                            });
+	                            if (Object.keys(colorMap).length === 1) {
+	                                div.style.background = color_1.default(currentGroup[0].marker.color, true);
+	                            } else {
+	                                (function () {
+	                                    var colorString = '';
+	                                    var pixels = 0;
+	                                    Object.keys(colorMap).forEach(function (id) {
+	                                        colorString += (pixels ? ', ' : '') + color_1.default(colorMap[id].color, true) + (pixels ? pixels + 'px' : '') + ', ';
+	                                        pixels += colorMap[id].count / currentGroup.length * options.markerWidth;
+	                                        colorString += color_1.default(colorMap[id].color) + (pixels ? pixels + 'px' : '');
+	                                    });
+	                                    div.style.background = 'linear-gradient(to bottom, ' + colorString + ')';
+	                                })();
+	                            }
+	                        })();
+	                    }
+	                    div.classList.add('multiMarker');
+	                    var currentPosition = currentGroup[0].position + (currentGroup[currentGroup.length - 1].position - currentGroup[0].position) / 2;
+	                    div.style.left = currentPosition + 'px';
+	                    minPosition = currentPosition + markerBuffer;
+	                }
+	            };
+	            markers.forEach(function (marker) {
+	                var markerPosition = position(marker.time);
+	                if (currentGroup.length) {
+	                    // Check if in current group
+	                    if (markerPosition > minPosition + markerBuffer) {
+	                        // Draw the current group
+	                        createMarker();
+	                        currentGroup = [];
+	                    } else {
+	                        // Add the marker to the group
+	                        currentGroup.push({
+	                            marker: marker,
+	                            position: markerPosition
+	                        });
+	                    }
+	                }
+	                if (!currentGroup.length) {
+	                    minPosition = position(marker.time);
+	                    currentGroup.push({
+	                        marker: marker,
+	                        position: markerPosition
+	                    });
+	                }
+	            });
+	            if (currentGroup.length) {
+	                createMarker();
+	            }
+	        };
+	        if (initialMarkers !== undefined) {
+	            redraw(initialMarkers);
+	        }
+	        return {
+	            redraw: redraw
+	        };
+	    };
+	    element.classList.add('timescale');
+	    // Create time Marker
+	    var timeMarker = void 0;
+	    element.appendChild(timeMarker = document.createElement('div'));
+	    var div = void 0;
+	    timeMarker.appendChild(div = document.createElement('div'));
+	    div.classList.add('line');
+	    timeMarker.classList.add('marker');
+	    return {
+	        // ...timeRange,
+	        setRange: timeRange.setRange,
+	        getRange: timeRange.getRange,
+	        extendRange: timeRange.extendRange,
+	        clearRange: timeRange.clearRange,
+	        resetRange: timeRange.resetRange,
+	        inside: timeRange.inside,
+	        addTimeRange: function addTimeRange(initialMinTime, initialMaxTime) {
+	            return timeRanges.push(TimeSlider(initialMinTime, initialMaxTime));
+	        },
+	        removeTimeRange: function removeTimeRange(id) {
+	            if (timeRanges[id] !== undefined) {
+	                delete timeRanges[id];
+	            }
+	        },
+	        /**
+	         * Adds a marker div
+	         *
+	         * @param {TimePoint|TimePoint[]} [markers] Markers to initially add to the
+	         *   marker div
+	         *
+	         * @returns {number} ID of the new marker div
+	         */
+	        addMarkerDiv: function addMarkerDiv(markers) {
+	            var markerDiv = TimeMarkerDiv(markers);
+	            markerDivs.push(markerDiv);
+	            return markerDiv;
+	        },
+	        /**
+	         * Remove a marker div
+	         *
+	         * @param {number} id ID of the marker div to remove
+	         */
+	        removeMarkerDiv: function removeMarkerDiv(id) {
+	            if (markerDivs[id] !== undefined) {
+	                delete markerDivs[id];
+	            }
+	        }
+	    };
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Timescale;
+	function TimeRange(initialMinTime, initialMaxTime) {
+	    var minTime = void 0,
+	        maxTime = void 0;
+	    var setRange = function setRange(newMinTime, newMaxTime) {
+	        if (newMinTime !== undefined) {
+	            minTime = makeTime(newMinTime);
+	        }
+	        if (newMaxTime !== undefined) {
+	            maxTime = makeTime(newMaxTime);
+	        }
+	    };
+	    setRange(initialMinTime, initialMaxTime);
+	    return {
+	        /**
+	         * Sets the time range
+	         *
+	         * @param {Date|number|undefined} [newMinTime] New time or epoch seconds minimum
+	         * @param {Date|number|undefined} [newMaxTime] New time or epoch seconds maximum
+	         */
+	        setRange: setRange,
+	        extendRange: function extendRange(newMinTime, newMaxTime) {
+	            if (newMinTime !== undefined) {
+	                newMinTime = makeTime(newMinTime);
+	                if (minTime === undefined || newMinTime.getTime() < minTime.getTime()) {
+	                    minTime = newMinTime;
+	                }
+	            }
+	            if (newMaxTime !== undefined) {
+	                newMaxTime = makeTime(newMaxTime);
+	                if (maxTime === undefined || newMaxTime.getTime() < maxTime.getTime()) {
+	                    maxTime = newMaxTime;
+	                }
+	            }
+	        },
+	        /**
+	         * Resets the time range to the original time range
+	         */
+	        resetRange: function resetRange() {
+	            setRange(initialMinTime, initialMaxTime);
+	        },
+	        /**
+	         * Clears the time range
+	         */
+	        clearRange: function clearRange() {
+	            minTime = undefined;
+	            maxTime = undefined;
+	        },
+	        getRange: function getRange() {
+	            return [minTime, maxTime];
+	        },
+	        /**
+	         * Checks whether the given time is in the current time range
+	         *
+	         * @param {Date|number} time Date or UTC seconds since epoch to check if
+	         *   is in the current range
+	         *
+	         * @returns {boolean} Whether the given time is in the range
+	         */
+	        inside: function inside(time) {
+	            if (time instanceof Date) {
+	                time = time.getTime() / 1000;
+	            }
+	            return time >= minTime.getTime() / 1000 && time <= maxTime.getTime() / 1000;
+	        }
+	    };
+	}
+	exports.TimeRange = TimeRange;
 
 /***/ }
 /******/ ]);

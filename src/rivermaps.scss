@@ -134,3 +134,69 @@ body {
     }
   }
 }
+
+.timescale {
+  min-height: 50px;
+  position: relative;
+
+  .slider, .marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    vertical-align: middle;
+    cursor: pointer;
+    width: 2px;
+    font-size: 14px;
+  }
+
+  .slider {
+    width: 20px;
+    background: hsla(0, 0%, 80%, 0.4);
+  }
+
+  .slider.max {
+    right: 10px;
+  }
+
+  .slider.min {
+    left: 10px;
+    vertical-align: middle;
+
+    .arrow, .bar {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .bar{
+    vertical-align: middle;
+      width: 2px;
+      height: 100%;
+      background: #000;
+    }
+
+    .arrow:after {
+      content: '\25C0';
+
+    }
+  }
+
+  .slider.max:before {
+    content: '\25B6';
+    vertical-align: middle;
+  }
+
+  .markers {
+    position: relative;
+
+    .marker, .multiMarker {
+      position: absolute;
+      width: 10px;
+      height: 20px;
+      background: #ccc;
+    }
+
+    .marker {
+      height: 10px;
+    }
+  }
+}

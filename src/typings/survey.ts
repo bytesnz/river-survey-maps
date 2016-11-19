@@ -15,5 +15,7 @@ interface Survey {
   timestamp: {
     _epoch: number,
     _iso8601: string
-  }
+  },
+  timeMarker?: TimeMarker,
+  listElement?: HTMLElement
 }

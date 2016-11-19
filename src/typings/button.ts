@@ -1,7 +1,7 @@
 interface Button {
   label?: string,
   id?: string,
-  value?: number,
+  value?: any,
   color?: HSLColor | string,
   textColor?: HSLColor | string
 };
