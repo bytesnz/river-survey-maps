@@ -1,10 +1,20 @@
+const hour = 60*60*1000,
+    day = hour * 24,
+    week = day * 7,
+    month = day * 30,
+    year = day * 365;
+
 const config = {
   halflifeLengths: [
-    { label: "1 hour", time: 3600000},
-    { label: "1 day", time: 86400000},
-    { label: "1 week", time: 604800000},
-    { label: "1 month", time: 2592000000},
-    { label: "1 year", time: 31536000000}
+    { label: "1 week", time: week},
+    { label: "2 weeks", time: 2 * week},
+    { label: "3 weeks", time: 3 * week},
+    { label: "1 month", time: month},
+    { label: "2 months", time: 2 * month},
+    { label: "3 months", time: 3 * month},
+    { label: "6 months", time: 6 * month},
+    { label: "1 year", time: year},
+    { label: "2 years", time: 2 * year},
   ],
   defaultMarkerOptions: {
     color: "#ffffff",
