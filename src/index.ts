@@ -9,6 +9,8 @@ let mapElement = document.getElementById('map');
 
 let controlsLayer = document.getElementById('controls');
 
+let controlsButton = document.querySelector('#controls > button');
+
 let disableBubbling = (event: Event) => {
   event.stopPropagation();
 };
@@ -17,6 +19,13 @@ let disableBubbling = (event: Event) => {
 ['click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'scroll'].forEach((event) => {
   controlsLayer.addEventListener(event, disableBubbling);
 });
+
+if (controlsButton) {
+  controlsButton.addEventListener('click', (event) => {
+    controlsLayer.classList.toggle('open');
+    event.preventDefault();
+  });
+}
 
 // Create map
 Map(mapElement);
