@@ -60,8 +60,8 @@ export function getColor(survey) {
 export function score(survey) {
   let value = survey.attributes.thames21Coliforms;
   if (value === true) {
-    return scores['good'];
-  } else if (value === false) {
     return scores['bad'];
+  } else if (value === false) {
+    return scores['good'];
   }
 }
