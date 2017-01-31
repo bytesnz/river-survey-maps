@@ -1,0 +1,184 @@
+// out: ../rivermaps.css
+
+body {
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+
+  > main {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 10px;
+  }
+}
+
+#mapContainer {
+  position: relative;
+  flex-grow: 1;
+  overflow-y: hidden;
+
+  #map {
+    height: 100%;
+  }
+
+  #controls {
+    background: hsla(0,0%,98%,0.9);
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 16px;
+    min-width: 350px;
+    max-width: 500px;
+    width: 25%;
+    z-index: 1000;
+    overflow-y: scroll;
+    text-align: right;
+
+    > button {
+      display: none;
+    }
+
+    section {
+      text-align: left;
+
+      h1, h2 {
+        margin: 0px;
+        padding: 2px 8px;
+      }
+      h1{
+        background: rgba(255,255,255,0.9);
+        font-size: 1.2em;
+        cursor: pointer;
+
+        &:before {
+          content: '-';
+          margin-right: 5px;
+        }
+      }
+      h2 {
+        background: rgba(255,255,255,0.5);
+        font-size: 1.1em;
+      }
+      > div {
+        padding: 5px 10px;
+      }
+
+      section {
+        > h1 {
+          background: rgba(255,255,255,0.5);
+          font-size: 1.1em;
+        }
+      }
+
+      &.collapsed {
+        > * {
+          display: none;
+        }
+
+        h1 {
+          display: block;
+
+          &:before {
+            content: '+';
+          }
+        }
+      }
+    }
+
+    @media (max-width: 700px) {
+      width: auto;
+      max-width: initial;
+      min-width: initial;
+      bottom: initial;
+      max-height: 100%;
+
+      > button {
+        display: inline-block;
+        margin: 0;
+        padding: 5px 10px;
+        font-size: 1.2em;
+        border: none;
+      }
+
+      section {
+        display:none;
+      }
+
+      &.open section {
+        display: block;
+      }
+    }
+  }
+
+  button, .button {
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: none;
+    display: inline-block;
+    padding: 0px 5px;
+    margin: 2px;
+    font-size: 0.8em;
+    border-radius: 3px;
+    border: none;
+
+    background: rgba(200, 200, 200, 0.2);
+
+
+    &:hover {
+      background: rgba(200, 200, 200, 0.6);
+    }
+
+    &.selected {
+      background: rgba(255,255,255,0.6);
+
+      &:hover {
+        background: rgba(255,255,255,0.8);
+      }
+    }
+
+    > span {
+      display: inline-block;
+      padding: 5px 5px;
+      font-weight: bold;
+    }
+
+    > div {
+      padding: 5px 3px;
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+
+      &:hover {
+        background: rgba(255,255,255,0.5);
+      }
+    }
+  }
+
+  .noUi-target {
+    padding: 0 !important;
+    margin: 10px;
+  }
+
+  .key {
+    font-size: 0.8em;
+    color: #999;
+  }
+
+  .range {
+    clear: both;
+
+    .min,
+    .max {
+      display: inline-block;
+    }
+
+    /*.min {
+      float: left;
+    }*/
+    .max {
+      float: right;
+    }
+  }
+}
+

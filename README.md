@@ -1,6 +1,5 @@
 River Survey Maps
 ==========
-https://codepen.io/bytesnz/full/dpKRoW/
 
 [Thames21](http://www.thames21.org.uk) has a collection of
 [water quality](http://www.thames21.org.uk/thames-river-watch-water-quality/)
