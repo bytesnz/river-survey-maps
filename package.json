@@ -1,8 +1,8 @@
 {
   "name": "river-survey-maps",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Playing with Leaflet displaying Water Quality surveys from Thames21",
-  "main": "script.js",
+  "main": "rivermaps.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,35 +23,6 @@
     "url": "https://github.com/bytesnz/river-survey-maps-pen/issues"
   },
   "homepage": "https://github.com/bytesnz/river-survey-maps-pen#readme",
-  "pen": {
-    "title": "River Map",
-    "indentation": "spaces",
-    "width": 2,
-    "autosave": true,
-    "autopreview": false,
-    "html": {
-      "preprocessor": "none",
-      "head": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-    },
-    "css": {
-      "preprocessor": "scss",
-      "base": "neither",
-      "prefixing": "neither",
-      "external": [
-        "https://unpkg.com/leaflet@1.0.1/dist/leaflet.css",
-        "https://refreshless.com/noUiSlider/distribute/nouislider.css?v=900"
-      ]
-    },
-    "javascript": {
-      "preprocessor": "babel",
-      "external": [
-        "https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js",
-        "https://rawgit.com/yanatan16/nanoajax/master/nanoajax.min.js",
-        "https://unpkg.com/leaflet@1.0.1/dist/leaflet.js",
-        "https://refreshless.com/noUiSlider/distribute/nouislider.js?v=900"
-      ]
-    }
-  },
   "devDependencies": {
     "@types/leaflet": "^1.0.36",
     "@types/nanoajax": "^0.2.29",
