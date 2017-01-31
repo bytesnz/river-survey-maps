@@ -7,24 +7,6 @@ let mapListeners: Function[] = [];
 export let map: L.Map;
 
 /**
- * Set the height of the map. By default, the height will be 50% of the
- * window height
- *
- * @param {number} [height] Height (in px) to set the map to
- */
-export function resizeMap(height?: number) {
-  if (typeof height !== 'number') {
-    if (typeof (height = window.innerHeight) === 'undefined') {
-      height = document.body.clientHeight;
-    }
-    height = height * .80;
-  }
-
-  mapElement.style.height = height + 'px';
-};
-
-
-/**
  * Add a callback function to be called when the map view changes. Function
  * will be passed the event
  *
@@ -96,8 +78,6 @@ export function focusOnPoint(point: Position) {
  */
 export default function create(element: HTMLElement) {
   mapElement = element;
-
-  resizeMap();
 
   map = L.map(element, {
     // maxBounds: bounds // to limit map to certain area
