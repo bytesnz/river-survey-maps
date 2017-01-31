@@ -4,6 +4,9 @@ import Surveys from './surveys';
 import Time from './lib/time';
 import config from './config';
 
+import './rivermaps.scss';
+import '../node_modules/leaflet/dist/leaflet.css';
+import '../node_modules/nouislider/distribute/nouislider.min.css';
 
 let mapElement = document.getElementById('map');
 
