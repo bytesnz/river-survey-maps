@@ -4,6 +4,8 @@
   "description": "Playing with Leaflet displaying Water Quality surveys from Thames21",
   "main": "rivermaps.js",
   "scripts": {
+    "start": "webpack --watch --hot",
+    "build": "webpack --optimize-minimize",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
