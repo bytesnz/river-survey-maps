@@ -634,3 +634,21 @@ export function redrawSurveyData(survey: string) {
 export function redrawAllActive() {
   activeSurveys.forEach(redrawSurveyData);
 };
+
+/**
+ * Returns the survey data of the surveys that are currently active, and
+ * optionally, only those that are displayed on the map
+ *
+ * @param {string|string[]} survey Return only the survey data for the given
+ *   survey
+ * @param {boolean} onlyVisible Return on survey data that is currently
+ *   visible on the map
+ *
+ * @returns {Object|Array} An object containing the survey data broken down
+ *   by survey type or an array of the survey data for a specific survey
+ */
+export function getSurveyData(survey: string | string[],
+    onlyVisible: boolean) {
+  if (typeof survey === 'string') {
+  }
+}

@@ -2,6 +2,7 @@ import Map from './lib/map';
 import * as Controls from './lib/controls';
 import Surveys from './surveys';
 import Time from './lib/time';
+import List from './lib/list';
 import config from './config';
 
 import './rivermaps.scss';
@@ -13,6 +14,8 @@ let mapElement = document.getElementById('map');
 let controlsLayer = document.getElementById('controls');
 
 let controlsButton = document.querySelector('#controls > button');
+
+let listElement = document.getElementById('list');
 
 let disableBubbling = (event: Event) => {
   event.stopPropagation();
@@ -36,6 +39,8 @@ Map(mapElement);
 // Create time selection controls
 let timeSection = Controls.addControlSection('Time', controlsLayer);
 Time(timeSection);
+
+List(listElement);
 
 // Add survey
 Surveys(controlsLayer);
