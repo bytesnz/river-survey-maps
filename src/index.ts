@@ -8,15 +8,41 @@ import './rivermaps.scss';
 import '../node_modules/leaflet/dist/leaflet.css';
 import '../node_modules/nouislider/distribute/nouislider.min.css';
 
-let mapElement = document.getElementById('map');
+const mapElement = document.getElementById('map');
 
-let controlsLayer = document.getElementById('controls');
+const controlsLayer = document.getElementById('controls');
 
-let controlsButton = document.querySelector('#controls > button');
+const controlsButton = document.getElementById('controls-button');
 
-let disableBubbling = (event: Event) => {
+const disableBubbling = (event: Event) => {
   event.stopPropagation();
 };
+
+let activeLayer: null | { button: HTMLElement, layer: HTMLElement };
+
+const addControlButton = (button: HTMLElement, layer: HTMLElement): void => {
+  if (button && layer) {
+    button.addEventListener('click', (event) => {
+      if (button.classList.contains('selected')) {
+        activeLayer = null;
+        button.classList.remove('selected');
+        layer.classList.remove('open');
+      } else {
+        if (activeLayer) {
+          activeLayer.button.classList.remove('selected');
+          activeLayer.layer.classList.remove('open');
+        }
+        button.classList.add('selected');
+        layer.classList.add('open');
+        activeLayer = {
+          button,
+          layer
+        };
+      }
+      event.preventDefault();
+    });
+  }
+}
 
 // Disable bubbling on any events so clicks etc don't get passed to the map
 ['click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'scroll'].forEach((event) => {
@@ -24,10 +50,7 @@ let disableBubbling = (event: Event) => {
 });
 
 if (controlsButton) {
-  controlsButton.addEventListener('click', (event) => {
-    controlsLayer.classList.toggle('open');
-    event.preventDefault();
-  });
+  addControlButton(controlsButton, controlsLayer);
 }
 
 // Create map
